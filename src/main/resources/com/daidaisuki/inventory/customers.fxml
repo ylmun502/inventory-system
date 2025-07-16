@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+
+<VBox xmlns="http://javafx.com/javafx/8.0.171"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.daidaisuki.inventory.controller.view.CustomersController">
+    <Label text="Customers" styleClass="page-title"/>
+    <TableView fx:id="customerTable">
+        <columns>
+            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
+            <TableColumn fx:id="totalOrderCol" text="Total Orders" prefWidth="150"/>
+            <TableColumn fx:id="totalSpentCol" text="Total Spent" prefWidth="150"/>
+            <TableColumn fx:id="discountAmountCol" text="Discount Amount" prefWidth="200"/>
+            <TableColumn fx:id="platformCol" text="Platform" prefWidth="300"/>
+        </columns>
+    </TableView>
+    <HBox spacing="8">
+        <Button fx:id="addButton" text="Add Customer" onAction="#handleAddProduct"/>
+        <Button fx:id="editButton" text="Edit Customer" onAction="#handleEditProduct"/>
+        <Button fx:id="deleteButton" text="Delete Customer" onAction="#handleDeleteProduct"/>
+    </HBox>
+</VBox>

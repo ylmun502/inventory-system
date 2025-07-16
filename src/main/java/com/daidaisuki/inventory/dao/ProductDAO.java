@@ -1,0 +1,74 @@
+package com.daidaisuki.inventory.dao;
+
+import com.daidaisuki.inventory.model.Product;
+import com.daidaisuki.inventory.db.DatabaseManager;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class ProductDAO {
+    
+    public List<Product> getAllProducts() throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT * FROM products";
+        try (Connection conn = DatabaseManager.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String category = rs.getString("category");
+                int stock = rs.getInt("stock");
+                double price = rs.getDouble("selling_price");
+                double cost = rs.getDouble("purchase_cost");
+                double shipping = rs.getDouble("shipping_cost");
+                Product product = new Product(id, name, category, stock, price, cost, shipping);
+                products.add(product);
+            } 
+        } 
+        return products;
+    }
+
+    public void addProduct(Product product) throws SQLException {
+        String sql = "INSERT INTO products(name, category, stock, selling_price, purchase_cost, shipping_cost) VALUES(?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, product.getName());
+            stmt.setString(2, product.getCategory());
+            stmt.setInt(3, product.getStock());
+            stmt.setDouble(4, product.getPrice());
+            stmt.setDouble(5, product.getCost());
+            stmt.setDouble(6, product.getShipping());
+            stmt.executeUpdate();
+        } 
+    }
+
+    public void updateProduct(Product product) throws SQLException {
+        String sql = "UPDATE products SET name = ?, category = ?, stock = ?, selling_price = ?, purchase_cost = ?, shipping_cost = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, product.getName());
+            stmt.setString(2, product.getCategory());
+            stmt.setInt(3, product.getStock());
+            stmt.setDouble(4, product.getPrice());
+            stmt.setDouble(5, product.getCost());
+            stmt.setDouble(6, product.getShipping());
+            stmt.setInt(7, product.getId());
+            stmt.executeUpdate();
+        } 
+    }
+
+    public void deleteProduct(int productId) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            stmt.executeUpdate();
+        } 
+    }
+}

@@ -1,0 +1,44 @@
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# Maven build directory
+/target/
+
+# VSCode settings
+.vscode/
+
+# IntelliJ IDEA
+/.idea/
+/*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Optional Maven Wrapper (if not used)
+/.mvn/
+mvnw
+mvnw.cmd
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# JavaFX cache (optional)
+*.jfx
+
+# SQLite DB (optional)
+# *.db
+
+# Backup files
+*~
+
+# VSCode extension local history (optional)
+.history/
+
+# Maven site reports (optional)
+/site/
