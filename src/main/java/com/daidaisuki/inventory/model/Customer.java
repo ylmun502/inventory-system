@@ -121,7 +121,7 @@ public class Customer {
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(id.get());
+        return Integer.hashCode(getId());
     }
 
     @Override
