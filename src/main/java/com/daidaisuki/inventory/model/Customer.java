@@ -116,7 +116,7 @@ public class Customer {
             return false;
         }
         Customer other = (Customer) obj;
-        return this.id == other.id;
+        return this.getId() == other.getId();
     }
 
     @Override
