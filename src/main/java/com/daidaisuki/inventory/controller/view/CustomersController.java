@@ -13,6 +13,7 @@ import com.daidaisuki.inventory.dao.CustomerDAO;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.util.FxWindowUtils;
+import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
 import com.daidaisuki.inventory.util.ViewLoader;
 
@@ -57,6 +58,12 @@ public class CustomersController extends BaseTableController<Customer> {
         totalOrdersCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalOrders()));
         totalSpentCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalSpent()));
         totalDiscountCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalDiscount()));
+
+        nameCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
+        platformCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
+        totalOrdersCol.setCellFactory(TableCellUtils.centerAlignedIntegerCellFactory());
+        totalSpentCol.setCellFactory(TableCellUtils.centerAlignedPriceCellFactory());
+        totalDiscountCol.setCellFactory(TableCellUtils.centerAlignedPriceCellFactory());
     }
 
     @Override
