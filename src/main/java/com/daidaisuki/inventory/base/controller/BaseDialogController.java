@@ -51,9 +51,15 @@ public abstract class BaseDialogController<T> {
         return true;
     }
 
+    protected void closeDialog() {
+        if(dialogStage != null) {
+            dialogStage.close();
+        }
+    }
+
     @FXML
     protected void handleCancel() {
-        dialogStage.close();
+        closeDialog();
     }
 
     @FXML

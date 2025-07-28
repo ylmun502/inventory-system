@@ -35,7 +35,7 @@ public class OrderDAO {
     }
 
     public void addOrder(Order order) throws SQLException {
-        String sql = "INSERT INTO orders(customer_id, order_date, total_items, total_amount, discount_amount, payment_method) VALUES(?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO orders(customer_id, order_date, total_items, total_amount, discount_amount, payment_method) VALUES(?, ?, ?, ?, ?, ?)";
         try(Connection conn = DatabaseManager.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, order.getCustomerId());
@@ -52,8 +52,8 @@ public class OrderDAO {
         }
     }
 
-    public void editOrder(Order order) throws SQLException {
-        String sql = "UPDATE orders SET customer_id = ?, order_date = ?, total_items = ?, total_amount = ?, total_amount = ?, payment_method = ? WHERE id = ?";
+    public void updateOrder(Order order) throws SQLException {
+        String sql = "UPDATE orders SET customer_id = ?, order_date = ?, total_items = ?, total_amount = ?, discount_amount = ?, payment_method = ? WHERE id = ?";
         try(Connection conn = DatabaseManager.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, order.getCustomerId());

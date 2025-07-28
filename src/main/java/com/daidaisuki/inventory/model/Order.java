@@ -1,8 +1,11 @@
 package com.daidaisuki.inventory.model;
 
-import java.time.LocalDate;
-
 import com.daidaisuki.inventory.model.Customer;
+import com.daidaisuki.inventory.model.OrderItem;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -15,16 +18,28 @@ import javafx.beans.property.StringProperty;
 
 public class Order {
     private Customer customer;
-    private int id;
+    private final IntegerProperty id;
     private final IntegerProperty customerId;
     private final ObjectProperty<LocalDate> date;
     private final IntegerProperty totalItems;
     private final DoubleProperty totalAmount;
     private final DoubleProperty discountAmount;
     private final StringProperty paymentMethod;
+    private List<OrderItem> items = new ArrayList<>();
     
+    public Order() {
+        this.customer = null;
+        this.id = new SimpleIntegerProperty(-1);
+        this.customerId = new SimpleIntegerProperty(-1);
+        this.date = new SimpleObjectProperty<>();
+        this.totalItems = new SimpleIntegerProperty(0);
+        this.totalAmount = new SimpleDoubleProperty(0.0);
+        this.discountAmount = new SimpleDoubleProperty(0.0);
+        this.paymentMethod = new SimpleStringProperty("");
+    }
+
     public Order(int id, int customerId, LocalDate date, int totalItems, double totalAmount, double discountAmount, String paymentMethod) {
-        this.id = id;
+        this.id = new SimpleIntegerProperty(id);
         this.customerId = new SimpleIntegerProperty(customerId);
         this.date = new SimpleObjectProperty<>(date);
         this.totalItems = new SimpleIntegerProperty(totalItems);
@@ -42,11 +57,15 @@ public class Order {
     }
 
     public int getId() {
-        return id;
+        return this.id.get();
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
+    }
+
+    public IntegerProperty idProperty() {
+        return this.id;
     }
 
     public LocalDate getDate() {
@@ -89,7 +108,7 @@ public class Order {
         return this.totalAmount.get();
     }
 
-    public void setTotalAmount(int value) {
+    public void setTotalAmount(double value) {
         this.totalAmount.set(value);
     }
 
@@ -101,7 +120,7 @@ public class Order {
         return this.discountAmount.get();
     }
 
-    public void setDiscountAmount(int value) {
+    public void setDiscountAmount(double value) {
         this.discountAmount.set(value);
     }
 
@@ -119,5 +138,26 @@ public class Order {
 
     public StringProperty paymentMethodProperty() {
         return paymentMethod;
+    }
+
+    public List<OrderItem> getItems() {
+        return this.items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public void recalculateTotals() {
+        int totalItems = 0;
+        double totalAmount = 0.0;
+        
+        for(OrderItem item : items) {
+            totalItems += item.getQuantity();
+            totalAmount += item.getSubtotal();
+        }
+
+        setTotalItems(totalItems);
+        setTotalAmount(totalAmount);
     }
 }

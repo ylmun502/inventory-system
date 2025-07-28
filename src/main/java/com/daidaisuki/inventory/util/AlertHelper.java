@@ -1,5 +1,7 @@
 package com.daidaisuki.inventory.util;
 
+import com.daidaisuki.inventory.App;
+
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -7,8 +9,6 @@ import javafx.stage.Window;
 
 import java.sql.SQLException;
 import java.util.Optional;
-
-import com.daidaisuki.inventory.App;
 
 /**
  * Utility class for displaying styled JavaFX alert dialogs such as error, warning,

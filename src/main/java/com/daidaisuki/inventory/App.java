@@ -7,6 +7,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -15,6 +17,10 @@ import com.daidaisuki.inventory.db.DatabaseManager;
 public class App extends Application {
 
     private static Scene scene;
+    public static final double WIDTH_RATIO = 1.0;
+    public static final double HEIGHT_RATIO = 1.0;
+    public static final int MIN_WIDTH = 1200;
+    public static final int MIN_HEIGHT = 800;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -30,13 +36,15 @@ public class App extends Application {
         }
         FXMLLoader fxmlLoader = loadFXMLLoader("main");
         Parent root = fxmlLoader.getRoot();
-        scene = new Scene(root, 1200, 800);
+        Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
+        double width = Math.max(visualBounds.getWidth() * WIDTH_RATIO, MIN_WIDTH);
+        double height = Math.max(visualBounds.getHeight() * HEIGHT_RATIO, MIN_HEIGHT);
+        scene = new Scene(root, width, height);
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         stage.setScene(scene);
         stage.fullScreenProperty().addListener((obs, wasFull, isFull) -> {
             if (!isFull) {
-                stage.setWidth(1200);
-                stage.setHeight(800);
+                resizeStageToDynamicSize(stage);
             }
         });
         stage.show();
@@ -47,6 +55,13 @@ public class App extends Application {
         fxmlLoader.load();
         return fxmlLoader;
     }
+
+    private static void resizeStageToDynamicSize(Stage stage) {
+        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+        stage.setWidth(Math.max(bounds.getWidth() * WIDTH_RATIO, MIN_WIDTH));
+        stage.setHeight(Math.max(bounds.getHeight() * HEIGHT_RATIO, MIN_HEIGHT));
+    }
+
 
     public static void main(String[] args) {
         launch();

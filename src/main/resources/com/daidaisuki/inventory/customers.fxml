@@ -7,22 +7,23 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TableColumn?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.171"
+<VBox xmlns="http://javafx.com/javafx/13"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.daidaisuki.inventory.controller.view.CustomersController">
     <Label text="Customers" styleClass="page-title"/>
     <TableView fx:id="customerTable">
         <columns>
-            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="totalOrderCol" text="Total Orders" prefWidth="150"/>
-            <TableColumn fx:id="totalSpentCol" text="Total Spent" prefWidth="150"/>
-            <TableColumn fx:id="discountAmountCol" text="Discount Amount" prefWidth="200"/>
-            <TableColumn fx:id="platformCol" text="Platform" prefWidth="300"/>
+            <TableColumn fx:id="nameCol" text="Name" prefWidth="200"/>
+            <TableColumn fx:id="totalOrdersCol" text="Total Orders" prefWidth="200"/>
+            <TableColumn fx:id="totalSpentCol" text="Total Spent" prefWidth="200"/>
+            <TableColumn fx:id="totalDiscountCol" text="Total Discount" prefWidth="200"/>
+            <TableColumn fx:id="platformCol" text="Platform" prefWidth="200"/>
         </columns>
     </TableView>
     <HBox spacing="8">
-        <Button fx:id="addButton" text="Add Customer" onAction="#handleAddProduct"/>
-        <Button fx:id="editButton" text="Edit Customer" onAction="#handleEditProduct"/>
-        <Button fx:id="deleteButton" text="Delete Customer" onAction="#handleDeleteProduct"/>
+        <Button fx:id="addButton" text="Add Customer" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit Customer" onAction="#handleEdit"/>
+        <Button fx:id="deleteButton" text="Delete Customer" onAction="#handleDelete"/>
+        <Button fx:id="viewOrdersButton" text="View Orders" onAction="#handleViewOrders"/>
     </HBox>
 </VBox>

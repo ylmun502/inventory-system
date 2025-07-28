@@ -75,6 +75,8 @@ public class DatabaseManager {
                     "FOREIGN KEY(order_id) REFERENCES orders(id)," +
                     "FOREIGN KEY(product_id) REFERENCES products(id)" +
                     ");";
+                    //last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    //sync_status TEXT DEFAULT 'PENDING'
             stmt.execute(createOrderItemTable);
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);");

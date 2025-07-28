@@ -32,38 +32,96 @@ public class CustomerDAO {
         return customers;
     }
 
-    public void addCustomer(Customer c) throws SQLException {
+    public void addCustomer(Customer customer) throws SQLException {
         String sql = "INSERT INTO customers(name, phone_number, email, address, platform) VALUES( ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, c.getName());
-            stmt.setString(2, c.getPhoneNumber());
-            stmt.setString(3, c.getEmail());
-            stmt.setString(4, c.getAddress());
-            stmt.setString(5, c.getPlatform());
+            stmt.setString(1, customer.getName());
+            stmt.setString(2, customer.getPhoneNumber());
+            stmt.setString(3, customer.getEmail());
+            stmt.setString(4, customer.getAddress());
+            stmt.setString(5, customer.getPlatform());
             stmt.executeUpdate();
         } 
     }
 
-    public void updateCustomer(Customer c) throws SQLException {
+    public void updateCustomer(Customer customer) throws SQLException {
         String sql = "UPDATE customers SET name = ?, phone_number = ?, email = ?, address = ?, platform = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, c.getName());
-            stmt.setString(2, c.getPhoneNumber());
-            stmt.setString(3, c.getEmail());
-            stmt.setString(4, c.getAddress());
-            stmt.setInt(5, c.getId());
+            stmt.setString(1, customer.getName());
+            stmt.setString(2, customer.getPhoneNumber());
+            stmt.setString(3, customer.getEmail());
+            stmt.setString(4, customer.getAddress());
+            stmt.setString(5, customer.getPlatform());
+            stmt.setInt(6, customer.getId());
             stmt.executeUpdate();
         }
     }
 
-    public void deleteCustomer(Customer c) throws SQLException {
+    public void deleteCustomer(int customerId) throws SQLException {
         String sql = "DELETE FROM customers WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, c.getId());
+                stmt.setInt(1, customerId);
                 stmt.executeUpdate();
             }
+    }
+    
+    public void enrichCustomerStats(Customer customer) throws SQLException {
+        String sql = "SELECT COUNT(*) AS total_orders, " + 
+                     "SUM(total_amount) AS total_spent, " + 
+                     "SUM(discount_amount) AS total_discount " +
+                     "FROM orders WHERE customer_id = ?";
+        try(Connection conn = DatabaseManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customer.getId());
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                customer.setTotalOrders(rs.getInt("total_orders"));
+                customer.setTotalSpent(rs.getDouble("total_spent"));
+                customer.setTotalDiscount(rs.getDouble("total_discount"));
+            }
+        }
+    }
+
+    public Customer getById(int id) throws SQLException {
+        Customer customer = null;
+        String sql = "SELECT * FROM customers WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if(rs.next()) {
+                    customer = new Customer(rs.getInt("id"),
+                                            rs.getString("name"),
+                                            rs.getString("phone_number"),
+                                            rs.getString("email"),
+                                            rs.getString("address"),
+                                            rs.getString("platform"));
+                }
+            }
+        }
+        return customer;
+    }
+
+    public Customer findByName(String name) throws SQLException {
+        Customer customer = null;
+        String sql = "SELECT * FROM customers WHERE name = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if(rs.next()) {
+                    customer = new Customer(rs.getInt("id"),
+                                            rs.getString("name"),
+                                            rs.getString("phone_number"),
+                                            rs.getString("email"),
+                                            rs.getString("address"),
+                                            rs.getString("platform"));
+                }
+            }
+        }
+        return customer;
     }
 }

@@ -8,7 +8,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/8.0.171"
+<HBox xmlns="http://javafx.com/javafx/13"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.daidaisuki.inventory.controller.view.MainController">
 

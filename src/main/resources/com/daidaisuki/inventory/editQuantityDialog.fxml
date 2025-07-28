@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/13" 
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.daidaisuki.inventory.controller.dialog.EditQuantityDialogController"
+      spacing="10" alignment="CENTER">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Quantity:"/>
+    <TextField fx:id="quantityField" prefWidth="100"/>
+    <Label fx:id="errorLabel" textFill="red"/>
+
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Save" onAction="#handleSave" />
+        <Button text="Cancel" onAction="#handleCancel" />
+    </HBox>
+</VBox>

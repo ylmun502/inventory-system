@@ -1,8 +1,12 @@
 package com.daidaisuki.inventory.util;
 
+import java.util.function.Consumer;
+
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 
 /**
@@ -90,6 +94,38 @@ public class TableCellUtils {
                     setText(formatPrice(item));
                     setAlignment(Pos.CENTER);
                 }
+            }
+        };
+    }
+
+    /**
+     * Setup the Actions column with Edit and Delete buttons for each row.
+     */
+    public static <T> Callback<TableColumn<T, Void>, TableCell<T, Void>> createActionCellFactory(
+        Consumer<T> onEdit, Consumer<T> onDelete) {
+        return param -> new TableCell<T, Void>() {
+            private final Button editButton = new Button("Edit");
+            private final Button deleteButton = new Button("Delete");
+            private final HBox pane = new HBox(5, editButton, deleteButton);
+
+            {
+                pane.setAlignment(Pos.CENTER);
+
+                editButton.setOnAction(event -> {
+                    T item = getTableView().getItems().get(getIndex());
+                    onEdit.accept(item);
+                });
+
+                deleteButton.setOnAction(e -> {
+                    T item = getTableView().getItems().get(getIndex());
+                    onDelete.accept(item);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : pane);
             }
         };
     }

@@ -8,24 +8,24 @@
 <?import javafx.scene.control.TableColumn?>
 
 
-<VBox xmlns="http://javafx.com/javafx/8.0.171"
+<VBox xmlns="http://javafx.com/javafx/13"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.daidaisuki.inventory.controller.view.InventoryController">
     <Label text="Inventory" styleClass="page-title"/>
     <TableView fx:id="productTable">
         <columns>
             <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="categoryCol" text="Category" prefWidth="150"/>
-            <TableColumn fx:id="stockCol" text="Stock" prefWidth="100"/>
-            <TableColumn fx:id="priceCol" text="Price" prefWidth="100"/>
-            <TableColumn fx:id="availabilityCol" text="Availability" prefWidth="120"/>
-            <TableColumn fx:id="costCol" text="Cost" prefWidth="100"/>
-            <TableColumn fx:id="shippingCol" text="Shipping" prefWidth="100"/>
+            <TableColumn fx:id="categoryCol" text="Category"/>
+            <TableColumn fx:id="stockCol" text="Stock"/>
+            <TableColumn fx:id="priceCol" text="Price"/>
+            <TableColumn fx:id="availabilityCol" text="Availability"/>
+            <TableColumn fx:id="costCol" text="Cost"/>
+            <TableColumn fx:id="shippingCol" text="Shipping"/>
         </columns>
     </TableView>
     <HBox spacing="8">
-        <Button fx:id="addButton" text="Add Product" onAction="#handleAddProduct"/>
-        <Button fx:id="editButton" text="Edit Product" onAction="#handleEditProduct"/>
-        <Button fx:id="deleteButton" text="Delete Product" onAction="#handleDeleteProduct"/>
+        <Button fx:id="addButton" text="Add Product" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit Product" onAction="#handleEdit"/>
+        <Button fx:id="deleteButton" text="Delete Product" onAction="#handleDelete"/>
     </HBox>
 </VBox>

@@ -35,6 +35,9 @@ public class ProductDAO {
     }
 
     public void addProduct(Product product) throws SQLException {
+        // When inserting
+        //"INSERT INTO products(name, ..., last_modified, sync_status) VALUES (?, ..., CURRENT_TIMESTAMP, 'PENDING')"
+
         String sql = "INSERT INTO products(name, category, stock, selling_price, purchase_cost, shipping_cost) VALUES(?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -49,6 +52,9 @@ public class ProductDAO {
     }
 
     public void updateProduct(Product product) throws SQLException {
+        // When updating
+        //"UPDATE products SET ..., last_modified = CURRENT_TIMESTAMP, sync_status = 'PENDING' WHERE id = ?"
+
         String sql = "UPDATE products SET name = ?, category = ?, stock = ?, selling_price = ?, purchase_cost = ?, shipping_cost = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -70,5 +76,36 @@ public class ProductDAO {
             stmt.setInt(1, productId);
             stmt.executeUpdate();
         } 
+    }
+
+    public void decrementStock(int productId, int amount) throws SQLException {
+        String sql = "UPDATE products SET stock = stock - ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, amount);
+            stmt.setInt(2, productId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public Product getById(int id) throws SQLException {
+        Product product = null;
+        String sql = "SELECT * FROM products WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if(rs.next()) {
+                    product = new Product(rs.getInt("id"),
+                                          rs.getString("name"),
+                                          rs.getString("category"),
+                                          rs.getInt("stock"),
+                                          rs.getDouble("selling_price"),
+                                          rs.getDouble("purchase_cost"),
+                                          rs.getDouble("shipping_cost"));
+                }
+            }
+        }
+        return product;
     }
 }

@@ -1,18 +1,24 @@
 package com.daidaisuki.inventory.model;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Customer {
-    private int id;
+    private final IntegerProperty id;
     private final StringProperty name;
     private final StringProperty phoneNumber;
     private final StringProperty email;
     private final StringProperty address;
     private final StringProperty platform;
 
+    private transient int totalOrders;
+    private transient double totalSpent;
+    private transient double totalDiscount;
+
     public Customer() {
-        this.id = -1;
+        this.id = new SimpleIntegerProperty(-1);
         this.name = new SimpleStringProperty("");
         this.phoneNumber = new SimpleStringProperty("");
         this.email = new SimpleStringProperty("");
@@ -21,7 +27,7 @@ public class Customer {
     }
 
     public Customer(int id, String name, String phoneNumber, String email, String address, String platform) {
-        this.id = id;
+        this.id = new SimpleIntegerProperty(id);
         this.name = new SimpleStringProperty(name);
         this.phoneNumber = new SimpleStringProperty(phoneNumber);
         this.email = new SimpleStringProperty(email);
@@ -30,11 +36,15 @@ public class Customer {
     }
 
     public int getId() {
-        return this.id;
+        return this.id.get();
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
+    }
+
+    public IntegerProperty idProperty() {
+        return this.id;
     }
 
     public String getName() {
@@ -95,5 +105,51 @@ public class Customer {
 
     public StringProperty platformProperty() {
         return platform;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Customer other = (Customer) obj;
+        return this.id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id.get());
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
+    public int getTotalOrders() {
+        return this.totalOrders;
+    }
+    
+    public void setTotalOrders(int totalOrders) {
+        this.totalOrders = totalOrders;
+    }
+
+    public double getTotalSpent() {
+        return this.totalSpent;
+    }
+
+    public void setTotalSpent(double totalSpent) {
+        this.totalSpent = totalSpent;
+    }
+
+    public double getTotalDiscount() {
+        return this.totalDiscount;
+    }
+
+    public void setTotalDiscount(double totalDiscount) {
+        this.totalDiscount = totalDiscount;
     }
 }

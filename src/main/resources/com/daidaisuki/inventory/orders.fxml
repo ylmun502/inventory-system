@@ -7,24 +7,24 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TableColumn?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.171"
+<VBox xmlns="http://javafx.com/javafx/13"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.daidaisuki.inventory.controller.view.OrdersController">
     <Label text="Orders" styleClass="page-title"/>
     <TableView fx:id="orderTable">
         <columns>
-            <TableColumn fx:id="orderIdCol" text="Order ID" prefWidth="90"/>
-            <TableColumn fx:id="customerNameCol" text="Customer Name" prefWidth="180"/>
-            <TableColumn fx:id="dateCol" text="Order Date" prefWidth="120"/>
-            <TableColumn fx:id="totalItemsCol" text="Total Items" prefWidth="115"/>
-            <TableColumn fx:id="totalAmountCol" text="Total Amount" prefWidth="140"/>
-            <TableColumn fx:id="discountAmountCol" text="Discount Amount" prefWidth="175"/>
-            <TableColumn fx:id="paymentMethodCol" text="Payment Method" prefWidth="170"/>
+            <TableColumn fx:id="orderIdCol" text="ID"/>
+            <TableColumn fx:id="customerNameCol" text="Customer Name"/>
+            <TableColumn fx:id="dateCol" text="Date"/>
+            <TableColumn fx:id="totalItemsCol" text="Total Items"/>
+            <TableColumn fx:id="totalAmountCol" text="Total Amount"/>
+            <TableColumn fx:id="discountAmountCol" text="Discount Amount"/>
+            <TableColumn fx:id="paymentMethodCol" text="Payment Method"/>
         </columns>
     </TableView>
     <HBox spacing="8">
-        <Button fx:id="addButton" text="Add Order" onAction="#handleAddProduct"/>
-        <Button fx:id="editButton" text="Edit Order" onAction="#handleEditProduct"/>
-        <Button fx:id="deleteButton" text="Delete Order" onAction="#handleDeleteProduct"/>
+        <Button fx:id="addButton" text="Add Order" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit Order" onAction="#handleEdit"/>
+        <Button fx:id="deleteButton" text="Delete Order" onAction="#handleDelete"/>
     </HBox>
 </VBox>

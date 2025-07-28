@@ -12,4 +12,5 @@ module com.daidaisuki.inventory {
     exports com.daidaisuki.inventory.util;
     exports com.daidaisuki.inventory.enums;
     exports com.daidaisuki.inventory.interfaces;
+    exports com.daidaisuki.inventory.model;
 }

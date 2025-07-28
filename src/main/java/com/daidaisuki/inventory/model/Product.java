@@ -11,7 +11,7 @@ import javafx.beans.property.StringProperty;
  * Represents a product in the inventory system.
  * <p>
  * This class uses JavaFX {@code Property} types to support UI data binding,
- * such as displaying and editing product information in TableView columns or forms.
+ * enabling seamless synchronization with UI controls such as TableView columns or form fields.
  * </p>
  */
 
@@ -25,7 +25,8 @@ public class Product {
     private final DoubleProperty shipping;
 
     /**
-     * Creates an empty product with default values.
+     * Creates an empty product with default placeholder values
+     * to ensure properties are non-null and ready for binding.
      */
     public Product() {
         this.id = -1;
@@ -58,82 +59,182 @@ public class Product {
         this.shipping = new SimpleDoubleProperty(shipping);
     }
 
+    /**
+     * Returns the product ID.
+     * 
+     * @return the product ID
+     */
     public int getId() {
         return this.id;
     }
 
+    /**
+     * Sets the product ID.
+     * 
+     * @param id the new product ID
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Returns the product name.
+     *
+     * @return the product name
+     */
     public String getName() { 
         return this.name.get();
     }
 
+    /**
+     * Sets the product name.
+     *
+     * @param value the new product name
+     */
     public void setName(String value) {
         this.name.set(value);
     }
 
+    /**
+     * Returns the product name property for UI binding.
+     *
+     * @return the name property
+     */
     public StringProperty nameProperty() {
         return this.name;
     }
 
+    /**
+     * Returns the product category.
+     *
+     * @return the category
+     */
     public String getCategory() { 
         return this.category.get();
     }
 
+    /**
+     * Sets the product category.
+     *
+     * @param value the new category
+     */
     public void setCategory(String value) {
         this.category.set(value);
     }
 
+    /**
+     * Returns the product category property for UI binding.
+     *
+     * @return the category property
+     */
     public StringProperty categoryProperty() {
         return this.category;
     }
 
+    /**
+     * Returns the current stock quantity.
+     *
+     * @return the stock count
+     */
     public int getStock() { 
         return this.stock.get();
     }
 
+    /**
+     * Sets the stock quantity.
+     *
+     * @param value the new stock count
+     */
     public void setStock(int value) {
         this.stock.set(value);
     }
 
+    /**
+     * Returns the stock property for UI binding.
+     *
+     * @return the stock property
+     */
     public IntegerProperty stockProperty() {
         return this.stock;
     }
 
+    /**
+     * Returns the selling price.
+     *
+     * @return the price
+     */
     public double getPrice() { 
         return this.price.get();
     }
 
+    /**
+     * Sets the selling price.
+     *
+     * @param value the new price
+     */
     public void setPrice(double value) {
         this.price.set(value);
     }
 
+    /**
+     * Returns the price property for UI binding.
+     *
+     * @return the price property
+     */
     public DoubleProperty priceProperty() {
         return this.price;
     }
 
+    /**
+     * Returns the purchase cost.
+     *
+     * @return the cost
+     */
     public double getCost() {
         return this.cost.get();
     }
 
+    /**
+     * Sets the purchase cost.
+     *
+     * @param value the new cost
+     */
     public void setCost(double value) {
         this.cost.set(value);
     }
 
+    /**
+     * Returns the cost property for UI binding.
+     *
+     * @return the cost property
+     */
     public DoubleProperty costProperty() {
         return this.cost;
     }
 
+    /**
+     * Returns the shipping cost.
+     *
+     * @return the shipping cost
+     */
     public double getShipping() {
         return this.shipping.get();
     }
 
+    /**
+     * Sets the shipping cost.
+     *
+     * @param value the new shipping cost
+     */
     public void setShipping(double value) {
         this.shipping.set(value);
     }
 
+    /**
+     * Returns the shipping cost property for UI binding.
+     *
+     * @return the shipping property
+     */
     public DoubleProperty shippingProperty() {
         return this.shipping;
     }
@@ -145,5 +246,17 @@ public class Product {
      */
     public boolean isInStock() {
         return getStock() > 0;
+    }
+
+    /**
+     * Returns the product name for display in UI components such as ComboBoxes.
+     * Overriding {@code toString()} ensures the product name is shown instead of the default
+     * object representation.
+     *
+     * @return the product name
+     */
+    @Override
+    public String toString() {
+        return getName();
     }
 }

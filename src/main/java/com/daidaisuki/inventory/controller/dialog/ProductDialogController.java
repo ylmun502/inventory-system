@@ -40,12 +40,12 @@ public class ProductDialogController extends BaseDialogController<Product> {
     protected void handleSave() {
         StringBuilder errorMessage =  new StringBuilder();
 
-        isFieldEmpty(categoryField, "Name", errorMessage);
+        isFieldEmpty(nameField, "Name", errorMessage);
         isFieldEmpty(categoryField, "Category", errorMessage);
-        isNumeric(stockField, "Stock number", errorMessage, false);
-        isNumeric(priceField, "Sale price", errorMessage, true);
-        isNumeric(costField, "Purchase price", errorMessage, true);
-        isNumeric(shippingField, "Shipping cost", errorMessage, true);
+        isNumeric(stockField, "Stock Number", errorMessage, false);
+        isNumeric(priceField, "Sale Price", errorMessage, true);
+        isNumeric(costField, "Purchase Cost", errorMessage, true);
+        isNumeric(shippingField, "Shipping Fee", errorMessage, true);
 
         if(errorMessage.length() > 0) {
             showError(errorMessage.toString());

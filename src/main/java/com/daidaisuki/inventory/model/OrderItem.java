@@ -4,6 +4,8 @@ import com.daidaisuki.inventory.model.Product;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -16,6 +18,19 @@ public class OrderItem {
     private final DoubleProperty unitPrice;
     private final DoubleProperty costAtSale;
 
+    private final ReadOnlyDoubleWrapper subtotal = new ReadOnlyDoubleWrapper();
+
+    public OrderItem(Product product, int quantity) {
+        this.id = -1;
+        this.product = product;
+        this.orderId = new SimpleIntegerProperty(-1);
+        this.productId = new SimpleIntegerProperty(product.getId());
+        this.quantity = new SimpleIntegerProperty(quantity);
+        this.unitPrice = new SimpleDoubleProperty(product.getPrice());
+        this.costAtSale = new SimpleDoubleProperty(product.getCost());
+        bindSubtotal();
+    }
+
     public OrderItem(int id, int orderId, int productId, int quantity, double unitPrice, double costAtSale) {
         this.id = id;
         this.orderId = new SimpleIntegerProperty(orderId);
@@ -23,6 +38,7 @@ public class OrderItem {
         this.quantity = new SimpleIntegerProperty(quantity);
         this.unitPrice = new SimpleDoubleProperty(unitPrice);
         this.costAtSale = new SimpleDoubleProperty(costAtSale);
+        bindSubtotal();
     }
 
     public Product getProduct() {
@@ -99,5 +115,17 @@ public class OrderItem {
 
     public DoubleProperty costAtSaleProperty() {
         return this.costAtSale;
+    }
+
+    private void bindSubtotal() {
+        subtotal.bind(this.quantity.multiply(this.unitPrice));
+    }
+
+    public ReadOnlyDoubleProperty subtotalProperty() {
+        return subtotal.getReadOnlyProperty();
+    }
+
+    public double getSubtotal() {
+        return subtotal.get();
     }
 }

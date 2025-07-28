@@ -1,34 +1,34 @@
 package com.daidaisuki.inventory.controller.view;
 
 import com.daidaisuki.inventory.App;
+import com.daidaisuki.inventory.base.controller.BaseTableController;
 import com.daidaisuki.inventory.controller.dialog.ProductDialogController;
 import com.daidaisuki.inventory.dao.ProductDAO;
-import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.enums.DialogView;
-import com.daidaisuki.inventory.util.AlertHelper;
-import com.daidaisuki.inventory.util.FxUiUtils;
-import com.daidaisuki.inventory.util.TableCellUtils;
-import com.daidaisuki.inventory.util.ViewLoader;
+import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.FxWindowUtils;
+import com.daidaisuki.inventory.util.TableCellUtils;
+import com.daidaisuki.inventory.util.TableColumnUtils;
+import com.daidaisuki.inventory.util.ViewLoader;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Modality;
-import javafx.stage.Window;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Button;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
-public class InventoryController {
+public class InventoryController extends BaseTableController<Product> {
      
     @FXML private TableView<Product> productTable;
     @FXML private TableColumn<Product, String> nameCol;
@@ -44,37 +44,20 @@ public class InventoryController {
     @FXML private Button deleteButton;
 
     private final ProductDAO productDAO = new ProductDAO();
-    private final ObservableList<Product> productList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         setupColumns();
-        productTable.setItems(productList);
+        initializeBase(productTable, addButton, editButton, deleteButton);
 
         // Set default sort on nameCol ascending
         nameCol.setSortType(TableColumn.SortType.ASCENDING);
         productTable.getSortOrder().add(nameCol);
-        
-
-        try {
-            // Populate list from DB and perform initial sort
-            refreshTable();
-        } catch (SQLException e) {
-            AlertHelper.showDatabaseError(getWindow(), "Unable to load products from database.", e);
-        }
-
-        productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            boolean selected = newSel != null;
-            editButton.setDisable(!selected);
-            deleteButton.setDisable(!selected);
-        });
-
-        boolean hasSelection = productTable.getSelectionModel().getSelectedItem() != null;
-        editButton.setDisable(!hasSelection);
-        deleteButton.setDisable(!hasSelection);
     }
 
     private void setupColumns() {
+        List<Double> ratios = new ArrayList<>(Arrays.asList(0.15, 0.15, 0.1, 0.15, 0.15, 0.15, 0.15));
+        TableColumnUtils.bindColumnWidthsByRatio(productTable, ratios);
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         categoryCol.setCellValueFactory(cellData -> cellData.getValue().categoryProperty());
         stockCol.setCellValueFactory(cellData -> cellData.getValue().stockProperty().asObject());
@@ -94,66 +77,34 @@ public class InventoryController {
         shippingCol.setCellFactory(TableCellUtils.centerAlignedPriceCellFactory());
     }
 
-    @FXML
-    private void handleAddProduct() {
-        Product newProduct = showProductDialog(null);
-        if(newProduct != null) {
-            FxUiUtils.runWithButtonsDisabled(() -> {
-                try {
-                    productDAO.addProduct(newProduct);
-                    refreshTable();
-                } catch(SQLException e) {
-                    AlertHelper.showDatabaseError(getWindow(), "Could not add product", e);
-                }
-            }, addButton, editButton, deleteButton);
-        }
+    @Override
+    protected List<Product> fetchFromDB() throws SQLException {
+        return productDAO.getAllProducts();
     }
 
-    @FXML
-    private void handleEditProduct() {
-        Product selected = productTable.getSelectionModel().getSelectedItem();
-        if(selected == null) {
-            AlertHelper.showSelectionRequiredAlert(getWindow(), "edit");
-            return;
-        }
-
-        Product editedProduct = showProductDialog(selected);
-        if(editedProduct != null) {
-            FxUiUtils.runWithButtonsDisabled(() -> {
-                try {
-                    // Replace the product in the list
-                    productDAO.updateProduct(editedProduct);
-                    refreshTable();
-                } catch(SQLException e) {
-                    AlertHelper.showDatabaseError(getWindow(), "Could not edit product", e);
-                }
-            }, addButton, editButton, deleteButton);
-        }
+    @Override
+    protected Window getWindow() {
+        return FxWindowUtils.getWindow(productTable);
     }
 
-    @FXML
-    private void handleDeleteProduct() {
-        Product selected = productTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            AlertHelper.showSelectionRequiredAlert(getWindow(), "delete");
-            return;
-        }
+    @Override
+    protected void addItem(Product item) throws SQLException {
+        productDAO.addProduct(item);
+    }
 
-        boolean confirmed = AlertHelper.showConfirmationAlert(
-            getWindow(),
-            "Delete Product",
-            null,
-            "Are you sure you want to delete " + selected.getName() + "?");
-        if(confirmed) {
-            FxUiUtils.runWithButtonsDisabled(() -> {
-                try {
-                    productDAO.deleteProduct(selected.getId());
-                    refreshTable();
-                } catch(SQLException e) {
-                    AlertHelper.showDatabaseError(getWindow(), "Could not delete product", e);
-                }
-            }, addButton, editButton, deleteButton);
-        }
+    @Override
+    protected void updateItem(Product item) throws SQLException {
+        productDAO.updateProduct(item);
+    }
+
+    @Override
+    protected void deleteItem(Product item) throws SQLException {
+        productDAO.deleteProduct(item.getId());
+    }
+
+    @Override
+    protected Product showDialog(Product itemToEdit) {
+        return showProductDialog(itemToEdit);
     }
 
     private Product showProductDialog(Product productToEdit) {
@@ -177,15 +128,5 @@ public class InventoryController {
             e.printStackTrace();
             return null;
         }
-    }
-
-    private Window getWindow() {
-        return FxWindowUtils.getWindow(productTable);
-    }
-
-    private void refreshTable() throws SQLException {
-        List<Product> products = productDAO.getAllProducts();
-        productList.setAll(products);
-        productTable.sort();
     }
 }
