@@ -20,14 +20,14 @@ public class ProductDAO {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                String category = rs.getString("category");
-                int stock = rs.getInt("stock");
-                double price = rs.getDouble("selling_price");
-                double cost = rs.getDouble("purchase_cost");
-                double shipping = rs.getDouble("shipping_cost");
-                Product product = new Product(id, name, category, stock, price, cost, shipping);
+                Product product = new Product(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getInt("stock"),
+                    rs.getDouble("selling_price"),
+                    rs.getDouble("purchase_cost"),
+                    rs.getDouble("shipping_cost"));
                 products.add(product);
             } 
         } 

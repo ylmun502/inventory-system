@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.sql.SQLException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -20,14 +21,16 @@ public class OrderDAO {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
                 while(rs.next()) {
-                    int id = rs.getInt("id");
-                    int customerId = rs.getInt("customer_id");
-                    LocalDate date = rs.getDate("order_date") != null ? rs.getDate("order_date").toLocalDate() : null;
-                    int totalItems = rs.getInt("total_items");
-                    double totalAmount = rs.getDouble("total_amount");
-                    double discountAmount = rs.getDouble("discount_amount");
-                    String paymentMethod = rs.getString("payment_method");
-                    Order order = new Order(id, customerId, date, totalItems, totalAmount, discountAmount, paymentMethod);
+                    Date sqlDate = rs.getDate("order_date");
+                    LocalDate orderDate = sqlDate != null ? sqlDate.toLocalDate() : null;
+                    Order order = new Order(
+                        rs.getInt("id"),
+                        rs.getInt("customer_id"),
+                        orderDate,
+                        rs.getInt("total_items"),
+                        rs.getDouble("total_amount"),
+                        rs.getDouble("discount_amount"),
+                        rs.getString("payment_method"));
                     orders.add(order);
                 }
             }

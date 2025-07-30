@@ -32,12 +32,13 @@ public class OrderItemDAO {
             stmt.setInt(1, orderId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int id = rs.getInt("id");
-                int productId = rs.getInt("product_id");
-                int quantity = rs.getInt("quantity");
-                double unitPrice = rs.getDouble("unit_price");
-                double costAtSale = rs.getDouble("cost_at_sale");
-                OrderItem item = new OrderItem(id, orderId, productId, quantity, unitPrice, costAtSale);
+                OrderItem item = new OrderItem(
+                    rs.getInt("id"),
+                    orderId,
+                    rs.getInt("product_id"),
+                    rs.getInt("quantity"),
+                    rs.getDouble("unit_price"),
+                    rs.getDouble("cost_at_sale"));
                 items.add(item);
             }
         }

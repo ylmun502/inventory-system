@@ -19,13 +19,13 @@ public class CustomerDAO {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while(rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                String phoneNumber = rs.getString("phone_number");
-                String email = rs.getString("email");
-                String address = rs.getString("address");
-                String platform = rs.getString("platform");
-                Customer customer = new Customer(id, name, phoneNumber, email, address, platform);
+                Customer customer = new Customer(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("phone_number"),
+                    rs.getString("email"),
+                    rs.getString("address"),
+                    rs.getString("platform"));
                 customers.add(customer);
             }
         }
