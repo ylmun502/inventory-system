@@ -2,11 +2,15 @@ package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.util.AlertHelper;
 
+import java.util.regex.Pattern;
+
 import javafx.stage.Stage;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 
 public abstract class BaseDialogController<T> {
+    private static final Pattern DECIMAL_PATTERN = Pattern.compile("\\d+(\\.\\d+)?");
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
     protected Stage dialogStage;
     protected T model;
     protected boolean saveClicked = false;
@@ -43,8 +47,8 @@ public abstract class BaseDialogController<T> {
     }
 
     protected boolean isNumeric(String text, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
-        String pattern = allowDecimal ? "\\d+(\\.\\d+)?" : "\\d+";
-        if(text.isEmpty() || !text.matches(pattern)) {
+        Pattern pattern = allowDecimal ? DECIMAL_PATTERN : INTEGER_PATTERN;
+        if(text.isEmpty() || !pattern.matcher(text).matches()) {
             errorMessage.append(fieldName)
                         .append(" must be a ")
                         .append(allowDecimal ? "number" : "positive integer")
