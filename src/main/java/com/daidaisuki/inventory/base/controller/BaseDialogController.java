@@ -34,21 +34,33 @@ public abstract class BaseDialogController<T> {
         );
     }
 
-    protected boolean isFieldEmpty(TextField field, String fieldName, StringBuilder errorMessage) {
-        if(field.getText() == null || field.getText().trim().isEmpty()) {
+    protected boolean isFieldEmpty(String text, String fieldName, StringBuilder errorMessage) {
+        if(text.isEmpty()) {
             errorMessage.append(fieldName).append(" is required.\n");
             return true;
         }
         return false;
     }
 
-    protected boolean isNumeric(TextField field, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
+    protected boolean isNumeric(String text, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
         String pattern = allowDecimal ? "\\d+(\\.\\d+)?" : "\\d+";
-        if(field.getText() == null || !field.getText().matches(pattern)) {
-            errorMessage.append(fieldName).append(" must be a ").append(allowDecimal ? "number" : "positive integer").append(".\n");
+        if(text.isEmpty() || !text.matches(pattern)) {
+            errorMessage.append(fieldName)
+                        .append(" must be a ")
+                        .append(allowDecimal ? "number" : "positive integer")
+                        .append(".\n");
             return false;
         }
         return true;
+    }
+
+    protected String sanitizeInput(TextField field) {
+        return field.getText() == null ? null : field.getText().trim();
+    }
+
+    protected String sanitizeOrNull(TextField field) {
+        String value = sanitizeInput(field);
+        return value.isEmpty() ? null : value;
     }
 
     protected void closeDialog() {
