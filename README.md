@@ -39,6 +39,6 @@ A desktop inventory management system built using JavaFX and Maven, with a modul
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/vincentch/inventory-system.git
+   git clone https://github.com/ylmun502/inventory-system.git
    cd inventory-system
 
