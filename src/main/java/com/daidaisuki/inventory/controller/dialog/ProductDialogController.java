@@ -39,13 +39,19 @@ public class ProductDialogController extends BaseDialogController<Product> {
     @Override
     protected void handleSave() {
         StringBuilder errorMessage =  new StringBuilder();
+        String name = sanitizeInput(nameField);
+        String category = sanitizeInput(categoryField);
+        String stockStr = sanitizeInput(stockField);
+        String priceStr = sanitizeInput(priceField);
+        String costStr = sanitizeInput(costField);
+        String shippingStr = sanitizeInput(shippingField);
 
-        isFieldEmpty(nameField, "Name", errorMessage);
-        isFieldEmpty(categoryField, "Category", errorMessage);
-        isNumeric(stockField, "Stock Number", errorMessage, false);
-        isNumeric(priceField, "Sale Price", errorMessage, true);
-        isNumeric(costField, "Purchase Cost", errorMessage, true);
-        isNumeric(shippingField, "Shipping Fee", errorMessage, true);
+        isFieldEmpty(name, "Name", errorMessage);
+        isFieldEmpty(category, "Category", errorMessage);
+        isNumeric(stockStr, "Stock Number", errorMessage, false);
+        isNumeric(priceStr, "Sale Price", errorMessage, true);
+        isNumeric(costStr, "Purchase Cost", errorMessage, true);
+        isNumeric(shippingStr, "Shipping Fee", errorMessage, true);
 
         if(errorMessage.length() > 0) {
             showError(errorMessage.toString());
@@ -56,12 +62,12 @@ public class ProductDialogController extends BaseDialogController<Product> {
             model = new Product();
         }
 
-        model.setName(nameField.getText());
-        model.setCategory(categoryField.getText());
-        model.setStock(Integer.parseInt(stockField.getText()));
-        model.setPrice(Double.parseDouble(priceField.getText()));
-        model.setCost(Double.parseDouble(costField.getText()));
-        model.setShipping(Double.parseDouble(shippingField.getText()));
+        model.setName(name);
+        model.setCategory(category);
+        model.setStock(Integer.parseInt(stockStr));
+        model.setPrice(Double.parseDouble(priceStr));
+        model.setCost(Double.parseDouble(costStr));
+        model.setShipping(Double.parseDouble(shippingStr));
         saveClicked = true;
         dialogStage.close();
     }
