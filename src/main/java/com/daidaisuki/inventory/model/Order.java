@@ -54,6 +54,9 @@ public class Order {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+        if(customer != null) {
+            this.customerId.set(customer.getId());
+        }
     }
 
     public int getId() {

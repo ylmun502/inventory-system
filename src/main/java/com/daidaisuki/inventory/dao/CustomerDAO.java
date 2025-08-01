@@ -35,13 +35,23 @@ public class CustomerDAO {
     public void addCustomer(Customer customer) throws SQLException {
         String sql = "INSERT INTO customers(name, phone_number, email, address, platform) VALUES( ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, customer.getName());
             stmt.setString(2, customer.getPhoneNumber());
             stmt.setString(3, customer.getEmail());
             stmt.setString(4, customer.getAddress());
             stmt.setString(5, customer.getPlatform());
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            if(affectedRows == 0) {
+                throw new SQLException("Creating customer failed, no rows affected.");
+            }
+            try(ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if(generatedKeys.next()) {
+                    customer.setId(generatedKeys.getInt(1));
+                } else {
+                    throw new SQLException("Creating customer failed, no ID obtained.");
+                }
+            }
         } 
     }
 

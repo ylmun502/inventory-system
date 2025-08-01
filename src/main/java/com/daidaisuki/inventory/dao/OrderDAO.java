@@ -1,5 +1,6 @@
 package com.daidaisuki.inventory.dao;
 
+import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.db.DatabaseManager;
 
@@ -7,7 +8,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.sql.SQLException;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -17,20 +17,27 @@ public class OrderDAO {
     public List<Order> getAllOrders() throws SQLException {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT * FROM orders";
+        CustomerDAO customerDAO = new CustomerDAO();
         try(Connection conn = DatabaseManager.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
                 while(rs.next()) {
-                    Date sqlDate = rs.getDate("order_date");
-                    LocalDate orderDate = sqlDate != null ? sqlDate.toLocalDate() : null;
+                    String orderDateStr = rs.getString("order_date");
+                    LocalDate orderDate = null;
+                    if(orderDateStr != null && !orderDateStr.isEmpty()) {
+                        orderDate = LocalDate.parse(orderDateStr);
+                    }
+                    int customerId = rs.getInt("customer_id");
                     Order order = new Order(
                         rs.getInt("id"),
-                        rs.getInt("customer_id"),
+                        customerId,
                         orderDate,
                         rs.getInt("total_items"),
                         rs.getDouble("total_amount"),
                         rs.getDouble("discount_amount"),
                         rs.getString("payment_method"));
+                    Customer customer = customerDAO.getById(customerId);
+                    order.setCustomer(customer);
                     orders.add(order);
                 }
             }
@@ -43,15 +50,25 @@ public class OrderDAO {
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, order.getCustomerId());
             if (order.getDate() != null) {
-                stmt.setDate(2, java.sql.Date.valueOf(order.getDate()));
+                stmt.setString(2, order.getDate().toString());
             } else {
-                stmt.setNull(2, java.sql.Types.DATE);
+                stmt.setNull(2, java.sql.Types.VARCHAR);
             }
             stmt.setInt(3, order.getTotalItems());
             stmt.setDouble(4, order.getTotalAmount());
             stmt.setDouble(5, order.getDiscountAmount());
             stmt.setString(6, order.getPaymentMethod());
-            stmt.executeUpdate();
+            int affectedRows = stmt.executeUpdate();
+            if(affectedRows == 0) {
+                throw new SQLException("Creating order failed, no row affected.");
+            }
+            try(ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if(generatedKeys.next()) {
+                    order.setId(generatedKeys.getInt(1));
+                } else {
+                    throw new SQLException("Creating order failed, no ID obtained.");
+                }
+            }
         }
     }
 
