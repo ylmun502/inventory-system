@@ -16,8 +16,14 @@ import java.sql.ResultSet;
 public class OrderDAO {
     public List<Order> getAllOrders() throws SQLException {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT * FROM orders";
-        CustomerDAO customerDAO = new CustomerDAO();
+        String sql = "SELECT o.*, " +
+                     "c.id AS c_id, " + 
+                     "c.name AS c_name, " +
+                     "c.phone_number AS c_phone_number, " +
+                     "c.email AS c_email, " +
+                     "c.address AS c_address, " +
+                     "c.platform AS c_platform " +
+                     "FROM orders o LEFT JOIN customers c On o.customer_id = c.id";
         try(Connection conn = DatabaseManager.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
@@ -27,16 +33,21 @@ public class OrderDAO {
                     if(orderDateStr != null && !orderDateStr.isEmpty()) {
                         orderDate = LocalDate.parse(orderDateStr);
                     }
-                    int customerId = rs.getInt("customer_id");
+                    Customer customer = new Customer(
+                        rs.getInt("c_id"),
+                        rs.getString("c_name"),
+                        rs.getString("c_phone_number"),
+                        rs.getString("c_email"),
+                        rs.getString("c_address"),
+                        rs.getString("c_platform"));
                     Order order = new Order(
                         rs.getInt("id"),
-                        customerId,
+                        rs.getInt("customer_id"),
                         orderDate,
                         rs.getInt("total_items"),
                         rs.getDouble("total_amount"),
                         rs.getDouble("discount_amount"),
                         rs.getString("payment_method"));
-                    Customer customer = customerDAO.getById(customerId);
                     order.setCustomer(customer);
                     orders.add(order);
                 }
