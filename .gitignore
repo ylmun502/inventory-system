@@ -32,7 +32,7 @@ Thumbs.db
 *.jfx
 
 # SQLite DB (optional)
-# *.db
+*.db
 
 # Backup files
 *~
