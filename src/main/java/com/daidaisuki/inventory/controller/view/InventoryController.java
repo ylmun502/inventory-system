@@ -3,9 +3,9 @@ package com.daidaisuki.inventory.controller.view;
 import com.daidaisuki.inventory.App;
 import com.daidaisuki.inventory.base.controller.BaseTableController;
 import com.daidaisuki.inventory.controller.dialog.ProductDialogController;
-import com.daidaisuki.inventory.dao.ProductDAO;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.Product;
+import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
@@ -43,7 +43,7 @@ public class InventoryController extends BaseTableController<Product> {
     @FXML private Button editButton;
     @FXML private Button deleteButton;
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final ProductService productService = new ProductService();
 
     @FXML
     public void initialize() {
@@ -79,7 +79,7 @@ public class InventoryController extends BaseTableController<Product> {
 
     @Override
     protected List<Product> fetchFromDB() throws SQLException {
-        return productDAO.getAllProducts();
+        return productService.getAllProducts();
     }
 
     @Override
@@ -89,17 +89,17 @@ public class InventoryController extends BaseTableController<Product> {
 
     @Override
     protected void addItem(Product item) throws SQLException {
-        productDAO.addProduct(item);
+        productService.addProduct(item);
     }
 
     @Override
     protected void updateItem(Product item) throws SQLException {
-        productDAO.updateProduct(item);
+        productService.updateProduct(item);
     }
 
     @Override
     protected void deleteItem(Product item) throws SQLException {
-        productDAO.deleteProduct(item.getId());
+        productService.deleteProduct(item.getId());
     }
 
     @Override
