@@ -77,23 +77,6 @@ public class CustomerDAO {
                 stmt.executeUpdate();
             }
     }
-    
-    public void enrichCustomerStats(Customer customer) throws SQLException {
-        String sql = "SELECT COUNT(*) AS total_orders, " + 
-                     "SUM(total_amount) AS total_spent, " + 
-                     "SUM(discount_amount) AS total_discount " +
-                     "FROM orders WHERE customer_id = ?";
-        try(Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, customer.getId());
-            ResultSet rs = stmt.executeQuery();
-            if(rs.next()) {
-                customer.setTotalOrders(rs.getInt("total_orders"));
-                customer.setTotalSpent(rs.getDouble("total_spent"));
-                customer.setTotalDiscount(rs.getDouble("total_discount"));
-            }
-        }
-    }
 
     public Customer getById(int id) throws SQLException {
         Customer customer = null;
