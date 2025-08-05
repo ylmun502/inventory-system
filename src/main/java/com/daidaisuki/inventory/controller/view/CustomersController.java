@@ -12,6 +12,7 @@ import com.daidaisuki.inventory.controller.dialog.CustomerDialogController;
 import com.daidaisuki.inventory.dao.CustomerDAO;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.Customer;
+import com.daidaisuki.inventory.service.CustomerService;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
@@ -40,7 +41,7 @@ public class CustomersController extends BaseTableController<Customer> {
     @FXML private Button editButton;
     @FXML private Button deleteButton;
 
-    private final CustomerDAO customerDAO = new CustomerDAO();
+    private final CustomerService customerService = new CustomerService();
 
     @FXML
     public void initialize() {
@@ -68,7 +69,7 @@ public class CustomersController extends BaseTableController<Customer> {
 
     @Override
     protected List<Customer> fetchFromDB() throws SQLException {
-        return customerDAO.getAllCustomers();
+        return customerService.getAllCustomers();
     }
 
     @Override
@@ -78,17 +79,17 @@ public class CustomersController extends BaseTableController<Customer> {
 
     @Override
     protected void addItem(Customer customer) throws SQLException {
-        customerDAO.addCustomer(customer);
+        customerService.addCustomer(customer);
     }
 
     @Override
     protected void updateItem(Customer customer) throws SQLException {
-        customerDAO.updateCustomer(customer);
+        customerService.updateCustomer(customer);
     }
 
     @Override
     protected void deleteItem(Customer customer) throws SQLException {
-        customerDAO.deleteCustomer(customer.getId());
+        customerService.deleteCustomer(customer.getId());
     }
 
     @Override
