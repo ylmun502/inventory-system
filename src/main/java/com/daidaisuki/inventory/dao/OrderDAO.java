@@ -2,6 +2,7 @@ package com.daidaisuki.inventory.dao;
 
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.model.dto.OrderStats;
 import com.daidaisuki.inventory.db.DatabaseManager;
 
 import java.util.List;
@@ -108,6 +109,26 @@ public class OrderDAO {
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, orderId);
             stmt.executeUpdate();
+        }
+    }
+
+    public OrderStats getStatsForCustomer(int customerId) throws SQLException {
+        String sql = "SELECT COUNT(*) AS total_order, " +
+                     "SUM(total_amount) AS total_spent, " +
+                     "SUM(discount_amount) AS total_discount " +
+                     "FROM orders WHERE customer_id = ?";
+        try(Connection conn = DatabaseManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                int totalOrders = rs.getInt("total_orders");
+                double totalSpent = rs.getDouble("total_spent");
+                double totalDiscount = rs.getDouble("total_discount");
+                return new OrderStats(totalOrders, totalSpent, totalDiscount);
+            } else {
+                return new OrderStats(0, 0.0, 0.0);
+            }
         }
     }
 }
