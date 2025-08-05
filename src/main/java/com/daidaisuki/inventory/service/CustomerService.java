@@ -25,12 +25,12 @@ public class CustomerService {
         customerDAO.addCustomer(customer);
     }
 
-    public void updateCustoemr(Customer customer) throws SQLException {
+    public void updateCustomer(Customer customer) throws SQLException {
         customerDAO.updateCustomer(customer);
     }
 
-    public void deleteCustomer(Customer customer) throws SQLException {
-        customerDAO.deleteCustomer(0);
+    public void deleteCustomer(int customerId) throws SQLException {
+        customerDAO.deleteCustomer(customerId);
     }
     
     public Customer getById(int customerId) throws SQLException {
