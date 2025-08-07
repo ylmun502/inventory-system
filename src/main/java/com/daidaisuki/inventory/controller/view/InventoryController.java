@@ -88,23 +88,23 @@ public class InventoryController extends BaseTableController<Product> {
     }
 
     @Override
-    protected void addItem(Product item) throws SQLException {
-        productService.addProduct(item);
+    protected void addItem(Product product) throws SQLException {
+        productService.addProduct(product);
     }
 
     @Override
-    protected void updateItem(Product item) throws SQLException {
-        productService.updateProduct(item);
+    protected void updateItem(Product product) throws SQLException {
+        productService.updateProduct(product);
     }
 
     @Override
-    protected void deleteItem(Product item) throws SQLException {
-        productService.deleteProduct(item.getId());
+    protected void deleteItem(Product product) throws SQLException {
+        productService.deleteProduct(product.getId());
     }
 
     @Override
-    protected Product showDialog(Product itemToEdit) {
-        return showProductDialog(itemToEdit);
+    protected Product showDialog(Product productToEdit) {
+        return showProductDialog(productToEdit);
     }
 
     private Product showProductDialog(Product productToEdit) {
