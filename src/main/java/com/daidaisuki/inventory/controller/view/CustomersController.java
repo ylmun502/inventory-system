@@ -9,7 +9,6 @@ import java.util.List;
 import com.daidaisuki.inventory.App;
 import com.daidaisuki.inventory.base.controller.BaseTableController;
 import com.daidaisuki.inventory.controller.dialog.CustomerDialogController;
-import com.daidaisuki.inventory.dao.CustomerDAO;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.service.CustomerService;
