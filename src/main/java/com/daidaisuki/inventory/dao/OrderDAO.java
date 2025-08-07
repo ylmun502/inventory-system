@@ -113,7 +113,7 @@ public class OrderDAO {
     }
 
     public OrderStats getStatsForCustomer(int customerId) throws SQLException {
-        String sql = "SELECT COUNT(*) AS total_order, " +
+        String sql = "SELECT COUNT(*) AS total_orders, " +
                      "SUM(total_amount) AS total_spent, " +
                      "SUM(discount_amount) AS total_discount " +
                      "FROM orders WHERE customer_id = ?";
