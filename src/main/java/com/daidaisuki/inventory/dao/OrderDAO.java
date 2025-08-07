@@ -61,11 +61,7 @@ public class OrderDAO {
         try(Connection conn = DatabaseManager.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, order.getCustomerId());
-            if (order.getDate() != null) {
-                stmt.setString(2, order.getDate().toString());
-            } else {
-                stmt.setNull(2, java.sql.Types.VARCHAR);
-            }
+            setDateStringOrNull(stmt, 2, order.getDate());
             stmt.setInt(3, order.getTotalItems());
             stmt.setDouble(4, order.getTotalAmount());
             stmt.setDouble(5, order.getDiscountAmount());
@@ -89,11 +85,7 @@ public class OrderDAO {
         try(Connection conn = DatabaseManager.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, order.getCustomerId());
-            if (order.getDate() != null) {
-                stmt.setDate(2, java.sql.Date.valueOf(order.getDate()));
-            } else {
-                stmt.setNull(2, java.sql.Types.DATE);
-            }
+            setDateStringOrNull(stmt, 2, order.getDate());
             stmt.setInt(3, order.getTotalItems());
             stmt.setDouble(4, order.getTotalAmount());
             stmt.setDouble(5, order.getDiscountAmount());
@@ -109,6 +101,14 @@ public class OrderDAO {
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, orderId);
             stmt.executeUpdate();
+        }
+    }
+
+    public static void setDateStringOrNull(PreparedStatement stmt, int index, LocalDate date) throws SQLException {
+        if (date != null) {
+            stmt.setString(index, date.toString());
+        } else {
+            stmt.setNull(index, java.sql.Types.VARCHAR);
         }
     }
 
