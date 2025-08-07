@@ -68,7 +68,11 @@ public class CustomersController extends BaseTableController<Customer> {
 
     @Override
     protected List<Customer> fetchFromDB() throws SQLException {
-        return customerService.getAllCustomers();
+        List<Customer> customers = customerService.getAllCustomers();
+        for(Customer customer : customers) {
+            customerService.enrichCustomerStats(customer);
+        }
+        return customers;
     }
 
     @Override
