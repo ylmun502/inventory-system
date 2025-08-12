@@ -24,22 +24,18 @@ public class OrderService {
     public List<Order> getAllOrdersWithDetail() throws SQLException {
         List<Order> orders = orderDAO.getAllOrders();
         for(Order order : orders) {
-            if(order.getCustomer() == null && order.getCustomerId() != 0) {
-                Customer customer = customerDAO.getById(order.getCustomerId());
-                order.setCustomer(customer);
-            }
             List<OrderItem> items = orderItemDAO.getItemsByOrderId(order.getId());
             order.setItems(items);
         }
         return orders;
     }
 
-    public void createOrderWithItems(Order order, List<OrderItem> items) throws SQLException {
+    public void createOrderWithItems(Order order) throws SQLException {
         try(Connection conn = DatabaseManager.getConnection()) {
             try {
                 conn.setAutoCommit(false);
                 orderDAO.addOrder(order);
-                for(OrderItem item : items) {
+                for(OrderItem item : order.getItems()) {
                     item.setOrderId(order.getId());
                     orderItemDAO.addOrderItem(item);
                     prodctDAO.decrementStock(item.getProductId(), item.getQuantity());
