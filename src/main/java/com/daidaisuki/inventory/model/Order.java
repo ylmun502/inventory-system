@@ -14,6 +14,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -27,42 +28,21 @@ public class Order {
     private final DoubleProperty discountAmount = new SimpleDoubleProperty(this, "discountAmount", 0);
     private final StringProperty paymentMethod = new SimpleStringProperty(this, "paymentMethod", "");
     private final ObservableList<OrderItem> items = FXCollections.observableArrayList();
-    private final Map<OrderItem, ChangeListener<Number>> quantityListeners = new HashMap<>();
-    private final Map<OrderItem, ChangeListener<Number>> unitPriceListeners = new HashMap<>();
+    private final ChangeListener<Number> totalsUpdater = (obs, oldVal, newVal) -> updateTotals();
+    private final WeakChangeListener<Number> weakTotalsUpdater = new WeakChangeListener<>(totalsUpdater);
     
     public Order() {
         items.addListener((ListChangeListener<OrderItem>) change -> {
             while(change.next()) {
                 if(change.wasAdded()) {
-                    change.getAddedSubList().forEach(this::hookItem);
-                }
-                if(change.wasRemoved()) {
-                    change.getRemoved().forEach(this::unhookItem);
+                    for(OrderItem item : change.getAddedSubList()) {
+                        item.quantityProperty().addListener(weakTotalsUpdater);
+                        item.unitPriceProperty().addListener(weakTotalsUpdater);
+                    }
                 }
             }
             updateTotals();
         });
-    }
-
-    private void hookItem(OrderItem item) {
-        ChangeListener<Number> quantityListener = totalsUpdater();
-        ChangeListener<Number> unitPriceListener = totalsUpdater();
-        item.quantityProperty().addListener(quantityListener);
-        item.unitPriceProperty().addListener(unitPriceListener);
-        quantityListeners.put(item, quantityListener);
-        unitPriceListeners.put(item, unitPriceListener);
-    }
-
-    private void unhookItem(OrderItem item) {
-        Optional.ofNullable(quantityListeners.remove(item))
-                .ifPresent(listener -> item.quantityProperty().removeListener(listener));
-        Optional.ofNullable(unitPriceListeners.remove(item))
-                .ifPresent(listener -> item.unitPriceProperty().removeListener(listener));
-        }
-    }
-
-    private ChangeListener<Number> totalsUpdater() {
-        return (obs, oldVal, newVal) -> updateTotals();
     }
 
     public void updateTotals() {
