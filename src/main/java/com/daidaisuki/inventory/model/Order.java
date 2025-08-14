@@ -1,9 +1,6 @@
 package com.daidaisuki.inventory.model;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -37,7 +34,13 @@ public class Order {
                 if(change.wasAdded()) {
                     for(OrderItem item : change.getAddedSubList()) {
                         item.quantityProperty().addListener(weakTotalsUpdater);
-                        item.unitPriceProperty().addListener(weakTotalsUpdater);
+                        item.subtotalProperty().addListener(weakTotalsUpdater);
+                    }
+                }
+                if(change.wasRemoved()) {
+                    for(OrderItem item : change.getRemoved()) {
+                        item.quantityProperty().removeListener(weakTotalsUpdater);
+                        item.subtotalProperty().removeListener(weakTotalsUpdater);
                     }
                 }
             }
@@ -47,7 +50,7 @@ public class Order {
 
     public void updateTotals() {
         totalItems.set(items.stream().mapToInt(OrderItem::getQuantity).sum());
-        totalAmount.set(items.stream().mapToDouble(it -> it.getQuantity() * it.getUnitPrice()).sum());
+        totalAmount.set(items.stream().mapToDouble(OrderItem::getSubtotal).sum());
     }
 
     public final Customer getCustomer() {
