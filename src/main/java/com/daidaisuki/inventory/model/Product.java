@@ -16,26 +16,19 @@ import javafx.beans.property.StringProperty;
  */
 
 public class Product {
-    private int id;
-    private final StringProperty name;
-    private final StringProperty category;
-    private final IntegerProperty stock;
-    private final DoubleProperty price;
-    private final DoubleProperty cost;
-    private final DoubleProperty shipping;
+    private final IntegerProperty id = new SimpleIntegerProperty(this, "id", -1);
+    private final StringProperty name = new SimpleStringProperty(this, "name", "");
+    private final StringProperty category = new SimpleStringProperty(this, "category", "");
+    private final IntegerProperty stock = new SimpleIntegerProperty(this, "stock", 0);
+    private final DoubleProperty price = new SimpleDoubleProperty(this, "price", 0.0);
+    private final DoubleProperty cost = new SimpleDoubleProperty(this, "cost", 0.0);
+    private final DoubleProperty shipping = new SimpleDoubleProperty(this, "shipping", 0.0);
 
     /**
      * Creates an empty product with default placeholder values
      * to ensure properties are non-null and ready for binding.
      */
     public Product() {
-        this.id = -1;
-        this.name = new SimpleStringProperty("");
-        this.category = new SimpleStringProperty("");
-        this.stock = new SimpleIntegerProperty(0);
-        this.price = new SimpleDoubleProperty(0.0);
-        this.cost = new SimpleDoubleProperty(0.0);
-        this.shipping = new SimpleDoubleProperty(0.0);
     }
 
     /**
@@ -50,13 +43,13 @@ public class Product {
      * @param shipping the shipping cost
      */
     public Product(int id, String name, String category, int stock, double price, double cost, double shipping) {
-        this.id = id;
-        this.name = new SimpleStringProperty(name);
-        this.category = new SimpleStringProperty(category);
-        this.stock = new SimpleIntegerProperty(stock);
-        this.price = new SimpleDoubleProperty(price);
-        this.cost = new SimpleDoubleProperty(cost);
-        this.shipping = new SimpleDoubleProperty(shipping);
+        this.id.set(id);
+        this.name.set(name);
+        this.category.set(category);
+        this.stock.set(stock);
+        this.price.set(price);
+        this.cost.set(cost);
+        this.shipping.set(shipping);
     }
 
     /**
@@ -65,7 +58,7 @@ public class Product {
      * @return the product ID
      */
     public int getId() {
-        return this.id;
+        return this.id.get();
     }
 
     /**
@@ -74,7 +67,16 @@ public class Product {
      * @param id the new product ID
      */
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
+    }
+
+    /**
+     * Returns the id property for UI binding.
+     *
+     * @return the id property
+     */
+    public IntegerProperty idProperty() {
+        return this.id;
     }
 
     /**
