@@ -1,50 +1,44 @@
 package com.daidaisuki.inventory.model;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Customer {
-    private final IntegerProperty id;
-    private final StringProperty name;
-    private final StringProperty phoneNumber;
-    private final StringProperty email;
-    private final StringProperty address;
-    private final StringProperty platform;
+    private final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
+    private final StringProperty name = new SimpleStringProperty(this, "name", "");
+    private final StringProperty phoneNumber = new SimpleStringProperty(this, "phoneNumber", "");
+    private final StringProperty email = new SimpleStringProperty(this, "email", "");
+    private final StringProperty address = new SimpleStringProperty(this, "address", "");
+    private final StringProperty platform = new SimpleStringProperty(this, "platform", "");
 
     private transient int totalOrders;
     private transient double totalSpent;
     private transient double totalDiscount;
 
     public Customer() {
-        this.id = new SimpleIntegerProperty(-1);
-        this.name = new SimpleStringProperty("");
-        this.phoneNumber = new SimpleStringProperty("");
-        this.email = new SimpleStringProperty("");
-        this.address = new SimpleStringProperty("");
-        this.platform = new SimpleStringProperty("");
     }
 
     public Customer(int id, String name, String phoneNumber, String email, String address, String platform) {
-        this.id = new SimpleIntegerProperty(id);
-        this.name = new SimpleStringProperty(name);
-        this.phoneNumber = new SimpleStringProperty(phoneNumber);
-        this.email = new SimpleStringProperty(email);
-        this.address = new SimpleStringProperty(address);
-        this.platform = new SimpleStringProperty(platform);
+        this.id.set(id);
+        this.name.set(name);
+        this.phoneNumber.set(phoneNumber);
+        this.email.set(email);
+        this.address.set(address);
+        this.platform.set(platform);
     }
 
     public int getId() {
         return this.id.get();
     }
 
-    public void setId(int id) {
+    void setId(int id) {
         this.id.set(id);
     }
 
-    public IntegerProperty idProperty() {
-        return this.id;
+    public ReadOnlyIntegerProperty idProperty() {
+        return id.getReadOnlyProperty();
     }
 
     public String getName() {
