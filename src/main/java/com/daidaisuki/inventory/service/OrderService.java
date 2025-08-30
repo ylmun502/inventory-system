@@ -26,6 +26,7 @@ public class OrderService {
         for(Order order : orders) {
             List<OrderItem> items = orderItemDAO.getItemsByOrderId(order.getId());
             order.setItems(items);
+            order.recalculateTotals();
         }
         return orders;
     }
@@ -48,5 +49,13 @@ public class OrderService {
                 conn.setAutoCommit(true);
             }
         }
+    }
+
+    public void updateOrder(Order order) throws SQLException {
+        orderDAO.updateOrder(order);
+    }
+
+    public void deleteOrder(int orderId) throws SQLException {
+        orderDAO.deleteOrder(orderId);
     }
 }
