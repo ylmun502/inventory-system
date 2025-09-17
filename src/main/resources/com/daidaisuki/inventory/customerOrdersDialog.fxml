@@ -11,7 +11,7 @@
       fx:controller="com.daidaisuki.inventory.controller.dialog.CustomerOrdersDialogController" spacing="10">
     <padding>
         <Insets top="10" right="10" bottom="10" left="10"/>
-    <padding/>
+    </padding>
 
     <Label text="Orders for Customer" styleClass="dialog-title"/>
 
