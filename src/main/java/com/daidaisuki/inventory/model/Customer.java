@@ -33,7 +33,7 @@ public class Customer {
         return this.id.get();
     }
 
-    void setId(int id) {
+    public void setId(int id) {
         this.id.set(id);
     }
 
