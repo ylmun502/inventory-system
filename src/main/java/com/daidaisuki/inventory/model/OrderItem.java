@@ -19,7 +19,10 @@ import javafx.beans.property.SimpleObjectProperty;
 public class OrderItem {
     private final ObjectProperty<Product> product = new SimpleObjectProperty<>();
     private final IntegerProperty id = new SimpleIntegerProperty(-1);
+    private final IntegerProperty orderId = new SimpleIntegerProperty(-1);
+    private final IntegerProperty productId = new SimpleIntegerProperty(-1);
     private final IntegerProperty quantity = new SimpleIntegerProperty(0);
+    private final DoubleProperty unitPrice = new SimpleDoubleProperty(0.0);
     private final DoubleProperty costAtSale = new SimpleDoubleProperty(0.0);
     private final BooleanProperty completed = new SimpleBooleanProperty(false);
 
@@ -30,12 +33,23 @@ public class OrderItem {
         initBindings();
     }
 
-    public OrderItem(int id, Product product, int quantity, double costAtSale) {
+    public OrderItem(int id, int orderId, int productId, int quantity, double unitPrice, double costAtSale) {
         this.id.set(id);
-        this.product.set(product);
+        this.orderId.set(orderId);
+        this.productId.set(productId);
         this.quantity.set(quantity);
+        this.unitPrice.set(unitPrice);
         this.costAtSale.set(costAtSale);
         this.completed.set(costAtSale > 0);
+        initBindings();
+    }
+
+    public OrderItem(Product product, int quantity) {
+        this.product.set(product);
+        this.productId.set(product != null ? product.getId() : -1);
+        this.unitPrice.set(product != null ? product.getPrice() : 0.0);
+        this.quantity.set(quantity);
+        this.completed.set(false);
         initBindings();
     }
 
@@ -44,21 +58,19 @@ public class OrderItem {
             () -> product.get() != null ? product.get().getName() : "", product
         ));
         subtotal.bind(Bindings.createDoubleBinding( () -> {
-            if(isOrderCompleted()) {
+            if(costAtSale.get() > 0 && completed.get()) {
                 return costAtSale.get() * quantity.get();
             }
-            return (product.get() != null ? product.get().getPrice() : 0.0) * quantity.get();
-        }, costAtSale, quantity, product));
-    }
-
-    private boolean isOrderCompleted() {
-        return costAtSale.get() > 0;
+            double priceToUse = unitPrice.get() >  0 ? unitPrice.get() :
+                                (product.get() != null ? product.get().getPrice() : 0.0);
+            return  priceToUse * quantity.get();
+        }, costAtSale, unitPrice, quantity, product, completed));
     }
 
     public void finalizeSale() {
         if(product.get() != null) {
             costAtSale.set(product.get().getPrice());
-            completed.set(true);
+            setCompleted(true);
         }
     }
 
@@ -68,6 +80,10 @@ public class OrderItem {
 
     public void setProduct(Product product) {
         this.product.set(product);
+        this.productId.set(product != null ? product.getId() : -1);
+        if(product != null && unitPrice.get() <= 0) {
+            unitPrice.set(product.getPrice());
+        }
     }
 
     public ObjectProperty<Product> productProperty() {
@@ -75,7 +91,7 @@ public class OrderItem {
     }
 
     public int getId() {
-        return this.id.get();
+        return id.get();
     }
 
     public void setId(int id) {
@@ -86,28 +102,64 @@ public class OrderItem {
         return id;
     }
 
-    public int getQuantity() {
-        return this.quantity.get();
+    public int getOrderId() {
+        return orderId.get();
     }
 
-    public void setQuantity(int value) {
-        this.quantity.set(value);
+    public void setOrderId(int orderId) {
+        this.orderId.set(orderId);
+    }
+
+    public IntegerProperty orderIdProperty() {
+        return orderId;
+    } 
+
+    public int getProductId() {
+        return productId.get();
+    }
+
+    public void setProductId(int productId) {
+        this.productId.set(productId);
+    }
+
+    public IntegerProperty productIdProperty() {
+        return productId;
+    }
+
+    public int getQuantity() {
+        return quantity.get();
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity.set(quantity);
     }
 
     public IntegerProperty quantityProperty() {
-        return this.quantity;
+        return quantity;
+    }
+
+    public double getUnitPrice() {
+        return unitPrice.get();
+    }
+
+    public void setUnitPrice(double price) {
+        this.unitPrice.set(price);
+    }
+
+    public DoubleProperty unitPriceProperty() {
+        return unitPrice;
     }
 
     public double getCostAtSale() {
         return costAtSale.get();
     }
 
-    public void setCostAtSale(double value) {
-        this.costAtSale.set(value);
+    public void setCostAtSale(double cost) {
+        this.costAtSale.set(cost);
     }
 
     public DoubleProperty costAtSaleProperty() {
-        return this.costAtSale;
+        return costAtSale;
     }
 
     public boolean getCompleted() {
@@ -150,7 +202,7 @@ public class OrderItem {
         if(this.getId() == -1 || other.getId() == -1) {
             return this == other;
         }
-        return id.get() == other.id.get();
+        return id.get() == other.getId();
     }
 
     @Override
