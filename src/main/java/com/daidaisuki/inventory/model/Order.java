@@ -1,5 +1,6 @@
 package com.daidaisuki.inventory.model;
 
+import java.util.List;
 import java.time.LocalDate;
 
 import javafx.beans.property.DoubleProperty;
@@ -48,13 +49,32 @@ public class Order {
         });
     }
 
+    public Order(int id, int customerIdIgnored, LocalDate date, int totalItems, double totalAmount, double discountAmount, String paymentMethod) {
+        this();
+        this.id.set(id);
+        this.date.set(date);
+        this.totalItems.set(totalItems);
+        this.totalAmount.set(totalAmount);
+        this.discountAmount.set(discountAmount);
+        this.paymentMethod.set(paymentMethod);
+    }
+
     public void updateTotals() {
         totalItems.set(items.stream().mapToInt(OrderItem::getQuantity).sum());
         totalAmount.set(items.stream().mapToDouble(OrderItem::getSubtotal).sum());
     }
 
+    public void recalculateTotals() {
+        updateTotals();
+    }
+
+    public void setItems(List<OrderItem> newItems) {
+        items.setAll(newItems);
+        updateTotals();
+    }
+
     public final Customer getCustomer() {
-        return this.customer.get();
+        return customer.get();
     }
 
     public final void setCustomer(Customer customer) {
@@ -66,7 +86,7 @@ public class Order {
     }
 
     public int getId() {
-        return this.id.get();
+        return id.get();
     }
 
     public void setId(int id) {
@@ -74,11 +94,11 @@ public class Order {
     }
 
     public IntegerProperty idProperty() {
-        return this.id;
+        return id;
     }
 
     public LocalDate getDate() {
-        return this.date.get();
+        return date.get();
     }
 
     public void setDate(LocalDate value) {
@@ -90,7 +110,7 @@ public class Order {
     }
 
     public int getTotalItems() {
-        return this.totalItems.get();
+        return totalItems.get();
     }
 
     public void setTotalItems(int value) {
@@ -102,7 +122,7 @@ public class Order {
     }
 
     public double getTotalAmount() {
-        return this.totalAmount.get();
+        return totalAmount.get();
     }
 
     public void setTotalAmount(double value) {
@@ -114,7 +134,7 @@ public class Order {
     }
 
     public double getDiscountAmount() {
-        return this.discountAmount.get();
+        return discountAmount.get();
     }
 
     public void setDiscountAmount(double value) {
@@ -126,7 +146,7 @@ public class Order {
     }
 
     public String getPaymentMethod() {
-        return this.paymentMethod.get();
+        return paymentMethod.get();
     }
 
     public void setPaymentMethod(String value) {
@@ -138,6 +158,6 @@ public class Order {
     }
 
     public ObservableList<OrderItem> getItems() {
-        return this.items;
+        return items;
     }
 }
