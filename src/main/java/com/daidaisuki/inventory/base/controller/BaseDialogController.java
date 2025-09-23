@@ -1,83 +1,78 @@
 package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.util.AlertHelper;
-
 import java.util.regex.Pattern;
-
-import javafx.stage.Stage;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 public abstract class BaseDialogController<T> {
-    private static final Pattern DECIMAL_PATTERN = Pattern.compile("\\d+(\\.\\d+)?");
-    private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
-    protected Stage dialogStage;
-    protected T model;
-    protected boolean saveClicked = false;
+  private static final Pattern DECIMAL_PATTERN = Pattern.compile("\\d+(\\.\\d+)?");
+  private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
+  protected Stage dialogStage;
+  protected T model;
+  protected boolean saveClicked = false;
 
-    public void setDialogStage(Stage dialogStage) {
-        this.dialogStage = dialogStage;
+  public void setDialogStage(Stage dialogStage) {
+    this.dialogStage = dialogStage;
+  }
+
+  public boolean isSaveClicked() {
+    return saveClicked;
+  }
+
+  public T getModel() {
+    return model;
+  }
+
+  public abstract void setModel(T model);
+
+  protected void showError(String message) {
+    AlertHelper.showErrorAlert(dialogStage, "Invalid Input", "Please fix input errors", message);
+  }
+
+  protected boolean isFieldEmpty(String text, String fieldName, StringBuilder errorMessage) {
+    if (text.isEmpty()) {
+      errorMessage.append(fieldName).append(" is required.\n");
+      return true;
     }
+    return false;
+  }
 
-    public boolean isSaveClicked() {
-        return saveClicked;
+  protected boolean isNumeric(
+      String text, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
+    Pattern pattern = allowDecimal ? DECIMAL_PATTERN : INTEGER_PATTERN;
+    if (text.isEmpty() || !pattern.matcher(text).matches()) {
+      errorMessage
+          .append(fieldName)
+          .append(" must be a ")
+          .append(allowDecimal ? "number" : "positive integer")
+          .append(".\n");
+      return false;
     }
+    return true;
+  }
 
-    public T getModel() {
-        return model;
+  protected String sanitizeInput(TextField field) {
+    return field.getText() == null ? null : field.getText().trim();
+  }
+
+  protected String sanitizeOrNull(TextField field) {
+    String value = sanitizeInput(field);
+    return value.isEmpty() ? null : value;
+  }
+
+  protected void closeDialog() {
+    if (dialogStage != null) {
+      dialogStage.close();
     }
+  }
 
-    public abstract void setModel(T model);
+  @FXML
+  protected void handleCancel() {
+    closeDialog();
+  }
 
-    protected void showError(String message) {
-        AlertHelper.showErrorAlert(
-            dialogStage,
-            "Invalid Input",
-            "Please fix input errors",
-            message
-        );
-    }
-
-    protected boolean isFieldEmpty(String text, String fieldName, StringBuilder errorMessage) {
-        if(text.isEmpty()) {
-            errorMessage.append(fieldName).append(" is required.\n");
-            return true;
-        }
-        return false;
-    }
-
-    protected boolean isNumeric(String text, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
-        Pattern pattern = allowDecimal ? DECIMAL_PATTERN : INTEGER_PATTERN;
-        if(text.isEmpty() || !pattern.matcher(text).matches()) {
-            errorMessage.append(fieldName)
-                        .append(" must be a ")
-                        .append(allowDecimal ? "number" : "positive integer")
-                        .append(".\n");
-            return false;
-        }
-        return true;
-    }
-
-    protected String sanitizeInput(TextField field) {
-        return field.getText() == null ? null : field.getText().trim();
-    }
-
-    protected String sanitizeOrNull(TextField field) {
-        String value = sanitizeInput(field);
-        return value.isEmpty() ? null : value;
-    }
-
-    protected void closeDialog() {
-        if(dialogStage != null) {
-            dialogStage.close();
-        }
-    }
-
-    @FXML
-    protected void handleCancel() {
-        closeDialog();
-    }
-
-    @FXML
-    protected abstract void handleSave();
+  @FXML
+  protected abstract void handleSave();
 }

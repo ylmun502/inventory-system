@@ -6,144 +6,144 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Customer {
-    private final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
-    private final StringProperty name = new SimpleStringProperty(this, "name", "");
-    private final StringProperty phoneNumber = new SimpleStringProperty(this, "phoneNumber", "");
-    private final StringProperty email = new SimpleStringProperty(this, "email", "");
-    private final StringProperty address = new SimpleStringProperty(this, "address", "");
-    private final StringProperty platform = new SimpleStringProperty(this, "platform", "");
+  private final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
+  private final StringProperty name = new SimpleStringProperty(this, "name", "");
+  private final StringProperty phoneNumber = new SimpleStringProperty(this, "phoneNumber", "");
+  private final StringProperty email = new SimpleStringProperty(this, "email", "");
+  private final StringProperty address = new SimpleStringProperty(this, "address", "");
+  private final StringProperty platform = new SimpleStringProperty(this, "platform", "");
 
-    private transient int totalOrders;
-    private transient double totalSpent;
-    private transient double totalDiscount;
+  private transient int totalOrders;
+  private transient double totalSpent;
+  private transient double totalDiscount;
 
-    public Customer() {
-    }
+  public Customer() {}
 
-    public Customer(int id, String name, String phoneNumber, String email, String address, String platform) {
-        this.id.set(id);
-        this.name.set(name);
-        this.phoneNumber.set(phoneNumber);
-        this.email.set(email);
-        this.address.set(address);
-        this.platform.set(platform);
-    }
+  public Customer(
+      int id, String name, String phoneNumber, String email, String address, String platform) {
+    this.id.set(id);
+    this.name.set(name);
+    this.phoneNumber.set(phoneNumber);
+    this.email.set(email);
+    this.address.set(address);
+    this.platform.set(platform);
+  }
 
-    public int getId() {
-        return this.id.get();
-    }
+  public int getId() {
+    return this.id.get();
+  }
 
-    public void setId(int id) {
-        this.id.set(id);
-    }
+  public void setId(int id) {
+    this.id.set(id);
+  }
 
-    public ReadOnlyIntegerProperty idProperty() {
-        return id.getReadOnlyProperty();
-    }
+  public ReadOnlyIntegerProperty idProperty() {
+    return id.getReadOnlyProperty();
+  }
 
-    public String getName() {
-        return this.name.get();
-    }
+  public String getName() {
+    return this.name.get();
+  }
 
-    public void setName(String value) {
-        this.name.set(value);
-    }
+  public void setName(String value) {
+    this.name.set(value);
+  }
 
-    public StringProperty nameProperty() {
-        return this.name;
-    }
+  public StringProperty nameProperty() {
+    return this.name;
+  }
 
-    public String getPhoneNumber() {
-        return this.phoneNumber.get();
-    }
+  public String getPhoneNumber() {
+    return this.phoneNumber.get();
+  }
 
-    public void setPhoneNumber(String value) {
-        this.phoneNumber.set(value);
-    }
+  public void setPhoneNumber(String value) {
+    this.phoneNumber.set(value);
+  }
 
-    public StringProperty phoneNumberProperty() {
-        return this.phoneNumber;
-    }
+  public StringProperty phoneNumberProperty() {
+    return this.phoneNumber;
+  }
 
-    public String getEmail() {
-        return this.email.get();
-    }
-    
-    public void setEmail(String value) {
-        this.email.set(value);
-    }
+  public String getEmail() {
+    return this.email.get();
+  }
 
-    public StringProperty emailProperty() {
-        return email;
-    }
+  public void setEmail(String value) {
+    this.email.set(value);
+  }
 
-    public String getAddress() {
-        return this.address.get();
-    }
-    
-    public void setAddress(String value) {
-        this.address.set(value);
-    }
+  public StringProperty emailProperty() {
+    return email;
+  }
 
-    public StringProperty addressProperty() {
-        return address;
-    }
+  public String getAddress() {
+    return this.address.get();
+  }
 
-    public String getPlatform() {
-        return this.platform.get();
-    }
-    
-    public void setPlatform(String value) {
-        this.platform.set(value);
-    }
+  public void setAddress(String value) {
+    this.address.set(value);
+  }
 
-    public StringProperty platformProperty() {
-        return platform;
-    }
+  public StringProperty addressProperty() {
+    return address;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Customer other = (Customer) obj;
-        return this.getId() == other.getId();
-    }
+  public String getPlatform() {
+    return this.platform.get();
+  }
 
-    @Override
-    public int hashCode() {
-        return Integer.hashCode(getId());
-    }
+  public void setPlatform(String value) {
+    this.platform.set(value);
+  }
 
-    @Override
-    public String toString() {
-        return getName();
-    }
+  public StringProperty platformProperty() {
+    return platform;
+  }
 
-    public int getTotalOrders() {
-        return this.totalOrders;
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-    
-    public void setTotalOrders(int totalOrders) {
-        this.totalOrders = totalOrders;
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
     }
+    Customer other = (Customer) obj;
+    return this.getId() == other.getId();
+  }
 
-    public double getTotalSpent() {
-        return this.totalSpent;
-    }
+  @Override
+  public int hashCode() {
+    return Integer.hashCode(getId());
+  }
 
-    public void setTotalSpent(double totalSpent) {
-        this.totalSpent = totalSpent;
-    }
+  @Override
+  public String toString() {
+    return getName();
+  }
 
-    public double getTotalDiscount() {
-        return this.totalDiscount;
-    }
+  public int getTotalOrders() {
+    return this.totalOrders;
+  }
 
-    public void setTotalDiscount(double totalDiscount) {
-        this.totalDiscount = totalDiscount;
-    }
+  public void setTotalOrders(int totalOrders) {
+    this.totalOrders = totalOrders;
+  }
+
+  public double getTotalSpent() {
+    return this.totalSpent;
+  }
+
+  public void setTotalSpent(double totalSpent) {
+    this.totalSpent = totalSpent;
+  }
+
+  public double getTotalDiscount() {
+    return this.totalDiscount;
+  }
+
+  public void setTotalDiscount(double totalDiscount) {
+    this.totalDiscount = totalDiscount;
+  }
 }
