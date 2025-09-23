@@ -12,26 +12,22 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class ProductDAO {
+    private final Connection connection;
+
+    public ProductDAO(Connection connection) {
+        this.connection = connection;
+    }
     
     public List<Product> getAllProducts() throws SQLException {
-        List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
-        try (Connection conn = DatabaseManager.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)) {
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            List<Product> products = new ArrayList<>();
             while (rs.next()) {
-                Product product = new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getString("category"),
-                    rs.getInt("stock"),
-                    rs.getDouble("selling_price"),
-                    rs.getDouble("purchase_cost"),
-                    rs.getDouble("shipping_cost"));
-                products.add(product);
-            } 
-        } 
-        return products;
+                products.add(mapResultSetToProduct(rs));
+            }
+            return products; 
+        }
     }
 
     public void addProduct(Product product) throws SQLException {
@@ -39,8 +35,7 @@ public class ProductDAO {
         //"INSERT INTO products(name, ..., last_modified, sync_status) VALUES (?, ..., CURRENT_TIMESTAMP, 'PENDING')"
 
         String sql = "INSERT INTO products(name, category, stock, selling_price, purchase_cost, shipping_cost) VALUES(?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setString(2, product.getCategory());
             stmt.setInt(3, product.getStock());
@@ -48,6 +43,11 @@ public class ProductDAO {
             stmt.setDouble(5, product.getCost());
             stmt.setDouble(6, product.getShipping());
             stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if(rs.next()) {
+                    product.setId(rs.getInt(1));
+                }
+            }
         } 
     }
 
@@ -56,8 +56,7 @@ public class ProductDAO {
         //"UPDATE products SET ..., last_modified = CURRENT_TIMESTAMP, sync_status = 'PENDING' WHERE id = ?"
 
         String sql = "UPDATE products SET name = ?, category = ?, stock = ?, selling_price = ?, purchase_cost = ?, shipping_cost = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setString(2, product.getCategory());
             stmt.setInt(3, product.getStock());
@@ -71,8 +70,7 @@ public class ProductDAO {
 
     public void deleteProduct(int productId) throws SQLException {
         String sql = "DELETE FROM products WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, productId);
             stmt.executeUpdate();
         } 
@@ -80,8 +78,7 @@ public class ProductDAO {
 
     public void decrementStock(int productId, int amount) throws SQLException {
         String sql = "UPDATE products SET stock = stock - ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, amount);
             stmt.setInt(2, productId);
             stmt.executeUpdate();
@@ -89,23 +86,25 @@ public class ProductDAO {
     }
 
     public Product getById(int id) throws SQLException {
-        Product product = null;
         String sql = "SELECT * FROM products WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if(rs.next()) {
-                    product = new Product(rs.getInt("id"),
-                                          rs.getString("name"),
-                                          rs.getString("category"),
-                                          rs.getInt("stock"),
-                                          rs.getDouble("selling_price"),
-                                          rs.getDouble("purchase_cost"),
-                                          rs.getDouble("shipping_cost"));
+                    return mapResultSetToProduct(rs);
                 }
             }
         }
-        return product;
+        return null;
+    }
+
+    private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
+        return new Product(rs.getInt("id"),
+                           rs.getString("name"),
+                           rs.getString("category"),
+                           rs.getInt("stock"),
+                           rs.getDouble("selling_price"),
+                           rs.getDouble("purchase_cost"),
+                           rs.getDouble("shipping_cost"));
     }
 }
