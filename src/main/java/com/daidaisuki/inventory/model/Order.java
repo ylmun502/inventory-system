@@ -54,7 +54,6 @@ public class Order {
 
   public Order(
       int id,
-      int customerIdIgnored,
       LocalDate date,
       int totalItems,
       double totalAmount,
