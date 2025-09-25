@@ -1,8 +1,8 @@
 package com.daidaisuki.inventory.dao;
 
-import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.model.OrderItem;
 import com.daidaisuki.inventory.model.dto.OrderStats;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,6 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDAO {
+  private final Connection connection;
+  private final OrderItemDAO orderItemDAO;
+
+  public OrderDAO(Connection connection) {
+    this.connection = connection;
+    this.orderItemDAO = new OrderItemDAO(connection);
+  }
+
   public List<Order> getAllOrders() throws SQLException {
     List<Order> orders = new ArrayList<>();
     String sql =
@@ -25,8 +33,7 @@ public class OrderDAO {
             + "c.address AS c_address, "
             + "c.platform AS c_platform "
             + "FROM orders o LEFT JOIN customers c On o.customer_id = c.id";
-    try (Connection conn = DatabaseManager.getConnection();
-        Statement stmt = conn.createStatement();
+    try (Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         String orderDateStr = rs.getString("order_date");
@@ -45,13 +52,14 @@ public class OrderDAO {
         Order order =
             new Order(
                 rs.getInt("id"),
-                rs.getInt("customer_id"),
                 orderDate,
                 rs.getInt("total_items"),
                 rs.getDouble("total_amount"),
                 rs.getDouble("discount_amount"),
                 rs.getString("payment_method"));
         order.setCustomer(customer);
+        List<OrderItem> items = orderItemDAO.getItemsByOrderId(order.getId());
+        order.setItems(items);
         orders.add(order);
       }
     }
@@ -62,9 +70,9 @@ public class OrderDAO {
     String sql =
         "INSERT INTO orders(customer_id, order_date, total_items, total_amount, discount_amount,"
             + " payment_method) VALUES(?, ?, ?, ?, ?, ?)";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
-      stmt.setInt(1, order.getCustomerId());
+    try (PreparedStatement stmt =
+        connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      stmt.setInt(1, order.getCustomer().getId());
       setDateStringOrNull(stmt, 2, order.getDate());
       stmt.setInt(3, order.getTotalItems());
       stmt.setDouble(4, order.getTotalAmount());
@@ -82,15 +90,18 @@ public class OrderDAO {
         }
       }
     }
+    for (OrderItem item : order.getItems()) {
+      item.setOrderId(order.getId());
+      orderItemDAO.addOrderItem(item);
+    }
   }
 
   public void updateOrder(Order order) throws SQLException {
     String sql =
         "UPDATE orders SET customer_id = ?, order_date = ?, total_items = ?, total_amount = ?,"
             + " discount_amount = ?, payment_method = ? WHERE id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
-      stmt.setInt(1, order.getCustomerId());
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, order.getCustomer().getId());
       setDateStringOrNull(stmt, 2, order.getDate());
       stmt.setInt(3, order.getTotalItems());
       stmt.setDouble(4, order.getTotalAmount());
@@ -99,12 +110,25 @@ public class OrderDAO {
       stmt.setInt(7, order.getId());
       stmt.executeUpdate();
     }
+    List<OrderItem> existingItems = orderItemDAO.getItemsByOrderId(order.getId());
+    for (OrderItem existingItem : existingItems) {
+      if (!order.getItems().contains(existingItem)) {
+        orderItemDAO.deleteOrderItem(existingItem.getId());
+      }
+    }
+    for (OrderItem item : order.getItems()) {
+      item.setOrderId(order.getId());
+      if (item.getId() <= 0) {
+        orderItemDAO.addOrderItem(item);
+      } else {
+        orderItemDAO.updateOrderItem(item);
+      }
+    }
   }
 
   public void deleteOrder(int orderId) throws SQLException {
     String sql = "DELETE FROM orders WHERE id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, orderId);
       stmt.executeUpdate();
     }
@@ -125,8 +149,7 @@ public class OrderDAO {
             + "SUM(total_amount) AS total_spent, "
             + "SUM(discount_amount) AS total_discount "
             + "FROM orders WHERE customer_id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, customerId);
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
