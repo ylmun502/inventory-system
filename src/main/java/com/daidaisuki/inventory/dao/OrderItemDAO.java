@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderItemDAO {
-  private Connection connection;
+  private final Connection connection;
 
   public OrderItemDAO(Connection connection) {
     this.connection = connection;
@@ -41,6 +41,36 @@ public class OrderItemDAO {
         if (generatedKeys.next()) {
           item.setId(generatedKeys.getInt(1));
         }
+      }
+    }
+  }
+
+  public void updateOrderItem(OrderItem item) throws SQLException {
+    String sql =
+        "UPDATE order_items SET order_id = ?, product_id = ?, quantity = ?, unit_price = ?,"
+            + " cost_at_sale = ? WHERE id = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, item.getOrderId());
+      stmt.setInt(2, item.getProductId());
+      stmt.setInt(3, item.getQuantity());
+      stmt.setDouble(4, item.getUnitPrice());
+      stmt.setDouble(5, item.getCostAtSale());
+      stmt.setInt(6, item.getId());
+
+      int affectedRow = stmt.executeUpdate();
+      if (affectedRow == 0) {
+        throw new SQLException("Updating order item failed, no rows affected.");
+      }
+    }
+  }
+
+  public void deleteOrderItem(int orderItemId) throws SQLException {
+    String sql = "DELETE from order_items WHERE id = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, orderItemId);
+      int affectedRow = stmt.executeUpdate();
+      if (affectedRow == 0) {
+        throw new SQLException("Deleting order item failed, no rows affected.");
       }
     }
   }
