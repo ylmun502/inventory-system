@@ -1,8 +1,6 @@
 package com.daidaisuki.inventory.model;
 
-
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -10,7 +8,6 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -23,7 +20,6 @@ public class OrderItem {
   private final IntegerProperty quantity = new SimpleIntegerProperty(0);
   private final DoubleProperty unitPrice = new SimpleDoubleProperty(0.0);
   private final DoubleProperty costAtSale = new SimpleDoubleProperty(0.0);
-  private final BooleanProperty completed = new SimpleBooleanProperty(false);
 
   private final ReadOnlyDoubleWrapper subtotal = new ReadOnlyDoubleWrapper();
   private final ReadOnlyStringWrapper productName = new ReadOnlyStringWrapper("");
@@ -40,7 +36,6 @@ public class OrderItem {
     this.quantity.set(quantity);
     this.unitPrice.set(unitPrice);
     this.costAtSale.set(costAtSale);
-    this.completed.set(costAtSale > 0);
     initBindings();
   }
 
@@ -49,7 +44,6 @@ public class OrderItem {
     this.productId.set(product != null ? product.getId() : -1);
     this.unitPrice.set(product != null ? product.getPrice() : 0.0);
     this.quantity.set(quantity);
-    this.completed.set(false);
     initBindings();
   }
 
@@ -60,7 +54,7 @@ public class OrderItem {
     subtotal.bind(
         Bindings.createDoubleBinding(
             () -> {
-              if (costAtSale.get() > 0 && completed.get()) {
+              if (costAtSale.get() > 0) {
                 return costAtSale.get() * quantity.get();
               }
               double priceToUse =
@@ -72,14 +66,12 @@ public class OrderItem {
             costAtSale,
             unitPrice,
             quantity,
-            product,
-            completed));
+            product));
   }
 
   public void finalizeSale() {
     if (product.get() != null) {
       costAtSale.set(product.get().getPrice());
-      setCompleted(true);
     }
   }
 
@@ -169,18 +161,6 @@ public class OrderItem {
 
   public DoubleProperty costAtSaleProperty() {
     return costAtSale;
-  }
-
-  public boolean getCompleted() {
-    return completed.get();
-  }
-
-  public void setCompleted(boolean value) {
-    completed.set(value);
-  }
-
-  public BooleanProperty completedProperty() {
-    return completed;
   }
 
   public double getSubtotal() {

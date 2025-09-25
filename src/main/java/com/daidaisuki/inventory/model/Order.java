@@ -2,9 +2,11 @@ package com.daidaisuki.inventory.model;
 
 import java.time.LocalDate;
 import java.util.List;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -25,6 +27,7 @@ public class Order {
   private final DoubleProperty totalAmount = new SimpleDoubleProperty(this, "totalAmount", 0);
   private final DoubleProperty discountAmount = new SimpleDoubleProperty(this, "discountAmount", 0);
   private final StringProperty paymentMethod = new SimpleStringProperty(this, "paymentMethod", "");
+  private final BooleanProperty completed = new SimpleBooleanProperty(false);
   private final ObservableList<OrderItem> items = FXCollections.observableArrayList();
   private final ChangeListener<Number> totalsUpdater = (obs, oldVal, newVal) -> updateTotals();
   private final WeakChangeListener<Number> weakTotalsUpdater =
@@ -168,5 +171,17 @@ public class Order {
 
   public ObservableList<OrderItem> getItems() {
     return items;
+  }
+
+  public boolean getCompleted() {
+    return completed.get();
+  }
+
+  public void setCompleted(boolean value) {
+    completed.set(value);
+  }
+
+  public BooleanProperty completedProperty() {
+    return completed;
   }
 }
