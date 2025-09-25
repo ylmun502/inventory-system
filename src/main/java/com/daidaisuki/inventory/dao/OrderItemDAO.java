@@ -1,7 +1,6 @@
 package com.daidaisuki.inventory.dao;
 
 import com.daidaisuki.inventory.model.OrderItem;
-import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,12 +23,7 @@ public class OrderItemDAO {
     try (PreparedStatement stmt =
         connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setInt(1, item.getOrderId());
-      int productId = item.getProductId();
-      if (productId <= 0 && item.getProduct() != null) {
-        Product product = item.getProduct();
-        productId = product != null ? product.getId() : -1;
-      }
-      stmt.setInt(2, productId);
+      stmt.setInt(2, item.getProductId());
       stmt.setInt(3, item.getQuantity());
       stmt.setDouble(4, item.getUnitPrice());
       stmt.setDouble(5, item.getCostAtSale());
