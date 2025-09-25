@@ -90,4 +90,12 @@ public class OrderItemDAO {
     }
     return items;
   }
+
+  public void deleteByOrderId(int orderId) throws SQLException {
+    String sql = "DELETE FROM order_items WHERE order_id = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, orderId);
+      stmt.executeUpdate();
+    }
+  }
 }
