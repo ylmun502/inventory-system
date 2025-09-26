@@ -125,10 +125,6 @@ public class Order {
     return totalItems.get();
   }
 
-  public void setTotalItems(int value) {
-    this.totalItems.set(value);
-  }
-
   public IntegerProperty totalItemsProperty() {
     return totalItems;
   }
