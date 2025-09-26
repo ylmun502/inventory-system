@@ -2,7 +2,6 @@ package com.daidaisuki.inventory.dao;
 
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.Order;
-import com.daidaisuki.inventory.model.OrderItem;
 import com.daidaisuki.inventory.model.dto.OrderStats;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,11 +14,9 @@ import java.util.List;
 
 public class OrderDAO {
   private final Connection connection;
-  private final OrderItemDAO orderItemDAO;
 
   public OrderDAO(Connection connection) {
     this.connection = connection;
-    this.orderItemDAO = new OrderItemDAO(connection);
   }
 
   public List<Order> getAllOrders() throws SQLException {
@@ -58,8 +55,6 @@ public class OrderDAO {
                 rs.getDouble("discount_amount"),
                 rs.getString("payment_method"));
         order.setCustomer(customer);
-        List<OrderItem> items = orderItemDAO.getItemsByOrderId(order.getId());
-        order.setItems(items);
         orders.add(order);
       }
     }
@@ -137,10 +132,8 @@ public class OrderDAO {
       stmt.setInt(1, customerId);
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
-        int totalOrders = rs.getInt("total_orders");
-        double totalSpent = rs.getDouble("total_spent");
-        double totalDiscount = rs.getDouble("total_discount");
-        return new OrderStats(totalOrders, totalSpent, totalDiscount);
+        return new OrderStats(
+            rs.getInt("total_orders"), rs.getDouble("total_spent"), rs.getDouble("total_discount"));
       } else {
         return new OrderStats(0, 0.0, 0.0);
       }
