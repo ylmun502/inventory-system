@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.service;
 
-import com.daidaisuki.inventory.dao.*;
+import com.daidaisuki.inventory.dao.OrderDAO;
+import com.daidaisuki.inventory.dao.ProductDAO;
 import com.daidaisuki.inventory.model.*;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,20 +10,20 @@ import java.util.List;
 public class OrderService {
   private Connection connection;
   private final OrderDAO orderDAO;
-  private final OrderItemDAO orderItemDAO;
   private final ProductDAO productDAO;
+  private final OrderItemService orderItemService;
 
   public OrderService(Connection connection) {
     this.connection = connection;
     this.orderDAO = new OrderDAO(connection);
-    this.orderItemDAO = new OrderItemDAO(connection);
     this.productDAO = new ProductDAO(connection);
+    this.orderItemService = new OrderItemService(connection);
   }
 
   public List<Order> getAllOrdersWithDetail() throws SQLException {
     List<Order> orders = orderDAO.getAllOrders();
     for (Order order : orders) {
-      List<OrderItem> items = orderItemDAO.getItemsByOrderId(order.getId());
+      List<OrderItem> items = orderItemService.getItemsByOrder(order);
       order.setItems(items);
       order.recalculateTotals();
     }
@@ -35,9 +36,7 @@ public class OrderService {
       validateStockIfCompleted(order);
       orderDAO.addOrder(order);
       for (OrderItem item : order.getItems()) {
-        item.setOrderId(order.getId());
-        orderItemDAO.addOrderItem(item);
-        decrementStockIfCompleted(order, item);
+        orderItemService.addOrderItem(order, item);
       }
       connection.commit();
     } catch (SQLException | RuntimeException e) {
@@ -53,20 +52,14 @@ public class OrderService {
       connection.setAutoCommit(false);
       validateStockIfCompleted(order);
       orderDAO.updateOrder(order);
-      List<OrderItem> existingItems = orderItemDAO.getItemsByOrderId(order.getId());
+      List<OrderItem> existingItems = orderItemService.getItemsByOrder(order);
       for (OrderItem existingItem : existingItems) {
         if (!order.getItems().contains(existingItem)) {
-          orderItemDAO.deleteOrderItem(existingItem.getId());
+          orderItemService.deleteOrderItem(existingItem.getId());
         }
       }
       for (OrderItem item : order.getItems()) {
-        item.setOrderId(order.getId());
-        if (item.getId() <= 0) {
-          orderItemDAO.addOrderItem(item);
-          decrementStockIfCompleted(order, item);
-        } else {
-          orderItemDAO.updateOrderItem(item);
-        }
+        orderItemService.updateOrderItem(order, item);
       }
       connection.commit();
     } catch (SQLException | RuntimeException e) {
@@ -80,7 +73,7 @@ public class OrderService {
   public void deleteOrder(int orderId) throws SQLException {
     try {
       connection.setAutoCommit(false);
-      orderItemDAO.deleteByOrderId(orderId);
+      orderItemService.deleteItemsByOrderId(orderId);
       orderDAO.deleteOrder(orderId);
       connection.commit();
     } catch (SQLException e) {
@@ -106,12 +99,6 @@ public class OrderService {
   private void validateStockIfCompleted(Order order) throws SQLException {
     if (order.getCompleted()) {
       validateStockForOrder(order);
-    }
-  }
-
-  private void decrementStockIfCompleted(Order order, OrderItem item) throws SQLException {
-    if (order.getCompleted()) {
-      productDAO.decrementStock(item.getProductId(), item.getQuantity());
     }
   }
 }
