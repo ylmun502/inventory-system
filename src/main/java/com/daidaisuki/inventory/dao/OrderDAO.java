@@ -69,7 +69,7 @@ public class OrderDAO {
   public void addOrder(Order order) throws SQLException {
     String sql =
         "INSERT INTO orders(customer_id, order_date, total_items, total_amount, discount_amount,"
-            + " payment_method) VALUES(?, ?, ?, ?, ?, ?)";
+            + " payment_method, completed) VALUES(?, ?, ?, ?, ?, ?)";
     try (PreparedStatement stmt =
         connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setInt(1, order.getCustomer().getId());
@@ -78,6 +78,7 @@ public class OrderDAO {
       stmt.setDouble(4, order.getTotalAmount());
       stmt.setDouble(5, order.getDiscountAmount());
       stmt.setString(6, order.getPaymentMethod());
+      stmt.setBoolean(7, order.getCompleted());
       int affectedRows = stmt.executeUpdate();
       if (affectedRows == 0) {
         throw new SQLException("Creating order failed, no row affected.");
@@ -90,16 +91,12 @@ public class OrderDAO {
         }
       }
     }
-    for (OrderItem item : order.getItems()) {
-      item.setOrderId(order.getId());
-      orderItemDAO.addOrderItem(item);
-    }
   }
 
   public void updateOrder(Order order) throws SQLException {
     String sql =
         "UPDATE orders SET customer_id = ?, order_date = ?, total_items = ?, total_amount = ?,"
-            + " discount_amount = ?, payment_method = ? WHERE id = ?";
+            + " discount_amount = ?, payment_method = ?, completed = ? WHERE id = ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, order.getCustomer().getId());
       setDateStringOrNull(stmt, 2, order.getDate());
@@ -107,7 +104,8 @@ public class OrderDAO {
       stmt.setDouble(4, order.getTotalAmount());
       stmt.setDouble(5, order.getDiscountAmount());
       stmt.setString(6, order.getPaymentMethod());
-      stmt.setInt(7, order.getId());
+      stmt.setBoolean(7, order.getCompleted());
+      stmt.setInt(8, order.getId());
       stmt.executeUpdate();
     }
     List<OrderItem> existingItems = orderItemDAO.getItemsByOrderId(order.getId());
