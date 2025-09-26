@@ -69,12 +69,6 @@ public class OrderItem {
             product));
   }
 
-  public void finalizeSale() {
-    if (product.get() != null) {
-      costAtSale.set(product.get().getPrice());
-    }
-  }
-
   public Product getProduct() {
     return product.get();
   }
