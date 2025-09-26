@@ -108,20 +108,6 @@ public class OrderDAO {
       stmt.setInt(8, order.getId());
       stmt.executeUpdate();
     }
-    List<OrderItem> existingItems = orderItemDAO.getItemsByOrderId(order.getId());
-    for (OrderItem existingItem : existingItems) {
-      if (!order.getItems().contains(existingItem)) {
-        orderItemDAO.deleteOrderItem(existingItem.getId());
-      }
-    }
-    for (OrderItem item : order.getItems()) {
-      item.setOrderId(order.getId());
-      if (item.getId() <= 0) {
-        orderItemDAO.addOrderItem(item);
-      } else {
-        orderItemDAO.updateOrderItem(item);
-      }
-    }
   }
 
   public void deleteOrder(int orderId) throws SQLException {
