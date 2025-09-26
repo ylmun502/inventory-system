@@ -1,6 +1,5 @@
 package com.daidaisuki.inventory.dao;
 
-import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.model.Customer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,11 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDAO {
+  private final Connection connection;
+
+  public CustomerDAO(Connection connection) {
+    this.connection = connection;
+  }
+
   public List<Customer> getAllCustomers() throws SQLException {
     List<Customer> customers = new ArrayList<>();
     String sql = "SELECT * FROM customers";
-    try (Connection conn = DatabaseManager.getConnection();
-        Statement stmt = conn.createStatement();
+    try (Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         Customer customer =
@@ -36,8 +40,8 @@ public class CustomerDAO {
     String sql =
         "INSERT INTO customers(name, phone_number, email, address, platform) VALUES( ?, ?, ?, ?,"
             + " ?)";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement stmt =
+        connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setString(1, customer.getName());
       stmt.setString(2, customer.getPhoneNumber());
       stmt.setString(3, customer.getEmail());
@@ -61,8 +65,7 @@ public class CustomerDAO {
     String sql =
         "UPDATE customers SET name = ?, phone_number = ?, email = ?, address = ?, platform = ?"
             + " WHERE id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setString(1, customer.getName());
       stmt.setString(2, customer.getPhoneNumber());
       stmt.setString(3, customer.getEmail());
@@ -75,8 +78,7 @@ public class CustomerDAO {
 
   public void deleteCustomer(int customerId) throws SQLException {
     String sql = "DELETE FROM customers WHERE id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, customerId);
       stmt.executeUpdate();
     }
@@ -85,8 +87,7 @@ public class CustomerDAO {
   public Customer getById(int id) throws SQLException {
     Customer customer = null;
     String sql = "SELECT * FROM customers WHERE id = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, id);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -107,8 +108,7 @@ public class CustomerDAO {
   public Customer findByName(String name) throws SQLException {
     Customer customer = null;
     String sql = "SELECT * FROM customers WHERE name = ?";
-    try (Connection conn = DatabaseManager.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setString(1, name);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
