@@ -32,21 +32,12 @@ public class OrderService {
   public void createOrderWithItems(Order order) throws SQLException {
     try {
       connection.setAutoCommit(false);
-      for (OrderItem item : order.getItems()) {
-        Product product = productDAO.getById(item.getProductId());
-        if (product == null) {
-          throw new SQLException("Product not found: id=" + item.getProductId());
-        }
-        if (product.getStock() < item.getQuantity()) {
-          throw new IllegalArgumentException(
-              "Insufficient stock for product: " + product.getName());
-        }
-      }
+      validateStockIfCompleted(order);
       orderDAO.addOrder(order);
       for (OrderItem item : order.getItems()) {
         item.setOrderId(order.getId());
         orderItemDAO.addOrderItem(item);
-        productDAO.decrementStock(item.getProductId(), item.getQuantity());
+        decrementStockIfCompleted(order, item);
       }
       connection.commit();
     } catch (SQLException | RuntimeException e) {
@@ -60,6 +51,7 @@ public class OrderService {
   public void updateOrder(Order order) throws SQLException {
     try {
       connection.setAutoCommit(false);
+      validateStockIfCompleted(order);
       orderDAO.updateOrder(order);
       List<OrderItem> existingItems = orderItemDAO.getItemsByOrderId(order.getId());
       for (OrderItem existingItem : existingItems) {
@@ -71,7 +63,7 @@ public class OrderService {
         item.setOrderId(order.getId());
         if (item.getId() <= 0) {
           orderItemDAO.addOrderItem(item);
-          productDAO.decrementStock(item.getProductId(), item.getQuantity());
+          decrementStockIfCompleted(order, item);
         } else {
           orderItemDAO.updateOrderItem(item);
         }
@@ -96,6 +88,30 @@ public class OrderService {
       throw e;
     } finally {
       connection.setAutoCommit(true);
+    }
+  }
+
+  private void validateStockForOrder(Order order) throws SQLException {
+    for (OrderItem item : order.getItems()) {
+      Product product = productDAO.getById(item.getProductId());
+      if (product == null) {
+        throw new SQLException("Product not found: id=" + item.getProductId());
+      }
+      if (product.getStock() < item.getQuantity()) {
+        throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
+      }
+    }
+  }
+
+  private void validateStockIfCompleted(Order order) throws SQLException {
+    if (order.getCompleted()) {
+      validateStockForOrder(order);
+    }
+  }
+
+  private void decrementStockIfCompleted(Order order, OrderItem item) throws SQLException {
+    if (order.getCompleted()) {
+      productDAO.decrementStock(item.getProductId(), item.getQuantity());
     }
   }
 }
