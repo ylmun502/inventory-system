@@ -2,14 +2,15 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.ProductDAO;
 import com.daidaisuki.inventory.model.Product;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public class ProductService {
   private final ProductDAO productDAO;
 
-  public ProductService() {
-    this.productDAO = new ProductDAO();
+  public ProductService(Connection connection) {
+    this.productDAO = new ProductDAO(connection);
   }
 
   public List<Product> getAllProducts() throws SQLException {

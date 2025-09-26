@@ -4,6 +4,7 @@ import com.daidaisuki.inventory.dao.CustomerDAO;
 import com.daidaisuki.inventory.dao.OrderDAO;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.dto.OrderStats;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -11,9 +12,9 @@ public class CustomerService {
   private final CustomerDAO customerDAO;
   private final OrderDAO orderDAO;
 
-  public CustomerService() {
-    this.customerDAO = new CustomerDAO();
-    this.orderDAO = new OrderDAO();
+  public CustomerService(Connection connection) {
+    this.customerDAO = new CustomerDAO(connection);
+    this.orderDAO = new OrderDAO(connection);
   }
 
   public List<Customer> getAllCustomers() throws SQLException {
