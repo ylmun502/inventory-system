@@ -6,6 +6,7 @@ import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.OrderItem;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 public class OrderItemService {
   private final OrderItemDAO orderItemDAO;
@@ -19,30 +20,37 @@ public class OrderItemService {
   public void addOrderItem(Order order, OrderItem item) throws SQLException {
     item.setOrderId(order.getId());
     orderItemDAO.addOrderItem(item);
-    decrementStockIfCompleted(order, item);
+    finalizeOrderItem(order, item);
   }
 
   public void updateOrderItem(Order order, OrderItem item) throws SQLException {
     item.setOrderId(order.getId());
     if (item.getId() <= 0) {
       orderItemDAO.addOrderItem(item);
-      decrementStockIfCompleted(order, item);
     } else {
       orderItemDAO.updateOrderItem(item);
     }
+    finalizeOrderItem(order, item);
   }
 
   public void deleteOrderItem(int orderItemId) throws SQLException {
     orderItemDAO.deleteOrderItem(orderItemId);
   }
 
+  public List<OrderItem> getItemsByOrder(Order order) throws SQLException {
+    return orderItemDAO.getItemsByOrderId(order.getId());
+  }
+
   public void deleteItemsByOrderId(int orderId) throws SQLException {
     orderItemDAO.deleteByOrderId(orderId);
   }
 
-  private void decrementStockIfCompleted(Order order, OrderItem item) throws SQLException {
+  private void finalizeOrderItem(Order order, OrderItem item) throws SQLException {
     if (order.getCompleted()) {
       productDAO.decrementStock(item.getProductId(), item.getQuantity());
+      if (item.getProduct() != null) {
+        item.setCostAtSale(item.getProduct().getPrice());
+      }
     }
   }
 }
