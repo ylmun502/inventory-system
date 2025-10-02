@@ -36,17 +36,23 @@ public class ProductDAO {
     String sql =
         "INSERT INTO products(name, category, stock, selling_price, purchase_cost, shipping_cost)"
             + " VALUES(?, ?, ?, ?, ?, ?)";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+    try (PreparedStatement stmt =
+        connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setString(1, product.getName());
       stmt.setString(2, product.getCategory());
       stmt.setInt(3, product.getStock());
       stmt.setDouble(4, product.getPrice());
       stmt.setDouble(5, product.getCost());
       stmt.setDouble(6, product.getShipping());
-      stmt.executeUpdate();
-      try (ResultSet rs = stmt.getGeneratedKeys()) {
-        if (rs.next()) {
-          product.setId(rs.getInt(1));
+      int affectedRows = stmt.executeUpdate();
+      if (affectedRows == 0) {
+        throw new SQLException("Creating product failed, no rows affected.");
+      }
+      try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+        if (generatedKeys.next()) {
+          product.setId(generatedKeys.getInt(1));
+        } else {
+          throw new SQLException("Creating product failed, no ID obtained.");
         }
       }
     }
