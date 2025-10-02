@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.ProductDAO;
+import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,7 +34,15 @@ public class ProductService {
     return productDAO.getById(productId);
   }
 
-  public void decrementStock(int productId, int amount) throws SQLException {
+  public void decrementStock(int productId, int amount)
+      throws SQLException, InsufficientStockException {
+    Product product = productDAO.getById(productId);
+    if (product == null) {
+      throw new SQLException("Product not found: id=" + productId);
+    }
+    if (product.getStock() < amount) {
+      throw new InsufficientStockException(null);
+    }
     productDAO.decrementStock(productId, amount);
   }
 }
