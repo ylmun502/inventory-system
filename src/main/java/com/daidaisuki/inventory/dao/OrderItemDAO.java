@@ -41,15 +41,14 @@ public class OrderItemDAO {
 
   public void updateOrderItem(OrderItem item) throws SQLException {
     String sql =
-        "UPDATE order_items SET order_id = ?, product_id = ?, quantity = ?, unit_price = ?,"
+        "UPDATE order_items SET product_id = ?, quantity = ?, unit_price = ?,"
             + " cost_at_sale = ? WHERE id = ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-      stmt.setInt(1, item.getOrderId());
-      stmt.setInt(2, item.getProductId());
-      stmt.setInt(3, item.getQuantity());
-      stmt.setDouble(4, item.getUnitPrice());
-      stmt.setDouble(5, item.getCostAtSale());
-      stmt.setInt(6, item.getId());
+      stmt.setInt(1, item.getProductId());
+      stmt.setInt(2, item.getQuantity());
+      stmt.setDouble(3, item.getUnitPrice());
+      stmt.setDouble(4, item.getCostAtSale());
+      stmt.setInt(5, item.getId());
 
       int affectedRow = stmt.executeUpdate();
       if (affectedRow == 0) {
