@@ -2,6 +2,7 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.OrderDAO;
 import com.daidaisuki.inventory.dao.ProductDAO;
+import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.*;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -93,19 +94,21 @@ public class OrderService {
     }
   }
 
-  private void validateStockForOrder(Order order) throws SQLException {
+  private void validateStockForOrder(Order order) throws SQLException, InsufficientStockException {
     for (OrderItem item : order.getItems()) {
       Product product = productDAO.getById(item.getProductId());
       if (product == null) {
         throw new SQLException("Product not found: id=" + item.getProductId());
       }
       if (product.getStock() < item.getQuantity()) {
-        throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
+        throw new InsufficientStockException(
+            "Insufficient stock for product: " + product.getName());
       }
     }
   }
 
-  private void validateStockIfCompleted(Order order) throws SQLException {
+  private void validateStockIfCompleted(Order order)
+      throws SQLException, InsufficientStockException {
     if (order.getCompleted()) {
       validateStockForOrder(order);
     }
