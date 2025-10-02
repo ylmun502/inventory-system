@@ -78,31 +78,29 @@ public class CustomerDAO {
   }
 
   public Customer getById(int id) throws SQLException {
-    Customer customer = null;
     String sql = "SELECT * FROM customers WHERE id = ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, id);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
-          customer = mapResultSetToCustomer(rs);
+          return mapResultSetToCustomer(rs);
         }
       }
     }
-    return customer;
+    return null;
   }
 
   public Customer findByName(String name) throws SQLException {
-    Customer customer = null;
     String sql = "SELECT * FROM customers WHERE name = ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setString(1, name);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
-          customer = mapResultSetToCustomer(rs);
+          return mapResultSetToCustomer(rs);
         }
       }
     }
-    return customer;
+    return null;
   }
 
   private Customer mapResultSetToCustomer(ResultSet rs) throws SQLException {
