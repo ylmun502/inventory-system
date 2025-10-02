@@ -33,7 +33,7 @@ public class OrderService {
     return orders;
   }
 
-  public void createOrderWithItems(Order order) throws SQLException {
+  public void createOrderWithItems(Order order) throws SQLException, InsufficientStockException {
     try {
       connection.setAutoCommit(false);
       validateStockIfCompleted(order);
@@ -50,7 +50,7 @@ public class OrderService {
     }
   }
 
-  public void updateOrder(Order order) throws SQLException {
+  public void updateOrder(Order order) throws SQLException, InsufficientStockException {
     try {
       connection.setAutoCommit(false);
       validateStockIfCompleted(order);
