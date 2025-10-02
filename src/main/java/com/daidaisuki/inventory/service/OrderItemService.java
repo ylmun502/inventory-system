@@ -18,18 +18,20 @@ public class OrderItemService {
   }
 
   public void addOrderItem(Order order, OrderItem item) throws SQLException {
+    if (order.getId() <= 0) {
+      throw new IllegalArgumentException("Order must be persisted before adding items.");
+    }
     item.setOrderId(order.getId());
     orderItemDAO.addOrderItem(item);
     finalizeOrderItem(order, item);
   }
 
   public void updateOrderItem(Order order, OrderItem item) throws SQLException {
-    item.setOrderId(order.getId());
     if (item.getId() <= 0) {
-      orderItemDAO.addOrderItem(item);
-    } else {
-      orderItemDAO.updateOrderItem(item);
+      throw new IllegalArgumentException("OrderItem must have a valid ID to be updated.");
     }
+    item.setOrderId(order.getId());
+    orderItemDAO.updateOrderItem(item);
     finalizeOrderItem(order, item);
   }
 
@@ -38,6 +40,9 @@ public class OrderItemService {
   }
 
   public List<OrderItem> getItemsByOrder(Order order) throws SQLException {
+    if (order.getId() <= 0) {
+      throw new IllegalArgumentException("Order must be persisted to fetch items.");
+    }
     return orderItemDAO.getItemsByOrderId(order.getId());
   }
 
