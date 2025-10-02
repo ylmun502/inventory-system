@@ -22,14 +22,7 @@ public class CustomerDAO {
     try (Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
-        Customer customer =
-            new Customer(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getString("phone_number"),
-                rs.getString("email"),
-                rs.getString("address"),
-                rs.getString("platform"));
+        Customer customer = mapResultSetToCustomer(rs);
         customers.add(customer);
       }
     }
@@ -91,14 +84,7 @@ public class CustomerDAO {
       stmt.setInt(1, id);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
-          customer =
-              new Customer(
-                  rs.getInt("id"),
-                  rs.getString("name"),
-                  rs.getString("phone_number"),
-                  rs.getString("email"),
-                  rs.getString("address"),
-                  rs.getString("platform"));
+          customer = mapResultSetToCustomer(rs);
         }
       }
     }
@@ -112,17 +98,20 @@ public class CustomerDAO {
       stmt.setString(1, name);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
-          customer =
-              new Customer(
-                  rs.getInt("id"),
-                  rs.getString("name"),
-                  rs.getString("phone_number"),
-                  rs.getString("email"),
-                  rs.getString("address"),
-                  rs.getString("platform"));
+          customer = mapResultSetToCustomer(rs);
         }
       }
     }
     return customer;
+  }
+
+  private Customer mapResultSetToCustomer(ResultSet rs) throws SQLException {
+    return new Customer(
+        rs.getInt("id"),
+        rs.getString("name"),
+        rs.getString("phone_number"),
+        rs.getString("email"),
+        rs.getString("address"),
+        rs.getString("platform"));
   }
 }
