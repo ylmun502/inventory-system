@@ -64,7 +64,7 @@ public class OrderDAO {
   public void addOrder(Order order) throws SQLException {
     String sql =
         "INSERT INTO orders(customer_id, order_date, total_items, total_amount, discount_amount,"
-            + " payment_method, completed) VALUES(?, ?, ?, ?, ?, ?)";
+            + " payment_method, completed) VALUES(?, ?, ?, ?, ?, ?, ?)";
     try (PreparedStatement stmt =
         connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setInt(1, order.getCustomer().getId());
