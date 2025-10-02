@@ -6,6 +6,8 @@ import com.daidaisuki.inventory.model.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class OrderService {
   private Connection connection;
@@ -53,13 +55,20 @@ public class OrderService {
       validateStockIfCompleted(order);
       orderDAO.updateOrder(order);
       List<OrderItem> existingItems = orderItemService.getItemsByOrder(order);
-      for (OrderItem existingItem : existingItems) {
-        if (!order.getItems().contains(existingItem)) {
-          orderItemService.deleteOrderItem(existingItem.getId());
+      Map<Integer, OrderItem> existingMap =
+          existingItems.stream().collect(Collectors.toMap(OrderItem::getId, i -> i));
+      for (OrderItem item : order.getItems()) {
+        if (order.getId() == 0) {
+          orderItemService.addOrderItem(order, item);
+        } else if (existingMap.containsKey(item.getId())) {
+          orderItemService.updateOrderItem(order, item);
+          existingMap.remove(item.getId());
+        } else {
+          throw new SQLException("Order item with id " + item.getId() + " not found in DB");
         }
       }
-      for (OrderItem item : order.getItems()) {
-        orderItemService.updateOrderItem(order, item);
+      for (OrderItem removedItem : existingMap.values()) {
+        orderItemService.deleteOrderItem(removedItem.getId());
       }
       connection.commit();
     } catch (SQLException | RuntimeException e) {
