@@ -2,8 +2,10 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.OrderItemDAO;
 import com.daidaisuki.inventory.dao.ProductDAO;
+import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.OrderItem;
+import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -50,8 +52,17 @@ public class OrderItemService {
     orderItemDAO.deleteByOrderId(orderId);
   }
 
-  private void finalizeOrderItem(Order order, OrderItem item) throws SQLException {
+  private void finalizeOrderItem(Order order, OrderItem item)
+      throws SQLException, InsufficientStockException {
     if (order.getCompleted()) {
+      Product product = productDAO.getById(item.getProductId());
+      if (product == null) {
+        throw new SQLException("Product not found: id=" + item.getProductId());
+      }
+      if (product.getStock() < item.getQuantity()) {
+        throw new InsufficientStockException(
+            "Insufficient stock for product: " + product.getName());
+      }
       productDAO.decrementStock(item.getProductId(), item.getQuantity());
       if (item.getProduct() != null) {
         item.setCostAtSale(item.getProduct().getPrice());
