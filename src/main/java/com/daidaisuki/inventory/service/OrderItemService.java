@@ -19,7 +19,8 @@ public class OrderItemService {
     this.productDAO = new ProductDAO(connection);
   }
 
-  public void addOrderItem(Order order, OrderItem item) throws SQLException {
+  public void addOrderItem(Order order, OrderItem item)
+      throws SQLException, InsufficientStockException {
     if (order.getId() <= 0) {
       throw new IllegalArgumentException("Order must be persisted before adding items.");
     }
@@ -28,7 +29,8 @@ public class OrderItemService {
     finalizeOrderItem(order, item);
   }
 
-  public void updateOrderItem(Order order, OrderItem item) throws SQLException {
+  public void updateOrderItem(Order order, OrderItem item)
+      throws SQLException, InsufficientStockException {
     if (item.getId() <= 0) {
       throw new IllegalArgumentException("OrderItem must have a valid ID to be updated.");
     }
