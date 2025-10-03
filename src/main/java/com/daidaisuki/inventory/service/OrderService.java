@@ -34,64 +34,46 @@ public class OrderService {
   }
 
   public void createOrderWithItems(Order order) throws SQLException, InsufficientStockException {
-    try {
-      connection.setAutoCommit(false);
-      validateStockIfCompleted(order);
-      orderDAO.addOrder(order);
-      for (OrderItem item : order.getItems()) {
-        orderItemService.addOrderItem(order, item);
-      }
-      connection.commit();
-    } catch (SQLException | RuntimeException e) {
-      connection.rollback();
-      throw e;
-    } finally {
-      connection.setAutoCommit(true);
-    }
+    executeInTransaction(
+        () -> {
+          validateStockIfCompleted(order);
+          orderDAO.addOrder(order);
+          for (OrderItem item : order.getItems()) {
+            orderItemService.addOrderItem(order, item);
+          }
+        });
   }
 
   public void updateOrder(Order order) throws SQLException, InsufficientStockException {
-    try {
-      connection.setAutoCommit(false);
-      validateStockIfCompleted(order);
-      orderDAO.updateOrder(order);
-      List<OrderItem> existingItems = orderItemService.getItemsByOrder(order);
-      Map<Integer, OrderItem> existingMap =
-          existingItems.stream().collect(Collectors.toMap(OrderItem::getId, i -> i));
-      for (OrderItem item : order.getItems()) {
-        if (order.getId() == 0) {
-          orderItemService.addOrderItem(order, item);
-        } else if (existingMap.containsKey(item.getId())) {
-          orderItemService.updateOrderItem(order, item);
-          existingMap.remove(item.getId());
-        } else {
-          throw new SQLException("Order item with id " + item.getId() + " not found in DB");
-        }
-      }
-      for (OrderItem removedItem : existingMap.values()) {
-        orderItemService.deleteOrderItem(removedItem.getId());
-      }
-      connection.commit();
-    } catch (SQLException | RuntimeException e) {
-      connection.rollback();
-      throw e;
-    } finally {
-      connection.setAutoCommit(true);
-    }
+    executeInTransaction(
+        () -> {
+          validateStockIfCompleted(order);
+          orderDAO.updateOrder(order);
+          List<OrderItem> existingItems = orderItemService.getItemsByOrder(order);
+          Map<Integer, OrderItem> existingMap =
+              existingItems.stream().collect(Collectors.toMap(OrderItem::getId, i -> i));
+          for (OrderItem item : order.getItems()) {
+            if (order.getId() == 0) {
+              orderItemService.addOrderItem(order, item);
+            } else if (existingMap.containsKey(item.getId())) {
+              orderItemService.updateOrderItem(order, item);
+              existingMap.remove(item.getId());
+            } else {
+              throw new SQLException("Order item with id " + item.getId() + " not found in DB");
+            }
+          }
+          for (OrderItem removedItem : existingMap.values()) {
+            orderItemService.deleteOrderItem(removedItem.getId());
+          }
+        });
   }
 
-  public void deleteOrder(int orderId) throws SQLException {
-    try {
-      connection.setAutoCommit(false);
-      orderItemService.deleteItemsByOrderId(orderId);
-      orderDAO.deleteOrder(orderId);
-      connection.commit();
-    } catch (SQLException e) {
-      connection.rollback();
-      throw e;
-    } finally {
-      connection.setAutoCommit(true);
-    }
+  public void deleteOrder(int orderId) throws SQLException, InsufficientStockException {
+    executeInTransaction(
+        () -> {
+          orderItemService.deleteItemsByOrderId(orderId);
+          orderDAO.deleteOrder(orderId);
+        });
   }
 
   private void validateStockForOrder(Order order) throws SQLException, InsufficientStockException {
@@ -112,5 +94,24 @@ public class OrderService {
     if (order.getCompleted()) {
       validateStockForOrder(order);
     }
+  }
+
+  private void executeInTransaction(TransactionAction action)
+      throws SQLException, InsufficientStockException {
+    try {
+      connection.setAutoCommit(false);
+      action.execute();
+      connection.commit();
+    } catch (SQLException | InsufficientStockException e) {
+      connection.rollback();
+      throw e;
+    } finally {
+      connection.setAutoCommit(true);
+    }
+  }
+
+  @FunctionalInterface
+  private interface TransactionAction {
+    void execute() throws SQLException, InsufficientStockException;
   }
 }
