@@ -7,7 +7,7 @@ A desktop inventory management system built using JavaFX and Maven, with a modul
 ## 📦 Features
 
 - Add, update, delete inventory items
-- Organized MVC and DAO architecture
+- Organized MVC (will be migrating to MVVM in the future) and DAO architecture
 - SQLite integration
 - Modular Java project with JavaFX
 - Firebase integration planned
