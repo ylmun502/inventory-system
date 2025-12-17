@@ -6,6 +6,11 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
 public class TableColumnUtils {
+  private TableColumnUtils() {
+    // Prevent instantiation
+    throw new UnsupportedOperationException("Utility class");
+  }
+
   /**
    * Bind TableColumn widths to TableView width based on given ratios. Ratios size list must match
    * the number of columns.

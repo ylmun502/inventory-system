@@ -14,6 +14,11 @@ import javafx.util.Pair;
  * provide the FXML path.
  */
 public class ViewLoader {
+  private ViewLoader() {
+    // Prevent instantiation
+    throw new UnsupportedOperationException("Utility class");
+  }
+
   /**
    * Creates a new {@link FXMLLoader} for the specified FXML view.
    *

@@ -33,6 +33,11 @@ public class AlertHelper {
   private static final int ALERT_PREF_HEIGHT = 350;
   private static final int ALERT_PREF_WIDTH = 400;
 
+  private AlertHelper() {
+    // Prevent instantiation
+    throw new UnsupportedOperationException("Utility class");
+  }
+
   /**
    * Shows an error alert dialog.
    *

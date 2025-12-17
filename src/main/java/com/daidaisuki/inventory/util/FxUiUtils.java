@@ -9,6 +9,11 @@ import javafx.scene.control.Button;
  * execution of a task.
  */
 public class FxUiUtils {
+  private FxUiUtils() {
+    // Prevent instantiation
+    throw new UnsupportedOperationException("Utility class");
+  }
+
   /**
    * Runs the specified operation while temporarily disabling the given buttons.
    *

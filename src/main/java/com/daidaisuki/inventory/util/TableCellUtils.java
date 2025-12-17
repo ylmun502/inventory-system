@@ -16,6 +16,10 @@ import javafx.util.Callback;
  * Integer}, and {@code Double}, with built-in support for center alignment and currency formatting.
  */
 public class TableCellUtils {
+  private TableCellUtils() {
+    // Prevent instantiation
+    throw new UnsupportedOperationException("Utility class");
+  }
 
   /**
    * Formats a numeric price into a currency string with two decimal places.
