@@ -3,6 +3,9 @@ package com.daidaisuki.inventory.util;
 import com.daidaisuki.inventory.App;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -75,51 +78,66 @@ public class AlertHelper {
   }
 
   /**
+   * Internal helper to construct and display the JavaFX Alert. This must be called on the JavaFX
+   * Application Thread.
+   *
+   * @param owner the window owner
+   * @param title dialog title
+   * @param header header text
+   * @param content main message content
+   * @return {@code true} if OK was pressed, {@code false} otherwise
+   */
+  private static boolean createAndShowAlert(
+      Window owner, String title, String header, String content) {
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    if (owner != null) {
+      alert.initOwner(owner);
+    }
+    alert.setTitle(safeString(title));
+    alert.setHeaderText(safeString(header));
+    alert.setContentText(safeString(content));
+    alert.getDialogPane().getStylesheets().add(STYLESHEET);
+    alert.getDialogPane().getStyleClass().add("custom-alert");
+    Optional<ButtonType> result = alert.showAndWait();
+    return result.isPresent() && result.get() == ButtonType.OK;
+  }
+
+  /**
    * Shows a confirmation dialog and returns {@code true} if the user clicks OK, {@code false}
    * otherwise.
    *
-   * <p><b>Note:</b> Confirmation dialogs must be shown on the JavaFX Application Thread. If called
-   * from a background thread, this method schedules the dialog using {@link
-   * Platform#runLater(Runnable)}. In such cases, synchronization may be needed to retrieve the
-   * result correctly.
+   * <p>This method is thread-safe. If called from the JavaFX Application Thread, the dialog is
+   * shown immediately. If called from a background thread, the task is scheduled via {@link
+   * Platform#runLater(Runnable)} and the current thread will block until the user provides a
+   * response or the task is interrupted.
    *
    * @param owner the owner window of the alert; can be {@code null}
    * @param title the alert title
    * @param header the alert header text
    * @param content the alert content text
-   * @return {@code true} if the user clicked OK; {@code false} otherwise
+   * @return {@code true} if the user clicked OK; {@code false} if they clicked Cancel, closed the
+   *     dialog, or if an error/interruption occurred during execution.
+   * @see #createAndShowAlert(Window, String, String, String)
    */
   public static boolean showConfirmationAlert(
       Window owner, String title, String header, String content) {
-    final boolean[] userResponse = new boolean[1];
-    Runnable showDialog =
-        () -> {
-          Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-          if (owner != null) {
-            alert.initOwner(owner);
-          }
-          alert.setTitle(safeString(title));
-          alert.setHeaderText(safeString(header));
-          alert.setContentText(safeString(content));
-          alert.getDialogPane().getStylesheets().add(STYLESHEET);
-          alert.getDialogPane().getStyleClass().add("custom-alert");
-          Optional<ButtonType> result = alert.showAndWait();
-          userResponse[0] = result.isPresent() && result.get() == ButtonType.OK;
-        };
-
+    Callable<Boolean> task = () -> createAndShowAlert(owner, title, header, content);
     if (Platform.isFxApplicationThread()) {
-      showDialog.run();
-    } else {
       try {
-        Platform.runLater(showDialog);
-        // Note: showAndWait must be called on FX thread and blocks it,
-        // so for confirmation dialogs called from background threads,
-        // further synchronization might be needed.
-      } catch (IllegalStateException e) {
-        e.printStackTrace();
+        return task.call();
+      } catch (Exception e) {
+        return false;
+      }
+    } else {
+      FutureTask<Boolean> futureTask = new FutureTask<>(task);
+      Platform.runLater(futureTask);
+      try {
+        return futureTask.get();
+      } catch (InterruptedException | ExecutionException e) {
+        Thread.currentThread().interrupt();
+        return false;
       }
     }
-    return userResponse[0];
   }
 
   /**
