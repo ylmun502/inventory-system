@@ -10,7 +10,6 @@ import javafx.stage.Window;
  * especially useful when handling events or dynamically generated components.
  */
 public final class FxWindowUtils {
-
   private FxWindowUtils() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");
