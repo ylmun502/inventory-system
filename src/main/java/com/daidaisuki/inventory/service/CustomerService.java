@@ -2,6 +2,7 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.CustomerDAO;
 import com.daidaisuki.inventory.dao.OrderDAO;
+import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.dto.OrderStats;
 import java.sql.Connection;
@@ -12,9 +13,21 @@ public class CustomerService {
   private final CustomerDAO customerDAO;
   private final OrderDAO orderDAO;
 
+  public CustomerService() {
+    this(getConnectionSafely());
+  }
+
   public CustomerService(Connection connection) {
     this.customerDAO = new CustomerDAO(connection);
     this.orderDAO = new OrderDAO(connection);
+  }
+
+  private static Connection getConnectionSafely() {
+    try {
+      return DatabaseManager.getConnection();
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to initialize CustomerService", e);
+    }
   }
 
   public List<Customer> getAllCustomers() throws SQLException {

@@ -38,7 +38,11 @@ public class CustomersController extends BaseTableController<Customer> {
   @FXML private Button editButton;
   @FXML private Button deleteButton;
 
-  private final CustomerService customerService = new CustomerService();
+  private final CustomerService customerService;
+
+  public CustomersController() {
+    this.customerService = new CustomerService();
+  }
 
   @FXML
   public void initialize() {
