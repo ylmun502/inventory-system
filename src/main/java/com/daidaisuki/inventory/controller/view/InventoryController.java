@@ -41,7 +41,11 @@ public class InventoryController extends BaseTableController<Product> {
   @FXML private Button editButton;
   @FXML private Button deleteButton;
 
-  private final ProductService productService = new ProductService();
+  private final ProductService productService;
+
+  public InventoryController() {
+    this.productService = new ProductService();
+  }
 
   @FXML
   public void initialize() {

@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.ProductDAO;
+import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
@@ -10,8 +11,20 @@ import java.util.List;
 public class ProductService {
   private final ProductDAO productDAO;
 
+  public ProductService() {
+    this(getConnectionSafely());
+  }
+
   public ProductService(Connection connection) {
     this.productDAO = new ProductDAO(connection);
+  }
+
+  private static Connection getConnectionSafely() {
+    try {
+      return DatabaseManager.getConnection();
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to initialize ProductService", e);
+    }
   }
 
   public List<Product> getAllProducts() throws SQLException {
