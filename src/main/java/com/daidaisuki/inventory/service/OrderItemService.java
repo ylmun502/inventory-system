@@ -2,6 +2,7 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.OrderItemDAO;
 import com.daidaisuki.inventory.dao.ProductDAO;
+import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.OrderItem;
@@ -14,9 +15,21 @@ public class OrderItemService {
   private final OrderItemDAO orderItemDAO;
   private final ProductDAO productDAO;
 
+  public OrderItemService() {
+    this(getConnectionSafely());
+  }
+
   public OrderItemService(Connection connection) {
     this.orderItemDAO = new OrderItemDAO(connection);
     this.productDAO = new ProductDAO(connection);
+  }
+
+  private static Connection getConnectionSafely() {
+    try {
+      return DatabaseManager.getConnection();
+    } catch(SQLException e) {
+      throw new RuntimeException("Failed to initialize OrderItemService", e);
+    }
   }
 
   public void addOrderItem(Order order, OrderItem item)
