@@ -2,6 +2,9 @@ package com.daidaisuki.inventory.controller.dialog;
 
 import com.daidaisuki.inventory.base.controller.BaseDialogController;
 import com.daidaisuki.inventory.model.Product;
+import com.daidaisuki.inventory.service.ProductService;
+import com.daidaisuki.inventory.util.ValidationUtils;
+import java.sql.SQLException;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -16,6 +19,12 @@ public class ProductDialogController extends BaseDialogController<Product> {
   @FXML private TextField shippingField;
 
   @FXML private Label dialogTitle;
+
+  private ProductService productService;
+
+  public void setProductService(ProductService productService) {
+    this.productService = productService;
+  }
 
   @Override
   public void setModel(Product product) {
@@ -45,12 +54,12 @@ public class ProductDialogController extends BaseDialogController<Product> {
     String costStr = sanitizeInput(costField);
     String shippingStr = sanitizeInput(shippingField);
 
-    isFieldEmpty(name, "Name", errorMessage);
-    isFieldEmpty(category, "Category", errorMessage);
-    isNumeric(stockStr, "Stock Number", errorMessage, false);
-    isNumeric(priceStr, "Sale Price", errorMessage, true);
-    isNumeric(costStr, "Purchase Cost", errorMessage, true);
-    isNumeric(shippingStr, "Shipping Fee", errorMessage, true);
+    ValidationUtils.isFieldEmpty(name, "Name", errorMessage);
+    ValidationUtils.isFieldEmpty(category, "Category", errorMessage);
+    ValidationUtils.isNumeric(stockStr, "Stock Number", errorMessage, false);
+    ValidationUtils.isNumeric(priceStr, "Sale Price", errorMessage, true);
+    ValidationUtils.isNumeric(costStr, "Purchase Cost", errorMessage, true);
+    ValidationUtils.isNumeric(shippingStr, "Shipping Fee", errorMessage, true);
 
     if (errorMessage.length() > 0) {
       showError(errorMessage.toString());
@@ -67,6 +76,18 @@ public class ProductDialogController extends BaseDialogController<Product> {
     model.setPrice(Double.parseDouble(priceStr));
     model.setCost(Double.parseDouble(costStr));
     model.setShipping(Double.parseDouble(shippingStr));
+
+    try {
+      if (model.getId() == 0) {
+        productService.addProduct(model);
+      } else {
+        productService.updateProduct(model);
+      }
+    } catch (SQLException e) {
+      showError("Failed to save product: \n" + e.getMessage());
+      return;
+    }
+
     saveClicked = true;
     dialogStage.close();
   }
