@@ -32,61 +32,89 @@ public class DatabaseManager {
       String createProductTable =
           "CREATE TABLE IF NOT EXISTS products ("
               + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+              + "sku TEXT UNIQUE,"
               + "name TEXT NOT NULL,"
               + "category TEXT NOT NULL,"
-              + "stock INTEGER NOT NULL,"
-              + "selling_price REAL NOT NULL,"
-              + "purchase_cost REAL NOT NULL,"
-              + "shipping_cost REAL NOT NULL"
+              + "current_stock INTEGER DEFAULT 0 NOT NULL,"
+              + "selling_price_cents INTEGER NOT NULL,"
+              + "reorder_level INTEGER DEFAULT 5,"
+              + "is_active INTEGER DEFAULT 1"
               + ");";
       stmt.execute(createProductTable);
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);");
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);");
 
+      String createStockBatchesTable =
+          "CREATE TABLE IF NOT EXISTS stock_batches ("
+              + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+              + "product_id INTEGER NOT NULL,"
+              + "quantity_received INTEGER NOT NULL,"
+              + "quantity_remaining INTEGER NOT NULL,"
+              + "unit_cost_cents INTEGER NOT NULL,"
+              + "landed_cost_cents INTEGER NOT NULL,"
+              + "received_date DATETIME DEFAULT CURRENT_TIMESTAMP,"
+              + "FOREIGN KEY(product_id) REFERENCES products(id)"
+              + ");";
+      stmt.execute(createStockBatchesTable);
+      stmt.execute(
+          "CREATE INDEX IF NOT EXISTS idx_batches_product_id ON stock_batches(product_id);");
+
       String createCustomerTable =
           "CREATE TABLE IF NOT EXISTS customers ("
               + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-              + "name TEXT NOT NULL,"
-              + "phone_number TEXT,"
+              + "full_name TEXT NOT NULL,"
+              + "phone TEXT,"
               + "email TEXT,"
               + "address TEXT,"
-              + "platform TEXT NOT NULL"
+              + "acquisition_source TEXT"
               + ");";
       stmt.execute(createCustomerTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(full_name);");
 
       String createOrderTable =
           "CREATE TABLE IF NOT EXISTS orders ("
               + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
               + "customer_id INTEGER NOT NULL,"
-              + "order_date TEXT NOT NULL,"
+              + "order_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,"
+              + "fulfillment_type TEXT NOT NULL,"
+              + "fulfillment_status TEXT NOT NULL,"
               + "total_items INTEGER NOT NULL,"
-              + "total_amount REAL NOT NULL,"
-              + "discount_amount REAL NOT NULL,"
+              + "subtotal_cents INTEGER NOT NULL,"
+              + "discount_amount_cents INTEGER DEFAULT 0,"
+              + "shipping_cost_cents INTEGER DEFAULT 0,"
+              + "shipping_cost_actual_cents INTEGER DEFAULT 0,"
+              + "final_amount_cents INTEGER NOT NULL,"
               + "payment_method TEXT,"
+              + "tracking_number TEXT,"
               + "FOREIGN KEY(customer_id) REFERENCES customers(id)"
               + ");";
       stmt.execute(createOrderTable);
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);");
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders(order_date);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders(order_timestamp);");
+      stmt.execute(
+          "CREATE INDEX IF NOT EXISTS idx_orders_fulfillment ON orders(fulfillment_type,"
+              + " fulfillment_status);");
 
       String createOrderItemTable =
           "CREATE TABLE IF NOT EXISTS order_items ("
               + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
               + "order_id INTEGER NOT NULL,"
               + "product_id INTEGER NOT NULL,"
+              + "batch_id INTEGER NOT NULL,"
               + "quantity INTEGER NOT NULL,"
-              + "unit_price REAL NOT NULL,"
-              + "cost_at_sale REAL NOT NULL,"
+              + "unit_price_cents INTEGER NOT NULL,"
+              + "unit_cost_at_sale_cents INTEGER NOT NULL,"
               + "FOREIGN KEY(order_id) REFERENCES orders(id),"
-              + "FOREIGN KEY(product_id) REFERENCES products(id)"
+              + "FOREIGN KEY(product_id) REFERENCES products(id),"
+              + "FOREIGN KEY(batch_id) REFERENCES stock_batches(id)"
               + ");";
-      // last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
-      // sync_status TEXT DEFAULT 'PENDING'
       stmt.execute(createOrderItemTable);
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);");
       stmt.execute(
           "CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_batch_id ON order_items(batch_id);");
+    }
+  }
     }
   }
 }
