@@ -115,6 +115,14 @@ public class DatabaseManager {
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_batch_id ON order_items(batch_id);");
     }
   }
+
+  public static void closeConnection() {
+    try {
+      if (connection != null && !connection.isClosed()) {
+        connection.close();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
   }
 }
