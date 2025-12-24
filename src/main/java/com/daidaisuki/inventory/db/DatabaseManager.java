@@ -13,11 +13,14 @@ public class DatabaseManager {
   private static Connection connection = null;
 
   // Connect to the SQLite database
-  public static Connection getConnection() throws SQLException {
+  public static synchronized Connection getConnection() throws SQLException {
     if (connection == null || connection.isClosed()) {
       connection = DriverManager.getConnection(DB_URL);
+      // Set PRAGMA for every new connection
       try (Statement stmt = connection.createStatement()) {
         stmt.execute("PRAGMA foreign_keys = ON;");
+        // Optimization for improving concurrency significantly with WAL mode
+        stmt.execute("PRAGMA journal_mode = WAL;");
       }
     }
     return connection;
