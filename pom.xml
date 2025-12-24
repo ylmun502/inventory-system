@@ -32,6 +32,12 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.45.2.0</version>
         </dependency>
+        <!-- Database Connectivity & Connection Pooling -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.0.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
