@@ -92,7 +92,7 @@ public class OrdersController extends BaseTableController<Order> {
 
   @Override
   protected List<Order> fetchFromDB() throws SQLException {
-    return orderService.getAllOrdersWithDetail();
+    return orderService.listOrdersWithDetails();
   }
 
   @Override
@@ -123,7 +123,7 @@ public class OrdersController extends BaseTableController<Order> {
   @Override
   protected void deleteItem(Order order) throws SQLException {
     try {
-      orderService.deleteOrder(order.getId());
+      orderService.removeOrder(order.getId());
     } catch (InsufficientStockException e) {
       AlertHelper.showErrorAlert(
           getWindow(), "Insufficient Stock", "Cannot complete order", e.getMessage());

@@ -1,87 +1,57 @@
 package com.daidaisuki.inventory.service;
 
-import com.daidaisuki.inventory.dao.OrderItemDAO;
-import com.daidaisuki.inventory.dao.ProductDAO;
-import com.daidaisuki.inventory.db.DatabaseManager;
-import com.daidaisuki.inventory.exception.InsufficientStockException;
-import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.dao.impl.OrderItemDAO;
+import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.model.OrderItem;
-import com.daidaisuki.inventory.model.Product;
+import com.daidaisuki.inventory.model.dto.StockAllocation;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public class OrderItemService {
+  private final TransactionManager transactionManager;
   private final OrderItemDAO orderItemDAO;
-  private final ProductDAO productDAO;
-
-  public OrderItemService() {
-    this(getConnectionSafely());
-  }
 
   public OrderItemService(Connection connection) {
+    this.transactionManager = new TransactionManager(connection);
     this.orderItemDAO = new OrderItemDAO(connection);
-    this.productDAO = new ProductDAO(connection);
   }
 
-  private static Connection getConnectionSafely() {
-    try {
-      return DatabaseManager.getConnection();
-    } catch(SQLException e) {
-      throw new RuntimeException("Failed to initialize OrderItemService", e);
-    }
+  public OrderItem createItem(OrderItem uiItem, int persistentOrderId, StockAllocation allocation)
+      throws SQLException {
+    return transactionManager.executeInTransaction(
+        () -> createItemInternal(uiItem, persistentOrderId, allocation));
   }
 
-  public void addOrderItem(Order order, OrderItem item)
-      throws SQLException, InsufficientStockException {
-    if (order.getId() <= 0) {
-      throw new IllegalArgumentException("Order must be persisted before adding items.");
-    }
-    item.setOrderId(order.getId());
-    orderItemDAO.addOrderItem(item);
-    finalizeOrderItem(order, item);
+  public void removeOrderItem(int orderItemId) throws SQLException {
+    transactionManager.executeInTransaction(() -> orderItemDAO.delete(orderItemId));
   }
 
-  public void updateOrderItem(Order order, OrderItem item)
-      throws SQLException, InsufficientStockException {
-    if (item.getId() <= 0) {
-      throw new IllegalArgumentException("OrderItem must have a valid ID to be updated.");
-    }
-    item.setOrderId(order.getId());
-    orderItemDAO.updateOrderItem(item);
-    finalizeOrderItem(order, item);
-  }
-
-  public void deleteOrderItem(int orderItemId) throws SQLException {
-    orderItemDAO.deleteOrderItem(orderItemId);
-  }
-
-  public List<OrderItem> getItemsByOrder(Order order) throws SQLException {
-    if (order.getId() <= 0) {
+  public List<OrderItem> listByOrderId(int orderId) throws SQLException {
+    if (orderId <= 0) {
       throw new IllegalArgumentException("Order must be persisted to fetch items.");
     }
-    return orderItemDAO.getItemsByOrderId(order.getId());
+    return orderItemDAO.findAllByOrderId(orderId);
   }
 
-  public void deleteItemsByOrderId(int orderId) throws SQLException {
-    orderItemDAO.deleteByOrderId(orderId);
+  public void removeAllByOrderId(int orderId) throws SQLException {
+    transactionManager.executeInTransaction(() -> removeAllByOrderIdInternal(orderId));
   }
 
-  private void finalizeOrderItem(Order order, OrderItem item)
-      throws SQLException, InsufficientStockException {
-    if (order.getCompleted()) {
-      Product product = productDAO.getById(item.getProductId());
-      if (product == null) {
-        throw new SQLException("Product not found: id=" + item.getProductId());
-      }
-      if (product.getStock() < item.getQuantity()) {
-        throw new InsufficientStockException(
-            "Insufficient stock for product: " + product.getName());
-      }
-      productDAO.decrementStock(item.getProductId(), item.getQuantity());
-      if (item.getProduct() != null) {
-        item.setCostAtSale(item.getProduct().getPrice());
-      }
-    }
+  OrderItem createItemInternal(OrderItem uiItem, int persistentOrderId, StockAllocation allocation)
+      throws SQLException {
+    OrderItem itemToPersist =
+        new OrderItem(
+            persistentOrderId,
+            uiItem.getProductId(),
+            allocation.batchId(),
+            allocation.quantity(),
+            uiItem.getUnitPriceAtSaleCents(),
+            allocation.unitCost());
+    return orderItemDAO.save(itemToPersist);
+  }
+
+  void removeAllByOrderIdInternal(int orderId) throws SQLException {
+    orderItemDAO.deleteAllByOrderId(orderId);
   }
 }

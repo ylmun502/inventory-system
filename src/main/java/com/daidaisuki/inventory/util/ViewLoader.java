@@ -4,6 +4,7 @@ import com.daidaisuki.inventory.interfaces.FxmlView;
 import java.io.IOException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.util.Callback;
 import javafx.util.Pair;
 
 /**
@@ -13,7 +14,7 @@ import javafx.util.Pair;
  * controllers, or both as a pair. It is designed to work with {@link FxmlView}, which is assumed to
  * provide the FXML path.
  */
-public class ViewLoader {
+public final class ViewLoader {
   private ViewLoader() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");
@@ -63,7 +64,15 @@ public class ViewLoader {
    * @throws IOException if loading the FXML file fails
    */
   public static <T> Pair<Parent, T> loadViewAndController(FxmlView view) throws IOException {
+    return loadViewWithControllerFactory(view, null);
+  }
+
+  public static <T> Pair<Parent, T> loadViewWithControllerFactory(
+      FxmlView view, Callback<Class<?>, Object> factory) throws IOException {
     FXMLLoader loader = loadFxml(view);
+    if (factory != null) {
+      loader.setControllerFactory(factory);
+    }
     Parent root = loader.load();
     return new Pair<>(root, loader.getController());
   }

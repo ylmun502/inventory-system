@@ -123,8 +123,8 @@ public class OrderDialogController extends BaseDialogController<Order> {
       if (!Objects.equals(customerComboBox.getValue(), order.getCustomer())) {
         customerComboBox.setValue(order.getCustomer());
       }
-      datePicker.setValue(order.getDate());
-      paymentMethodField.setText(order.getPaymentMethod());
+      datePicker.setValue(order.getCreatedAt().toLocalDate());
+      paymentMethodField.setText(order.getPaymentMethod().name());
       orderItems.setAll(order.getItems());
     } else {
       orderItems.clear();
@@ -225,7 +225,7 @@ public class OrderDialogController extends BaseDialogController<Order> {
 
   private void loadCustomers() {
     try {
-      final List<Customer> customers = customerService.getAllCustomers();
+      final List<Customer> customers = customerService.listCustomers();
       customerComboBox.setItems(FXCollections.observableArrayList(customers));
     } catch (SQLException e) {
       AlertHelper.showDatabaseError(dialogStage, "Failed to load customers.", e);
@@ -235,7 +235,7 @@ public class OrderDialogController extends BaseDialogController<Order> {
 
   private void loadProducts() {
     try {
-      final List<Product> products = productService.getAllProducts();
+      final List<Product> products = productService.listProducts();
       productComboBox.setItems(FXCollections.observableArrayList(products));
       for (Product product : products) {
         productCache.put(product.getId(), product);

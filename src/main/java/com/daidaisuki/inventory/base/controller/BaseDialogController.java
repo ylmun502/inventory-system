@@ -1,53 +1,51 @@
 package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.util.AlertHelper;
+import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import javafx.fxml.FXML;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
-public abstract class BaseDialogController<T> {
+public abstract class BaseDialogController<R, VM extends BaseDialogViewModel<R>> {
   protected Stage dialogStage;
-  protected T model;
-  protected boolean saveClicked = false;
+  protected boolean confirmed = false;
+  protected final VM viewModel;
+
+  @FXML protected Button confirmButton;
+
+  protected BaseDialogController(VM viewModel) {
+    this.viewModel = viewModel;
+  }
 
   public void setDialogStage(Stage dialogStage) {
     this.dialogStage = dialogStage;
   }
 
-  public boolean isSaveClicked() {
-    return saveClicked;
+  public boolean isConfirmed() {
+    return this.confirmed;
   }
 
-  public T getModel() {
-    return model;
+  public R getResult() {
+    return confirmed ? this.viewModel.createResult() : null;
   }
-
-  public abstract void setModel(T model);
 
   protected void showError(String message) {
     AlertHelper.showErrorAlert(dialogStage, "Invalid Input", "Please fix input errors", message);
   }
 
-  protected String sanitizeInput(TextField field) {
-    return field.getText() == null ? null : field.getText().trim();
-  }
-
-  protected String sanitizeOrNull(TextField field) {
-    String value = sanitizeInput(field);
-    return value.isEmpty() ? null : value;
-  }
-
-  protected void closeDialog() {
-    if (dialogStage != null) {
-      dialogStage.close();
+  @FXML
+  protected void handleConfirm() {
+    if (!this.viewModel.isInvalidProperty().get()) {
+      this.confirmed = true;
+      this.dialogStage.close();
+    } else {
+      AlertHelper.showWarningAlert(
+          dialogStage, "Invalid Input", null, "Please check the required fields.");
     }
   }
 
   @FXML
   protected void handleCancel() {
-    closeDialog();
+    this.dialogStage.close();
   }
-
-  @FXML
-  protected abstract void handleSave();
 }

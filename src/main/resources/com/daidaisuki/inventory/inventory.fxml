@@ -10,22 +10,134 @@
 
 <VBox xmlns="http://javafx.com/javafx/13"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.daidaisuki.inventory.controller.view.InventoryController">
-    <Label text="Inventory" styleClass="page-title"/>
-    <TableView fx:id="productTable">
-        <columns>
-            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="categoryCol" text="Category"/>
-            <TableColumn fx:id="stockCol" text="Stock"/>
-            <TableColumn fx:id="priceCol" text="Price"/>
-            <TableColumn fx:id="availabilityCol" text="Availability"/>
-            <TableColumn fx:id="costCol" text="Cost"/>
-            <TableColumn fx:id="shippingCol" text="Shipping"/>
-        </columns>
-    </TableView>
-    <HBox spacing="8">
-        <Button fx:id="addButton" text="Add Product" onAction="#handleAdd"/>
-        <Button fx:id="editButton" text="Edit Product" onAction="#handleEdit"/>
-        <Button fx:id="deleteButton" text="Delete Product" onAction="#handleDelete"/>
+      fx:controller="com.daidaisuki.inventory.controller.view.InventoryController"
+      spacing="10">
+
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="Inventory Management" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>
+        <Label fx:id="userLabel" styleClass="user-label"/>
     </HBox>
+
+    <HBox styleClass="toolbar">
+        <Button fx:id="addButton" text="Add" styleClass="primary" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit" styleClass="secondary" onAction="#handleEdit"/>
+        <Button fx:id="deleteButton" text="Delete" styleClass="danger" onAction="#handleDelete"/>
+
+        <Separator orientation="VERTICAL"/>
+
+        <Button fx:id="receiveStockButton" text="Receive Stock" styleClass="primary" onAction="#handleReceiveStock"/>
+        <MenuButton text="Adjust & Return">
+            <items>
+                <MenuItem text="Adjust Stock" onAction="#handleAdjustStock"/>
+                <MenuItem text="Customer Return" onAction="#handleProcessReturn"/>
+            </items>
+        </MenuButton>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <SplitPane orientation="VERTICAL" dividerPositions="0.5" VBOX.vgrow="ALWAYS">
+        <items>
+
+            <VBox spacing="10">
+                <TableView fx:id="table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="skuCol" text="SKU" prefWidth="100"/>
+                        <TableColumn fx:id="nameCol" text="Name" prefWidth="200"/>   
+                        <TableColumn fx:id="categoryCol" text="Category" prefWidth="200"/>                   
+                        <TableColumn fx:id="currentStockCol" text="Stock" prefWidth="80"/>
+                        <TableColumn fx:id="sellingPriceCol" text="Selling Price" prefWidth="120"/>
+                        <TableColumn fx:id="statusCol" text="Status" prefWidth="100"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <VBox styleClass="detail-section">
+                <TabPane fx:id="detailTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                    <tabs>
+
+                        <Tab text="Product Overview">
+                            <VBox spacing="15" padding="15">
+                                <GridPane hgap="20" vgap="10">
+                                    <columnConstraints>
+                                        <ColumnConstraints prefWidth="150"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                        <ColumnConstraints prefWidth="150"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                    </columnConstraints>
+
+                                    <Label text="Barcode:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="grid-label"/>
+                                    <Label fx:id="barcodeLabel" text="--" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="grid-label"/>
+
+                                    <Label text="Reorder Level:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="text-muted"/>
+                                    <Label fx:id="reorderLevelLabel" text="--" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                                    <Label text="Tax:" GridPane.rowIndex="0" GridPane.columnIndex="2" styleClass="text-muted"/>
+                                    <Label fx:id="taxLabel" text="--" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                                    <Label text="Weight:" GridPane.rowIndex="1" GridPane.columnIndex="2" styleClass="text-muted"/>
+                                    <Label fx:id="weightLabel" text="--" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                                    <Label text="Unit Type:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="text-muted"/>
+                                    <Label fx:id="unitTypeLabel" text="--" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                                    <Label text="Min Stock:" GridPane.rowIndex="2" GridPane.columnIndex="2" styleClass="text-muted"/>
+                                    <Label fx:id="minStockLabel" text="--" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+                                </GridPane>
+
+                                <Separator/>
+
+                                <HBox spacing="30" alignment="CENTER" styleClass="hbox">
+                                    <VBox alignment="CENTER">
+                                        <Label text="Average Unit Cost" styleClass="metric-label"/>
+                                        <Label fx:id="averageUnitCostLabel" text="$0.00" styleClass="metric-value"/>
+                                    </VBox>
+                                    <VBox alignment="CENTER">
+                                        <Label text="Markup %" styleClass="metric-label"/>
+                                        <Label fx:id="markupLabel" text="0%" styleClass="metric-value, markup-positive"/>
+                                    </VBox>
+                                    <VBox alignment="CENTER">
+                                        <Label text="Total Valuation" styleClass="metric-label"/>
+                                        <Label fx:id="productTotalValueLabel" text="$0.00" styleClass="metric-value"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+                        </Tab>
+
+                        <Tab text="Active Stock Batches">
+                            <TableView fx:id="batchesTable">
+                                <columns>
+                                    <TableColumn fx:id="batchIdCol" text="Batch ID" prefWidth="100"/>
+                                    <TableColumn fx:id="batchCodeCol" text="Batch Code" prefWidth="120"/>
+                                    <TableColumn fx:id="batchDateCol" text="Received Date" prefWidth="150"/>
+                                    <TableColumn fx:id="batchExpiryCol" text="Expiry Date" prefWidth="120"/>
+                                    <TableColumn fx:id="quantityRemainingCol" text="Quantity Remaining" prefWidth="120"/>
+                                    <TableColumn fx:id="unitCostCol" text="Unit Cost" prefWidth="120"/>
+                                    <TableColumn fx:id="landedCostCol" text="Landed Cost" prefWidth="120"/>
+                                </columns>
+                            </TableView>
+                        </Tab>
+
+                        <Tab text="Transaction History">
+                            <TableView fx:id="transactionTable">
+                                <columns>
+                                    <TableColumn fx:id="transactionDateCol" text="Timestamp" prefWidth="180"/>
+                                    <TableColumn fx:id="transactionTypeCol" text="Action" prefWidth="120"/>
+                                    <TableColumn fx:id="transactionAmountCol" text="Change" prefWidth="100"/>
+                                    <TableColumn fx:id="transactionReasonCol" text="Reason" prefWidth="200"/>
+                                </columns>
+                            </TableView>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </VBox>
+
+        </items>
+    </SplitPane>
+
 </VBox>

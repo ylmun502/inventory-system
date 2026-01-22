@@ -1,133 +1,217 @@
 package com.daidaisuki.inventory.controller.view;
 
-import com.daidaisuki.inventory.App;
 import com.daidaisuki.inventory.base.controller.BaseTableController;
 import com.daidaisuki.inventory.controller.dialog.CustomerDialogController;
 import com.daidaisuki.inventory.enums.DialogView;
+import com.daidaisuki.inventory.enums.FulfillmentStatus;
 import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.service.CustomerService;
-import com.daidaisuki.inventory.util.FxWindowUtils;
+import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.DateUtils;
 import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
-import com.daidaisuki.inventory.util.ViewLoader;
-import java.io.IOException;
-import java.sql.SQLException;
+import com.daidaisuki.inventory.viewmodel.dialog.CustomerDialogViewModel;
+import com.daidaisuki.inventory.viewmodel.view.CustomersViewModel;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 
-public class CustomersController extends BaseTableController<Customer> {
-  @FXML private TableView<Customer> customerTable;
-  @FXML private TableColumn<Customer, String> nameCol;
-  @FXML private TableColumn<Customer, Integer> totalOrdersCol;
-  @FXML private TableColumn<Customer, Double> totalSpentCol;
-  @FXML private TableColumn<Customer, Double> totalDiscountCol;
-  @FXML private TableColumn<Customer, String> platformCol;
+public class CustomersController extends BaseTableController<Customer, CustomersViewModel> {
+  @FXML private TableColumn<Customer, String> fullNameCol;
+  @FXML private TableColumn<Customer, BigDecimal> totalSpentCol;
+  @FXML private TableColumn<Customer, String> acquisitionSourceCol;
+  @FXML private TableColumn<Customer, OffsetDateTime> lastOrderDateCol;
 
-  @FXML private Button addButton;
-  @FXML private Button editButton;
-  @FXML private Button deleteButton;
+  @FXML private Label fullNameLabel;
+  @FXML private Label emailLabel;
+  @FXML private Label phoneNumberLabel;
+  @FXML private Label addressLabel;
+  @FXML private Label totalOrdersLabel;
+  @FXML private Label totalSpentLabel;
+  @FXML private Label totalDiscountLabel;
+  @FXML private Label averageOrderValueLabel;
+  @FXML private Label acquisitionSourceLabel;
+  @FXML private Label createdAtLabel;
+  @FXML private Label updatedAtLabel;
 
-  private final CustomerService customerService;
+  @FXML private TableView<Order> orderTable;
+  @FXML private TableColumn<Order, Number> orderIdCol;
+  @FXML private TableColumn<Order, OffsetDateTime> orderDateCol;
+  @FXML private TableColumn<Order, FulfillmentStatus> orderStatusCol;
+  @FXML private TableColumn<Order, BigDecimal> orderTotalCol;
 
-  public CustomersController() {
-    this.customerService = new CustomerService();
+  public CustomersController(CustomersViewModel viewModel) {
+    super(viewModel);
   }
 
   @FXML
   public void initialize() {
     setupColumns();
-    initializeBase(customerTable, addButton, editButton, deleteButton);
-    nameCol.setSortType(TableColumn.SortType.ASCENDING);
-    customerTable.getSortOrder().add(nameCol);
+    setupOrderColumn();
+    initializeBase(this.table, this.addButton, this.editButton, this.deleteButton);
+    this.fullNameCol.setSortType(TableColumn.SortType.ASCENDING);
+    this.table.getSortOrder().add(this.fullNameCol);
+    this.table.sort();
+    this.orderDateCol.setSortType(TableColumn.SortType.DESCENDING);
+    this.orderTable.getSortOrder().add(this.orderDateCol);
+    this.table
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener(
+            (obs, oldVal, newVal) -> {
+              updateDetailPane(newVal);
+            });
   }
 
-  public void setupColumns() {
-    List<Double> ratios = new ArrayList<>(Collections.nCopies(5, 0.2));
-    TableColumnUtils.bindColumnWidthsByRatio(customerTable, ratios);
-    nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-    platformCol.setCellValueFactory(cellData -> cellData.getValue().platformProperty());
-    totalOrdersCol.setCellValueFactory(
-        cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalOrders()));
-    totalSpentCol.setCellValueFactory(
-        cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalSpent()));
-    totalDiscountCol.setCellValueFactory(
-        cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTotalDiscount()));
+  private void setupColumns() {
+    List<Double> ratios = new ArrayList<>(Collections.nCopies(7, 0.2));
+    TableColumnUtils.bindColumnWidthsByRatio(this.table, ratios);
+    this.fullNameCol.setCellValueFactory(cellData -> cellData.getValue().fullNameProperty());
+    this.acquisitionSourceCol.setCellValueFactory(
+        cellData -> cellData.getValue().acquisitionSourceProperty());
+    this.totalSpentCol.setCellValueFactory(cellData -> cellData.getValue().totalSpentProperty());
+    this.lastOrderDateCol.setCellValueFactory(
+        cellData -> cellData.getValue().lastOrderDateProperty());
 
-    nameCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
-    platformCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
-    totalOrdersCol.setCellFactory(TableCellUtils.centerAlignedIntegerCellFactory());
-    totalSpentCol.setCellFactory(TableCellUtils.centerAlignedPriceCellFactory());
-    totalDiscountCol.setCellFactory(TableCellUtils.centerAlignedPriceCellFactory());
+    this.fullNameCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
+    this.acquisitionSourceCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
+    this.totalSpentCol.setCellFactory(TableCellUtils.centerAlignedCurrencyCellFactory());
+    this.lastOrderDateCol.setCellFactory(TableCellUtils.centerAlignedDateCellFactory());
   }
 
-  @Override
-  protected List<Customer> fetchFromDB() throws SQLException {
-    List<Customer> customers = customerService.getAllCustomers();
-    for (Customer customer : customers) {
-      customerService.enrichCustomerStats(customer);
+  private void setupOrderColumn() {
+    this.orderIdCol.setCellValueFactory(celldata -> celldata.getValue().idProperty());
+    this.orderDateCol.setCellValueFactory(celldata -> celldata.getValue().createdAtProperty());
+    this.orderStatusCol.setCellValueFactory(
+        celldata -> celldata.getValue().fulfillmentStatusProperty());
+    this.orderTotalCol.setCellValueFactory(celldata -> celldata.getValue().totalItemsProperty());
+
+    this.orderIdCol.setCellFactory(TableCellUtils.centerAlignedNumberCellFactory());
+    this.orderDateCol.setCellFactory(TableCellUtils.centerAlignedDateCellFactory());
+    this.orderStatusCol.setCellFactory(TableCellUtils.centerAlignedEnumCellFactory());
+    this.orderTotalCol.setCellFactory(TableCellUtils.centerAlignedCurrencyCellFactory());
+  }
+
+  private void updateDetailPane(Customer customer) {
+    unBindLabels();
+    if (customer == null) {
+      clearLabels();
+      this.orderTable.setItems(FXCollections.emptyObservableList());
+      return;
     }
-    return customers;
+    bindLabels(customer);
   }
 
-  @Override
-  protected Window getWindow() {
-    return FxWindowUtils.getWindow(customerTable);
+  private void bindLabels(Customer customer) {
+    this.fullNameLabel.textProperty().bind(customer.fullNameProperty());
+    this.acquisitionSourceLabel.textProperty().bind(customer.acquisitionSourceProperty());
+    this.emailLabel.textProperty().bind(customer.emailProperty());
+    this.phoneNumberLabel.textProperty().bind(customer.phoneNumberProperty());
+    this.addressLabel.textProperty().bind(customer.addressProperty());
+    this.totalOrdersLabel.textProperty().bind(customer.totalOrdersProperty().asString());
+    this.totalSpentLabel
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () -> CurrencyUtil.format(customer.getTotalSpent()),
+                customer.totalSpentProperty()));
+    this.totalDiscountLabel
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () -> CurrencyUtil.format(customer.getTotalDiscount()),
+                customer.totalDiscountProperty()));
+    this.averageOrderValueLabel
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () -> CurrencyUtil.format(customer.getAverageOrderValue()),
+                customer.averageOrderValueProperty()));
+    this.createdAtLabel
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () -> DateUtils.format(customer.getCreatedAt()), customer.createdAtProperty()));
+    this.updatedAtLabel
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () -> DateUtils.format(customer.getUpdatedAt()), customer.updatedAtProperty()));
+    this.orderTable.setItems(this.viewModel.getOrdersForCustomer(customer.getId()));
   }
 
-  @Override
-  protected void addItem(Customer customer) throws SQLException {
-    customerService.addCustomer(customer);
+  private void unBindLabels() {
+    fullNameLabel.textProperty().unbind();
+    acquisitionSourceLabel.textProperty().unbind();
+    emailLabel.textProperty().unbind();
+    phoneNumberLabel.textProperty().unbind();
+    addressLabel.textProperty().unbind();
+    totalOrdersLabel.textProperty().unbind();
+    totalSpentLabel.textProperty().unbind();
+    totalDiscountLabel.textProperty().unbind();
+    averageOrderValueLabel.textProperty().unbind();
+    createdAtLabel.textProperty().unbind();
+    updatedAtLabel.textProperty().unbind();
   }
 
-  @Override
-  protected void updateItem(Customer customer) throws SQLException {
-    customerService.updateCustomer(customer);
+  private void clearLabels() {
+    fullNameLabel.setText("Select a Customer");
+    acquisitionSourceLabel.setText("Source: --");
+    emailLabel.setText("Email: --");
+    phoneNumberLabel.setText("Phone: --");
+    addressLabel.setText("Address: --");
+    totalOrdersLabel.setText("0");
+    totalSpentLabel.setText("$0.00");
+    totalDiscountLabel.setText("$0.00");
+    averageOrderValueLabel.setText("$0.00");
+    createdAtLabel.setText("Created: --");
+    updatedAtLabel.setText("Updated: --");
   }
 
-  @Override
-  protected void deleteItem(Customer customer) throws SQLException {
-    customerService.deleteCustomer(customer.getId());
-  }
-
-  @Override
-  protected Customer showDialog(Customer customerToEdit) {
-    return showCustomerDialog(customerToEdit);
-  }
-
-  private Customer showCustomerDialog(Customer customerToEdit) {
-    try {
-      FXMLLoader loader = ViewLoader.loadFxml(DialogView.CUSTOMER_DIALOG);
-      Stage dialogStage = new Stage();
-      dialogStage.initModality(Modality.APPLICATION_MODAL);
-      dialogStage.initOwner(customerTable.getScene().getWindow());
-      Scene scene = new Scene(loader.load());
-      scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
-      dialogStage.setScene(scene);
-
-      CustomerDialogController controller = loader.getController();
-      controller.setDialogStage(dialogStage);
-      controller.setModel(customerToEdit);
-
-      dialogStage.showAndWait();
-
-      return controller.isSaveClicked() ? controller.getModel() : null;
-    } catch (IOException e) {
-      e.printStackTrace();
-      return null;
+  @FXML
+  private void handleAdd() throws Exception {
+    Customer customer =
+        this.showGenericDialog(
+            CustomerDialogController.class,
+            DialogView.CUSTOMER_DIALOG,
+            new CustomerDialogViewModel(this.viewModel.getCustomerService()),
+            null);
+    if (customer != null) {
+      this.viewModel.add(customer);
     }
   }
 
   @FXML
-  private void handleViewOrders() {}
+  private void handleEdit() throws Exception {
+    Customer selectedCustomer = this.viewModel.selectedItemProperty().get();
+    if (selectedCustomer != null) {
+      CustomerDialogViewModel dialogViewModel =
+          new CustomerDialogViewModel(this.viewModel.getCustomerService());
+      Customer updatedCustomer =
+          showGenericDialog(
+              CustomerDialogController.class,
+              DialogView.CUSTOMER_DIALOG,
+              dialogViewModel,
+              selectedCustomer);
+      if (updatedCustomer != null) {
+        this.viewModel.update(updatedCustomer);
+      }
+    }
+  }
+
+  @FXML
+  private void handleDelete() throws Exception {
+    Customer selectedCustomer = this.viewModel.selectedItemProperty().get();
+    if (selectedCustomer != null) {
+      this.viewModel.delete(selectedCustomer);
+    }
+  }
 }
