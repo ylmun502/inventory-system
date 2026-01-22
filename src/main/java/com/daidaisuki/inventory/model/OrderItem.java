@@ -1,195 +1,205 @@
 package com.daidaisuki.inventory.model;
 
+import com.daidaisuki.inventory.model.base.BaseModel;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.ReadOnlyLongProperty;
+import javafx.beans.property.ReadOnlyLongWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-public class OrderItem {
-  private final ObjectProperty<Product> product = new SimpleObjectProperty<>();
-  private final IntegerProperty id = new SimpleIntegerProperty(-1);
-  private final IntegerProperty orderId = new SimpleIntegerProperty(-1);
-  private final IntegerProperty productId = new SimpleIntegerProperty(-1);
-  private final IntegerProperty quantity = new SimpleIntegerProperty(0);
-  private final DoubleProperty unitPrice = new SimpleDoubleProperty(0.0);
-  private final DoubleProperty costAtSale = new SimpleDoubleProperty(0.0);
+public class OrderItem extends BaseModel {
+  private final ReadOnlyIntegerWrapper orderId = new ReadOnlyIntegerWrapper(this, "orderId", -1);
+  private final ReadOnlyIntegerWrapper productId =
+      new ReadOnlyIntegerWrapper(this, "productId", -1);
+  private final ReadOnlyIntegerWrapper batchId = new ReadOnlyIntegerWrapper(this, "batchId", -1);
 
-  private final ReadOnlyDoubleWrapper subtotal = new ReadOnlyDoubleWrapper();
+  private final IntegerProperty quantity = new SimpleIntegerProperty(0);
+  private final LongProperty unitPriceAtSaleCents = new SimpleLongProperty(0L);
+  private final LongProperty unitCostAtSaleCents = new SimpleLongProperty(0L);
+
+  private final ObjectProperty<Product> product = new SimpleObjectProperty<>();
+
+  private final ReadOnlyLongWrapper subtotal = new ReadOnlyLongWrapper();
   private final ReadOnlyStringWrapper productName = new ReadOnlyStringWrapper("");
 
   public OrderItem() {
+    super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
     initBindings();
   }
 
   public OrderItem(
-      int id, int orderId, int productId, int quantity, double unitPrice, double costAtSale) {
-    this.id.set(id);
+      int id,
+      int orderId,
+      int productId,
+      int batchId,
+      int quantity,
+      long unitPriceAtSaleCents,
+      long unitCostAtSaleCents,
+      OffsetDateTime createdAt,
+      OffsetDateTime updatedAt,
+      boolean deleted) {
+    super(id, createdAt, updatedAt, deleted);
+    initBindings();
     this.orderId.set(orderId);
     this.productId.set(productId);
+    this.batchId.set(batchId);
     this.quantity.set(quantity);
-    this.unitPrice.set(unitPrice);
-    this.costAtSale.set(costAtSale);
+    this.unitPriceAtSaleCents.set(unitPriceAtSaleCents);
+    this.unitCostAtSaleCents.set(unitCostAtSaleCents);
+  }
+
+  public OrderItem(
+      int orderId,
+      int productId,
+      int batchId,
+      int quantity,
+      long unitPriceAtSaleCents,
+      long unitCostAtSaleCents) {
+    super(-1, OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC), false);
     initBindings();
+    this.orderId.set(orderId);
+    this.productId.set(productId);
+    this.batchId.set(batchId);
+    this.quantity.set(quantity);
+    this.unitPriceAtSaleCents.set(unitPriceAtSaleCents);
+    this.unitCostAtSaleCents.set(unitCostAtSaleCents);
   }
 
   public OrderItem(Product product, int quantity) {
+    this();
     this.product.set(product);
     this.productId.set(product != null ? product.getId() : -1);
-    this.unitPrice.set(product != null ? product.getPrice() : 0.0);
+    this.unitPriceAtSaleCents.set(product != null ? product.getSellingPriceCents() : 0);
     this.quantity.set(quantity);
-    initBindings();
   }
 
   private void initBindings() {
-    productName.bind(
-        Bindings.createStringBinding(
-            () -> product.get() != null ? product.get().getName() : "", product));
+    this.productName.bind(
+        this.product.flatMap(Product::nameProperty).orElse("No Product Assigned"));
+    this.subtotal.bind(
+        Bindings.createLongBinding(
+            () -> getUnitPriceAtSaleCents() * getQuantity(),
+            this.unitPriceAtSaleCents,
+            this.quantity));
+    /* Use this logic for Prototyping, Temporary Data Entry, or Live Estimation Tools
     subtotal.bind(
-        Bindings.createDoubleBinding(
+        Bindings.createLongBinding(
             () -> {
-              if (costAtSale.get() > 0) {
-                return costAtSale.get() * quantity.get();
+              if (unitCostAtSaleCents.get() > 0) {
+                return unitCostAtSaleCents.get() * quantity.get();
               }
-              double priceToUse =
-                  unitPrice.get() > 0
-                      ? unitPrice.get()
-                      : (product.get() != null ? product.get().getPrice() : 0.0);
+              long priceToUse =
+                  unitPriceCents.get() > 0
+                      ? unitPriceCents.get()
+                      : (product.get() != null ? product.get().getSellingPriceCents() : 0);
               return priceToUse * quantity.get();
             },
-            costAtSale,
-            unitPrice,
+            unitCostAtSaleCents,
+            unitPriceCents,
             quantity,
             product));
+    */
   }
 
-  public Product getProduct() {
-    return product.get();
-  }
-
-  public void setProduct(Product product) {
-    this.product.set(product);
-    this.productId.set(product != null ? product.getId() : -1);
-    if (product != null && unitPrice.get() <= 0) {
-      unitPrice.set(product.getPrice());
-    }
-  }
-
-  public ObjectProperty<Product> productProperty() {
-    return product;
-  }
-
-  public int getId() {
-    return id.get();
-  }
-
-  public void setId(int id) {
-    this.id.set(id);
-  }
-
-  public IntegerProperty idProperty() {
-    return id;
-  }
-
-  public int getOrderId() {
+  public final int getOrderId() {
     return orderId.get();
   }
 
-  public void setOrderId(int orderId) {
-    this.orderId.set(orderId);
+  public final ReadOnlyIntegerProperty orderIdProperty() {
+    return orderId.getReadOnlyProperty();
   }
 
-  public IntegerProperty orderIdProperty() {
-    return orderId;
-  }
-
-  public int getProductId() {
+  public final int getProductId() {
     return productId.get();
   }
 
-  public void setProductId(int productId) {
-    this.productId.set(productId);
+  public final ReadOnlyIntegerProperty productIdProperty() {
+    return productId.getReadOnlyProperty();
   }
 
-  public IntegerProperty productIdProperty() {
-    return productId;
+  public final int getBatchId() {
+    return batchId.get();
   }
 
-  public int getQuantity() {
+  public final ReadOnlyIntegerProperty batchIdProperty() {
+    return batchId.getReadOnlyProperty();
+  }
+
+  public final int getQuantity() {
     return quantity.get();
   }
 
-  public void setQuantity(int quantity) {
+  public final void setQuantity(int quantity) {
     this.quantity.set(quantity);
   }
 
-  public IntegerProperty quantityProperty() {
+  public final IntegerProperty quantityProperty() {
     return quantity;
   }
 
-  public double getUnitPrice() {
-    return unitPrice.get();
+  public final long getUnitPriceAtSaleCents() {
+    return unitPriceAtSaleCents.get();
   }
 
-  public void setUnitPrice(double price) {
-    this.unitPrice.set(price);
+  public final void setUnitPriceAtSaleCents(long unitPriceCents) {
+    this.unitPriceAtSaleCents.set(unitPriceCents);
   }
 
-  public DoubleProperty unitPriceProperty() {
-    return unitPrice;
+  public final LongProperty unitPriceAtSaleCentsProperty() {
+    return unitPriceAtSaleCents;
   }
 
-  public double getCostAtSale() {
-    return costAtSale.get();
+  public final long getUnitCostAtSaleCents() {
+    return unitCostAtSaleCents.get();
   }
 
-  public void setCostAtSale(double cost) {
-    this.costAtSale.set(cost);
+  public final void setUnitCostAtSaleCents(long costAtSaleCents) {
+    this.unitCostAtSaleCents.set(costAtSaleCents);
   }
 
-  public DoubleProperty costAtSaleProperty() {
-    return costAtSale;
+  public final LongProperty unitCostAtSaleCentsProperty() {
+    return unitCostAtSaleCents;
   }
 
-  public double getSubtotal() {
+  public final Product getProduct() {
+    return product.get();
+  }
+
+  public final void setProduct(Product product) {
+    this.product.set(product);
+    this.productId.set(product != null ? product.getId() : -1);
+    if (product != null && unitPriceAtSaleCents.get() <= 0) {
+      unitPriceAtSaleCents.set(product.getSellingPriceCents());
+    }
+  }
+
+  public final ObjectProperty<Product> productProperty() {
+    return product;
+  }
+
+  public final long getSubtotal() {
     return subtotal.get();
   }
 
-  public ReadOnlyDoubleProperty subtotalProperty() {
+  public final ReadOnlyLongProperty subtotalProperty() {
     return subtotal.getReadOnlyProperty();
   }
 
-  public String getProductName() {
+  public final String getProductName() {
     return productName.get();
   }
 
-  public ReadOnlyStringProperty productNameProperty() {
+  public final ReadOnlyStringProperty productNameProperty() {
     return productName.getReadOnlyProperty();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    OrderItem other = (OrderItem) obj;
-    if (this.getId() == -1 || other.getId() == -1) {
-      return this == other;
-    }
-    return id.get() == other.getId();
-  }
-
-  @Override
-  public int hashCode() {
-    return (getId() == -1) ? System.identityHashCode(this) : Integer.hashCode(getId());
   }
 }

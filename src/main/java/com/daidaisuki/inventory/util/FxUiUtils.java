@@ -3,12 +3,13 @@ package com.daidaisuki.inventory.util;
 import javafx.scene.control.Button;
 
 /**
- * Utility class for common JavaFX UI-related operations.
+ * Deprecated as buttons are bound to properties Utility class for common JavaFX UI-related
+ * operations.
  *
  * <p>Provides convenience methods to handle UI interactions such as disabling buttons during
  * execution of a task.
  */
-public class FxUiUtils {
+public final class FxUiUtils {
   private FxUiUtils() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");

@@ -31,7 +31,7 @@ import javafx.stage.Window;
  * methods in this class handle thread checking internally using {@link
  * Platform#runLater(Runnable)}.
  */
-public class AlertHelper {
+public final class AlertHelper {
   private static final String STYLESHEET = App.class.getResource("styles.css").toExternalForm();
   private static final int ALERT_PREF_HEIGHT = 350;
   private static final int ALERT_PREF_WIDTH = 400;

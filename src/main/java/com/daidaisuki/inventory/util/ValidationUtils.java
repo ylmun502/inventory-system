@@ -2,7 +2,7 @@ package com.daidaisuki.inventory.util;
 
 import java.util.regex.Pattern;
 
-public class ValidationUtils {
+public final class ValidationUtils {
   private static final Pattern DECIMAL_PATTERN = Pattern.compile("\\d+(\\.\\d+)?");
   private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
 
@@ -12,7 +12,7 @@ public class ValidationUtils {
   }
 
   public static boolean isFieldEmpty(String text, String fieldName, StringBuilder errorMessage) {
-    if (text.isEmpty()) {
+    if (text == null || text.isBlank()) {
       errorMessage.append(fieldName).append(" is required.\n");
       return true;
     }
@@ -22,7 +22,7 @@ public class ValidationUtils {
   public static boolean isNumeric(
       String text, String fieldName, StringBuilder errorMessage, boolean allowDecimal) {
     Pattern pattern = allowDecimal ? DECIMAL_PATTERN : INTEGER_PATTERN;
-    if (text.isEmpty() || !pattern.matcher(text).matches()) {
+    if (text == null || text.isBlank() || !pattern.matcher(text).matches()) {
       errorMessage
           .append(fieldName)
           .append(" must be a ")

@@ -1,149 +1,186 @@
 package com.daidaisuki.inventory.model;
 
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
+import com.daidaisuki.inventory.model.base.BaseModel;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.OffsetDateTime;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class Customer {
-  private final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
-  private final StringProperty name = new SimpleStringProperty(this, "name", "");
+public class Customer extends BaseModel {
+  private final StringProperty fullName = new SimpleStringProperty(this, "fullName", "");
   private final StringProperty phoneNumber = new SimpleStringProperty(this, "phoneNumber", "");
   private final StringProperty email = new SimpleStringProperty(this, "email", "");
   private final StringProperty address = new SimpleStringProperty(this, "address", "");
-  private final StringProperty platform = new SimpleStringProperty(this, "platform", "");
+  private final StringProperty acquisitionSource =
+      new SimpleStringProperty(this, "acquisitionSource", "");
+  private final IntegerProperty totalOrders = new SimpleIntegerProperty(this, "totalOrders", 0);
+  private final ObjectProperty<BigDecimal> totalSpent =
+      new SimpleObjectProperty<>(this, "totalSpent", decimalZero());
+  private final ObjectProperty<BigDecimal> totalDiscount =
+      new SimpleObjectProperty<>(this, "totalDiscount", decimalZero());
+  private final ObjectProperty<BigDecimal> averageOrderValue =
+      new SimpleObjectProperty<>(this, "averageOrderValue", decimalZero());
+  private final ReadOnlyObjectWrapper<OffsetDateTime> lastOrderDate =
+      new ReadOnlyObjectWrapper<>(this, "lastOrderDate");
 
-  private transient int totalOrders;
-  private transient double totalSpent;
-  private transient double totalDiscount;
-
-  public Customer() {}
+  public Customer() {
+    super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
+  }
 
   public Customer(
-      int id, String name, String phoneNumber, String email, String address, String platform) {
-    this.id.set(id);
-    this.name.set(name);
+      int id,
+      String fullName,
+      String phoneNumber,
+      String email,
+      String address,
+      String acquisitionSource,
+      int totalOrders,
+      BigDecimal totalSpent,
+      BigDecimal totalDiscount,
+      BigDecimal averageOrderValue,
+      OffsetDateTime lastOrderDate,
+      OffsetDateTime createdAt,
+      OffsetDateTime updatedAt,
+      boolean deleted) {
+    super(id, createdAt, updatedAt, deleted);
+    this.fullName.set(fullName);
     this.phoneNumber.set(phoneNumber);
     this.email.set(email);
     this.address.set(address);
-    this.platform.set(platform);
+    this.acquisitionSource.set(acquisitionSource);
+    this.totalOrders.set(totalOrders);
+    this.totalSpent.set(sanitize(totalSpent));
+    this.totalDiscount.set(sanitize(totalDiscount));
+    this.averageOrderValue.set(sanitize(averageOrderValue));
+    this.lastOrderDate.set(lastOrderDate);
   }
 
-  public int getId() {
-    return this.id.get();
+  public final String getFullName() {
+    return this.fullName.get();
   }
 
-  public void setId(int id) {
-    this.id.set(id);
+  public final void setFullName(String fullName) {
+    this.fullName.set(fullName);
   }
 
-  public ReadOnlyIntegerProperty idProperty() {
-    return id.getReadOnlyProperty();
+  public final StringProperty fullNameProperty() {
+    return this.fullName;
   }
 
-  public String getName() {
-    return this.name.get();
-  }
-
-  public void setName(String value) {
-    this.name.set(value);
-  }
-
-  public StringProperty nameProperty() {
-    return this.name;
-  }
-
-  public String getPhoneNumber() {
+  public final String getPhoneNumber() {
     return this.phoneNumber.get();
   }
 
-  public void setPhoneNumber(String value) {
-    this.phoneNumber.set(value);
+  public final void setPhoneNumber(String phoneNumber) {
+    this.phoneNumber.set(phoneNumber);
   }
 
-  public StringProperty phoneNumberProperty() {
+  public final StringProperty phoneNumberProperty() {
     return this.phoneNumber;
   }
 
-  public String getEmail() {
+  public final String getEmail() {
     return this.email.get();
   }
 
-  public void setEmail(String value) {
-    this.email.set(value);
+  public final void setEmail(String email) {
+    this.email.set(email);
   }
 
-  public StringProperty emailProperty() {
-    return email;
+  public final StringProperty emailProperty() {
+    return this.email;
   }
 
-  public String getAddress() {
+  public final String getAddress() {
     return this.address.get();
   }
 
-  public void setAddress(String value) {
-    this.address.set(value);
+  public final void setAddress(String address) {
+    this.address.set(address);
   }
 
-  public StringProperty addressProperty() {
-    return address;
+  public final StringProperty addressProperty() {
+    return this.address;
   }
 
-  public String getPlatform() {
-    return this.platform.get();
+  public final String getAcquisitionSource() {
+    return this.acquisitionSource.get();
   }
 
-  public void setPlatform(String value) {
-    this.platform.set(value);
+  public final void setAcquisitionSource(String acquisitionSource) {
+    this.acquisitionSource.set(acquisitionSource);
   }
 
-  public StringProperty platformProperty() {
-    return platform;
+  public final StringProperty acquisitionSourceProperty() {
+    return this.acquisitionSource;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    Customer other = (Customer) obj;
-    return this.getId() == other.getId();
+  public final int getTotalOrders() {
+    return this.totalOrders.get();
   }
 
-  @Override
-  public int hashCode() {
-    return Integer.hashCode(getId());
+  public final void setTotalOrders(int totalOrders) {
+    this.totalOrders.set(totalOrders);
+  }
+
+  public final IntegerProperty totalOrdersProperty() {
+    return this.totalOrders;
+  }
+
+  public final BigDecimal getTotalSpent() {
+    return this.totalSpent.get();
+  }
+
+  public final ReadOnlyObjectProperty<BigDecimal> totalSpentProperty() {
+    return this.totalSpent;
+  }
+
+  public final BigDecimal getTotalDiscount() {
+    return this.totalDiscount.get();
+  }
+
+  public final ReadOnlyObjectProperty<BigDecimal> totalDiscountProperty() {
+    return this.totalDiscount;
+  }
+
+  public final BigDecimal getAverageOrderValue() {
+    return this.averageOrderValue.get();
+  }
+
+  public final ReadOnlyObjectProperty<BigDecimal> averageOrderValueProperty() {
+    return this.averageOrderValue;
+  }
+
+  public final OffsetDateTime getLastOrderDate() {
+    return this.lastOrderDate.get();
+  }
+
+  public final void setLastOrderDate(OffsetDateTime lastOrderDate) {
+    this.lastOrderDate.set(lastOrderDate);
+  }
+
+  public final ReadOnlyObjectProperty<OffsetDateTime> lastOrderDateProperty() {
+    return this.lastOrderDate.getReadOnlyProperty();
   }
 
   @Override
   public String toString() {
-    return getName();
+    if (this.getEmail() == null || this.getEmail().isEmpty()) return this.getFullName();
+    return this.getFullName() + " (" + this.getEmail() + ")";
   }
 
-  public int getTotalOrders() {
-    return this.totalOrders;
+  private BigDecimal decimalZero() {
+    return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
   }
 
-  public void setTotalOrders(int totalOrders) {
-    this.totalOrders = totalOrders;
-  }
-
-  public double getTotalSpent() {
-    return this.totalSpent;
-  }
-
-  public void setTotalSpent(double totalSpent) {
-    this.totalSpent = totalSpent;
-  }
-
-  public double getTotalDiscount() {
-    return this.totalDiscount;
-  }
-
-  public void setTotalDiscount(double totalDiscount) {
-    this.totalDiscount = totalDiscount;
+  private BigDecimal sanitize(BigDecimal value) {
+    return value == null ? decimalZero() : value.setScale(2, RoundingMode.HALF_UP);
   }
 }
