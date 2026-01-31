@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.enums.TransactionType;
 import com.daidaisuki.inventory.model.InventoryTransaction;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -74,7 +75,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
         transaction.getUserId(),
         transaction.getReferenceId(),
         transaction.getChangeAmount(),
-        transaction.getTransactionType(),
+        transaction.getTransactionType().name(),
         transaction.getReasonCode(),
         now,
         now,
@@ -155,7 +156,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
       int userId = rs.getInt("user_id");
       int referenceId = rs.getInt("reference_id");
       int changeAmount = rs.getInt("change_amount");
-      String transactionType = rs.getString("transaction_type");
+      TransactionType transactionType = TransactionType.valueOf(rs.getString("transaction_type"));
       String reasonCode = rs.getString("reason_code");
       OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
       OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);

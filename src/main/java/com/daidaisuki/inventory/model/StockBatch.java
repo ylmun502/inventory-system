@@ -39,8 +39,14 @@ public class StockBatch extends BaseModel {
   private final ReadOnlyObjectWrapper<BigDecimal> totalValue =
       new ReadOnlyObjectWrapper<>(this, "totalValue", BigDecimal.ZERO);
 
-  public StockBatch() {
+  public StockBatch(int productId, int supplierId, int quantity, BigDecimal unitCost) {
     super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
+    this.productId.set(productId);
+    this.supplierId.set(supplierId);
+    this.quantityReceived.set(quantity);
+    this.quantityRemaining.set(quantity);
+    this.unitCost.set(unitCost);
+    this.landedCost.set(unitCost);
     initBindings();
   }
 

@@ -32,6 +32,10 @@ public class TransactionManager {
 
   public <T> T executeInTransaction(TransactionCallable<T> action)
       throws SQLException, InsufficientStockException {
+    boolean alreadyInTransaction = !connection.getAutoCommit();
+    if (alreadyInTransaction) {
+      return action.execute();
+    }
     try {
       connection.setAutoCommit(false);
       T result = action.execute();
@@ -41,7 +45,9 @@ public class TransactionManager {
       connection.rollback();
       throw e;
     } finally {
-      connection.setAutoCommit(true);
+      if (!alreadyInTransaction) {
+        connection.setAutoCommit(true);
+      }
     }
   }
 }

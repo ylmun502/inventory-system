@@ -107,6 +107,10 @@ public class CustomersController extends BaseTableController<Customer, Customers
       this.orderTable.setItems(FXCollections.emptyObservableList());
       return;
     }
+    bindLabels(customer);
+  }
+
+  private void bindLabels(Customer customer) {
     this.fullNameLabel.textProperty().bind(customer.fullNameProperty());
     this.acquisitionSourceLabel.textProperty().bind(customer.acquisitionSourceProperty());
     this.emailLabel.textProperty().bind(customer.emailProperty());
@@ -175,7 +179,7 @@ public class CustomersController extends BaseTableController<Customer, Customers
   @FXML
   private void handleAdd() throws Exception {
     Customer customer =
-        showGenericDialog(
+        this.showGenericDialog(
             CustomerDialogController.class,
             DialogView.CUSTOMER_DIALOG,
             new CustomerDialogViewModel(this.viewModel.getCustomerService()),

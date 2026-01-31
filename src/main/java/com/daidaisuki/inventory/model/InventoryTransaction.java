@@ -1,5 +1,6 @@
 package com.daidaisuki.inventory.model;
 
+import com.daidaisuki.inventory.enums.TransactionType;
 import com.daidaisuki.inventory.model.base.BaseModel;
 import java.time.OffsetDateTime;
 import javafx.beans.property.IntegerProperty;
@@ -20,8 +21,8 @@ public class InventoryTransaction extends BaseModel {
   private final ReadOnlyIntegerWrapper referenceId =
       new ReadOnlyIntegerWrapper(this, "referenceId", -1);
   private final IntegerProperty changeAmount = new SimpleIntegerProperty(this, "changeAmount", 0);
-  private final StringProperty transactionType =
-      new SimpleStringProperty(this, "transactionType", "");
+  private final ObjectProperty<TransactionType> transactionType =
+      new SimpleObjectProperty<>(this, "transactionType", TransactionType.STOCK_IN);
   private final StringProperty reasonCode = new SimpleStringProperty(this, "reasonCode", "");
   private final ObjectProperty<Product> product = new SimpleObjectProperty<>(this, "product");
   private final ObjectProperty<StockBatch> batch = new SimpleObjectProperty<>(this, "batch");
@@ -39,7 +40,7 @@ public class InventoryTransaction extends BaseModel {
       int userId,
       int referenceId,
       int changeAmount,
-      String transactionType,
+      TransactionType transactionType,
       String reasonCode,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
@@ -103,15 +104,15 @@ public class InventoryTransaction extends BaseModel {
     return this.changeAmount;
   }
 
-  public final String getTransactionType() {
+  public final TransactionType getTransactionType() {
     return this.transactionType.get();
   }
 
-  public final void setTransactionType(String transactionType) {
+  public final void setTransactionType(TransactionType transactionType) {
     this.transactionType.set(transactionType);
   }
 
-  public final StringProperty transactionTypeProperty() {
+  public final ObjectProperty<TransactionType> transactionTypeProperty() {
     return this.transactionType;
   }
 

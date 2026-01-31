@@ -119,22 +119,14 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return query(sql, this::mapResultSetToStockBatch, productId);
   }
 
-  public boolean incrementQuantity(int batchId, int quantity) throws SQLException {
-    String sql =
-        """
-        UPDATE stock_batches SET quantity_remaining = quantity_remaining + ?, updated_at = ? WHERE id = ?
-        """;
-    return update(sql, quantity, OffsetDateTime.now(ZoneOffset.UTC), batchId) > 0;
-  }
-
-  public boolean decrementQuantity(int batchId, int quantity) throws SQLException {
+  public boolean updateStockTotal(int batchId, int changeAmount) throws SQLException {
     String sql =
         """
         UPDATE stock_batches
-        SET quantity_remaining = quantity_remaining - ?, updated_at = ?
-        WHERE id = ? AND quantity_remaining >= ?
+        SET quantity_remaining = quantity_remaining + ?, updated_at = ?
+        WHERE id = ? AND quantity_remaining + ? >= 0
         """;
-    return update(sql, quantity, OffsetDateTime.now(ZoneOffset.UTC), batchId, quantity) > 0;
+    return update(sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), batchId, changeAmount) > 0;
   }
 
   public Optional<StockBatch> findOldestAvailableBatch(int productId) throws SQLException {

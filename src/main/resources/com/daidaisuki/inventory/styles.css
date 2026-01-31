@@ -42,6 +42,12 @@
     -fx-font-weight: bold;
 }
 
+.user-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
 /* =========================
    BUTTONS
    ========================= */

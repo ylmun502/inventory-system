@@ -1,11 +1,13 @@
 package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.enums.DialogView;
+import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.ViewLoader;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.lang.reflect.Constructor;
+import java.sql.SQLException;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -20,7 +22,7 @@ import javafx.util.Pair;
 
 public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   @FXML protected TableView<T> table;
-  @FXML protected Button addButton; 
+  @FXML protected Button addButton;
   @FXML protected Button editButton;
   @FXML protected Button deleteButton;
   protected VM viewModel;
@@ -35,7 +37,7 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     this.addButton = addButton;
     this.editButton = editButton;
     this.deleteButton = deleteButton;
-    this.table.setItems(viewModel.getDataList());
+    this.table.setItems(this.viewModel.getDataList());
     this.viewModel
         .selectedItemProperty()
         .bind(this.table.getSelectionModel().selectedItemProperty());
@@ -43,11 +45,26 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     this.editButton.disableProperty().bind(nothingSelected);
     this.deleteButton.disableProperty().bind(nothingSelected);
     this.addButton.disableProperty().bind(this.viewModel.isBusyProperty());
-    this.viewModel.loadData();
+    this.viewModel.setOnError(
+        exception -> {
+          if (exception instanceof SQLException sqlException) {
+            AlertHelper.showDatabaseError(this.getWindow(), "Database Error", sqlException);
+          } else if (exception instanceof InsufficientStockException) {
+            AlertHelper.showWarningAlert(
+                getWindow(), "Stock Warning", null, exception.getMessage());
+          } else {
+            AlertHelper.showErrorAlert(
+                getWindow(),
+                "System Error",
+                "An unexpected error occurred",
+                exception.getMessage());
+          }
+        });
+    this.viewModel.refresh();
   }
 
-  protected <C extends BaseDialogController<T, ?>> T showGenericDialog(
-      Class<C> controllerClass, DialogView dialogView, Object viewModel, T initialItem) {
+  protected <R, C extends BaseDialogController<R, ?>> R showDialog(
+      Class<C> controllerClass, DialogView dialogView, Object viewModel) {
     try {
       Callback<Class<?>, Object> factory =
           type -> {
@@ -58,22 +75,18 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
           };
       Pair<Parent, C> pair = ViewLoader.loadViewWithControllerFactory(dialogView, factory);
       C controller = pair.getValue();
-      if (initialItem != null) {
-        controller.setModel(initialItem);
-      }
+
       Stage dialogStage = new Stage();
       dialogStage.initModality(Modality.APPLICATION_MODAL);
       dialogStage.initOwner(this.getWindow());
       dialogStage.setScene(new Scene(pair.getKey()));
       controller.setDialogStage(dialogStage);
       dialogStage.showAndWait();
-      if (controller.isSaveClicked()) {
-        return controller.getModel();
-      }
+      return controller.getResult();
     } catch (Exception e) {
-      e.printStackTrace();
+      this.viewModel.handleError(e);
+      return null;
     }
-    return null;
   }
 
   private <C, V> C newInstance(Class<C> controllerClass, V viewModel) {
@@ -96,14 +109,14 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     return null;
   }
 
-  private Window getWindow() {
+  protected Window getWindow() {
     return FxWindowUtils.getWindow(this.table);
   }
 
-  protected void deleteItem(T itemToDelete) throws Exception {
+  protected void deleteItem(T itemToDelete) {
     boolean confirmed =
         AlertHelper.showConfirmationAlert(
-            getWindow(),
+            this.getWindow(),
             "Delete Item",
             "Are you sure you want to delete this item?",
             "This action can not be undone.");

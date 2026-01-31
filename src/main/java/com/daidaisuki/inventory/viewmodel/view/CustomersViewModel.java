@@ -31,19 +31,19 @@ public class CustomersViewModel extends BaseListViewModel<Customer> {
   @Override
   public void add(Customer customer) throws SQLException {
     this.customerService.createCustomer(customer);
-    loadData();
+    refresh();
   }
 
   @Override
   public void update(Customer customer) throws SQLException {
     this.customerService.updateCustomer(customer);
-    loadData();
+    refresh();
   }
 
   @Override
   public void delete(Customer customer) throws SQLException {
     this.customerService.removeCustomer(customer.getId());
-    loadData();
+    refresh();
   }
 
   public ObservableList<Order> getOrdersForCustomer(int customerId) {

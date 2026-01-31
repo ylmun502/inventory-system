@@ -159,6 +159,42 @@ public final class TableCellUtils {
         };
   }
 
+  @SafeVarargs
+  public static <T> void setupStringCells(TableColumn<T, String>... cells) {
+    for (TableColumn<T, String> cell : cells) {
+      cell.setCellFactory(centerAlignedStringCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupNumberCells(TableColumn<T, Number>... cells) {
+    for (TableColumn<T, Number> cell : cells) {
+      cell.setCellFactory(centerAlignedNumberCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupCurrencyCells(TableColumn<T, BigDecimal>... cells) {
+    for (TableColumn<T, BigDecimal> cell : cells) {
+      cell.setCellFactory(centerAlignedCurrencyCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupDateCells(TableColumn<T, OffsetDateTime>... cells) {
+    for (TableColumn<T, OffsetDateTime> cell : cells) {
+      cell.setCellFactory(centerAlignedDateCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T, E extends Enum<E> & Displayable> void setupEnumCells(
+      TableColumn<T, E>... cells) {
+    for (TableColumn<T, E> cell : cells) {
+      cell.setCellFactory(centerAlignedEnumCellFactory());
+    }
+  }
+
   /** Setup the Actions column with Edit and Delete buttons for each row. */
   public static <T> Callback<TableColumn<T, Void>, TableCell<T, Void>> createActionCellFactory(
       Consumer<T> onEdit, Consumer<T> onDelete) {

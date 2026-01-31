@@ -1,0 +1,33 @@
+<VBox xmlns="http://javafx.com/javafx/13"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.daidaisuki.inventory.controller.dialog.receiveStockDialogController"
+      prefWidth="400" padding="20" spacing="10">
+
+    <Label text="Receive New Stock" styleClass="header-text"/>
+    <Label fx:id="productNameLabel" styleClass="product-subtitle" text="Product Name Here"/>
+
+    <GridPane vgap="10" hgap="10">
+        <Label text="Supplier:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="supplierCombo" promptText="Select Supplier..." prefWidth="250" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    
+        <Label text="Batch Code" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="batchCodeTextField" promptText="e.g. Lot-101-A" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Quantity" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="quantityTextField" promptText="2" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Unit Cost" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="unitCostTextField" promptText="0.00" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Expiry Date" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="expiryDatePicker" prefWidth="250" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Reason" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextArea fx:id="reasonTextArea" prefHeight="80" wrapText="true" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    </Gridpane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#handleCancel" styleClass="secondary"/>
+        <Button fx:id="confirmButton" text="Confirm" styleClass="primary"/>
+    </HBox>
+</VBox>

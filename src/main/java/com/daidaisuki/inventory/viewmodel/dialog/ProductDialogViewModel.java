@@ -1,12 +1,14 @@
 package com.daidaisuki.inventory.viewmodel.dialog;
 
 import com.daidaisuki.inventory.model.Product;
-import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.ui.validation.ValidationStatus;
+import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.StringCleaner;
 import com.daidaisuki.inventory.util.ValidationUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
+import java.math.BigDecimal;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -14,7 +16,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
-  private final ProductService productService;
+  private final Product product;
   private final ObjectBinding<ValidationStatus> validationStatus;
 
   public final StringProperty sku = new SimpleStringProperty("");
@@ -27,8 +29,15 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
   public final BooleanProperty isActive = new SimpleBooleanProperty(true);
 
   // Need to check validations
-  public ProductDialogViewModel(ProductService productService) {
-    this.productService = productService;
+  public ProductDialogViewModel(Product productToEdit) {
+    this.product = productToEdit;
+
+    if (productToEdit != null) {
+      this.mapModelToProperties(productToEdit);
+    } else {
+      this.resetProperties();
+    }
+
     this.validationStatus =
         Bindings.createObjectBinding(
             () -> {
@@ -55,8 +64,22 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
   }
 
   @Override
-  protected ObjectBinding<ValidationStatus> validationStatusProperty() {
-    return this.validationStatus;
+  public Product createResult() {
+    Product result = this.product == null ? new Product() : product;
+    result.setSku(this.sku.get());
+    result.setName(this.name.get());
+    result.setCategory(this.category.get());
+    result.setDescription(this.description.get());
+    result.setWeight(Integer.parseInt(this.weight.get().isEmpty() ? "0" : weight.get()));
+    result.setSellingPrice(new BigDecimal(price.get().isEmpty() ? "0" : price.get()));
+    result.setCurrentStock(Integer.parseInt(stock.get().isEmpty() ? "0" : stock.get()));
+    result.setActive(isActive.get());
+    return result;
+  }
+
+  @Override
+  public BooleanBinding isInvalidProperty() {
+    return Bindings.createBooleanBinding(() -> !validationStatus.get().isValid(), validationStatus);
   }
 
   @Override
@@ -71,42 +94,17 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.isActive.set(true);
   }
 
-  @Override
-  protected void mapModelToProperties() {
-    if (this.model != null) {
-      this.sku.set(this.model.getSku());
-      this.name.set(this.model.getName());
-      this.category.set(this.model.getCategory());
-      this.description.set(this.model.getDescription());
-      this.price.set(String.valueOf(this.model.getSellingPriceCents()));
-      this.stock.set(String.valueOf(this.model.getCurrentStock()));
-      this.isActive.set(this.model.isActive());
-    }
+  protected void mapModelToProperties(Product model) {
+    this.sku.set(model.getSku());
+    this.name.set(model.getName());
+    this.category.set(model.getCategory());
+    this.description.set(model.getDescription());
+    this.price.set(CurrencyUtil.format(model.getSellingPrice()));
+    this.stock.set(String.valueOf(model.getCurrentStock()));
+    this.isActive.set(model.isActive());
   }
 
-  @Override
-  protected Product mapPropertiesToModel() {
-    if (this.model == null) {
-      this.model = new Product();
-    }
-    this.model.setSku(sku.get());
-    this.model.setName(name.get());
-    this.model.setCategory(category.get());
-    this.model.setDescription(description.get());
-    this.model.setWeight(Integer.parseInt(weight.get()));
-    this.model.setSellingPriceCents(Long.parseLong(price.get()));
-    this.model.setCurrentStock(Integer.parseInt(stock.get()));
-    this.model.setActive(isActive.get());
-    return this.model;
-  }
-
-  @Override
-  public void save() throws Exception {
-    Product product = mapPropertiesToModel();
-    if (this.isNew()) {
-      this.productService.createProduct(product);
-    } else {
-      this.productService.updateProduct(product);
-    }
+  public BooleanBinding isNewProperty() {
+    return Bindings.createBooleanBinding(() -> product == null);
   }
 }

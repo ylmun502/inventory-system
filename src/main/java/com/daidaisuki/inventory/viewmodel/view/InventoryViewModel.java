@@ -1,20 +1,50 @@
 package com.daidaisuki.inventory.viewmodel.view;
 
+import com.daidaisuki.inventory.model.InventoryTransaction;
 import com.daidaisuki.inventory.model.Product;
+import com.daidaisuki.inventory.model.StockBatch;
+import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
+import com.daidaisuki.inventory.service.InventoryService;
 import com.daidaisuki.inventory.service.ProductService;
+import com.daidaisuki.inventory.service.SupplierService;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.util.List;
+import java.util.concurrent.Callable;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.concurrent.Task;
 
 public class InventoryViewModel extends BaseListViewModel<Product> {
   private final ProductService productService;
+  private final InventoryService inventoryService;
+  private final SupplierService supplierService;
+  private final ObservableList<StockBatch> selectedProductBatches =
+      FXCollections.observableArrayList();
+  private final ObservableList<InventoryTransaction> selectedProductTransactions =
+      FXCollections.observableArrayList();
   private final StringProperty searchFilter = new SimpleStringProperty();
   private final FilteredList<Product> filteredList;
 
-  public InventoryViewModel(ProductService service) {
-    this.productService = service;
+  public InventoryViewModel(
+      ProductService productService,
+      InventoryService inventoryService,
+      SupplierService supplierService) {
+    this.productService = productService;
+    this.inventoryService = inventoryService;
+    this.supplierService = supplierService;
+    this.selectedItem.addListener(
+        (obs, oldProduct, newProduct) -> {
+          if (newProduct != null) {
+            refreshDetail(newProduct.getId());
+          } else {
+            selectedProductBatches.clear();
+            selectedProductTransactions.clear();
+          }
+        });
     this.filteredList = new FilteredList<>(this.getDataList(), p -> true);
     this.searchFilter.addListener(
         (obs, oldVal, newVal) -> {
@@ -38,24 +68,46 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
         });
   }
 
-  @Override
-  protected List<Product> fetchItems() throws Exception {
-    return productService.listProducts();
+  public ProductService getProductService() {
+    return productService;
   }
 
-  @Override
-  public void add(Product item) throws Exception {
-    productService.createProduct(item);
+  public SupplierService getSupplierService() {
+    return supplierService;
   }
 
-  @Override
-  public void update(Product item) throws Exception {
-    productService.updateProduct(item);
+  private void refreshDetail(int productId) {
+    this.isBusy.set(true);
+    Task<Void> task =
+        new Task<>() {
+          @Override
+          protected Void call() throws Exception {
+            List<StockBatch> batches = inventoryService.listInventoryByProduct(productId);
+            List<InventoryTransaction> transactions =
+                inventoryService.getTransactionHistory(productId);
+            Platform.runLater(
+                () -> {
+                  selectedProductBatches.setAll(batches);
+                  selectedProductTransactions.setAll(transactions);
+                  isBusy.set(false);
+                });
+            return null;
+          }
+        };
+    task.setOnFailed(
+        e -> {
+          isBusy.set(false);
+          task.getException().printStackTrace();
+        });
+    new Thread(task).start();
   }
 
-  @Override
-  public void delete(Product item) throws Exception {
-    productService.removeProduct(item.getId());
+  public final ObservableList<StockBatch> getSelectedProductBatches() {
+    return selectedProductBatches;
+  }
+
+  public final ObservableList<InventoryTransaction> getSelectedProductTransactions() {
+    return selectedProductTransactions;
   }
 
   public final FilteredList<Product> getFilteredList() {
@@ -64,5 +116,71 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
 
   public final StringProperty searchFilterProperty() {
     return searchFilter;
+  }
+
+  @Override
+  protected List<Product> fetchItems() throws Exception {
+    return productService.listProducts();
+  }
+
+  @Override
+  public void add(Product item) {
+    this.runInventoryTask(
+        () -> {
+          productService.createProduct(item);
+          return null;
+        });
+  }
+
+  @Override
+  public void update(Product item) {
+    this.runInventoryTask(
+        () -> {
+          productService.updateProduct(item);
+          return null;
+        });
+  }
+
+  @Override
+  public void delete(Product item) {
+    this.runInventoryTask(
+        () -> {
+          productService.removeProduct(item.getId());
+          return null;
+        });
+  }
+
+  public void receiveStock(StockReceiveRequest receiveRequest, int userId) {
+    this.runInventoryTask(
+        () -> {
+          inventoryService.receiveNewStock(receiveRequest, userId);
+          return null;
+        });
+  }
+
+  private void runInventoryTask(Callable<Void> action) {
+    this.isBusy.set(true);
+    Task<Void> task =
+        new Task<>() {
+          @Override
+          protected Void call() throws Exception {
+            action.call();
+            return null;
+          }
+        };
+    task.setOnSucceeded(
+        e -> {
+          this.refresh();
+          if (selectedItem.get() != null) {
+            refreshDetail(selectedItem.get().getId());
+          }
+          this.isBusy.set(false);
+        });
+    task.setOnFailed(
+        e -> {
+          this.isBusy.set(false);
+          task.getException().printStackTrace();
+        });
+    new Thread(task).start();
   }
 }

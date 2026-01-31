@@ -9,7 +9,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
-public class ProductDialogController extends BaseDialogController<Product> {
+public class ProductDialogController extends BaseDialogController<Product, ProductDialogViewModel> {
   @FXML private TextField skuField;
   @FXML private TextField nameField;
   @FXML private TextField categoryField;
@@ -22,15 +22,27 @@ public class ProductDialogController extends BaseDialogController<Product> {
 
   @FXML private Label dialogTitle;
 
-  private ProductDialogViewModel viewModel;
+  public ProductDialogController(ProductDialogViewModel viewModel) {
+    super(viewModel);
+  }
 
-  public void setViewModel(ProductDialogViewModel viewModel) {
-    this.viewModel = viewModel;
+  @FXML
+  public void initialize() {
+    setupBinding();
+    this.dialogTitle
+        .textProperty()
+        .bind(
+            Bindings.when(this.viewModel.isNewProperty())
+                .then("Create Product")
+                .otherwise("Edit Product"));
+    if (confirmButton != null) {
+      confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
+    }
   }
 
   @Override
-  public Product getModel() {
-    return this.viewModel.getModel();
+  public Product getResult() {
+    return confirmed ? this.viewModel.createResult() : null;
   }
 
   @Override
@@ -64,18 +76,11 @@ public class ProductDialogController extends BaseDialogController<Product> {
 
   @FXML
   @Override
-  protected void handleSave() {
-    if (!this.viewModel.validate()) {
-      showError(this.viewModel.getValidationsErrors());
-      return;
-    }
-
-    try {
-      this.viewModel.save();
-      this.saveClicked = true;
-      closeDialog();
-    } catch (Exception e) {
-      showError("Failed to save product: \n" + e.getMessage());
+  protected void handleConfirm() {
+    if (!this.viewModel.isInvalidProperty().get()) {
+      this.confirmed = true;
+      this.dialogStage.close();
+    } else {
     }
   }
 }

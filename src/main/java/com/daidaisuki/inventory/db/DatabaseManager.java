@@ -34,7 +34,7 @@ public class DatabaseManager {
           """
           CREATE TABLE IF NOT EXISTS products (
                   -- Primary Identity
-                  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
 
                   -- Core Data
                   sku                   TEXT UNIQUE,
@@ -62,6 +62,25 @@ public class DatabaseManager {
       stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);");
       stmt.execute(
           "CREATE INDEX IF NOT EXISTS idx_products_sku_barcode ON products(sku, barcode);");
+
+      String createSupplierTable =
+          """
+          CREATE TABLE IF NOT EXIST suppliers (
+                  -- Primary Identity
+                  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                  -- Core Data
+                  name                  TEXT,
+                  short_code            TEXT,
+
+                  -- Audit Metadata
+                  created_at            DATETIME NOT NULL,
+                  updated_at            DATETIME NOT NULL,
+                  is_deleted            INTEGER NOT NULL
+                  );
+          """;
+      stmt.execute(createSupplierTable);
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);");
 
       String createStockBatchesTable =
           """

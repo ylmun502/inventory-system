@@ -4,11 +4,17 @@ import com.daidaisuki.inventory.dao.impl.InventoryTransactionDAO;
 import com.daidaisuki.inventory.dao.impl.ProductDAO;
 import com.daidaisuki.inventory.dao.impl.StockBatchDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
+import com.daidaisuki.inventory.enums.TransactionType;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.InventoryTransaction;
 import com.daidaisuki.inventory.model.StockBatch;
+import com.daidaisuki.inventory.model.dto.StockAdjustRequest;
 import com.daidaisuki.inventory.model.dto.StockAllocation;
+import com.daidaisuki.inventory.model.dto.StockDeductRequest;
+import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
+import com.daidaisuki.inventory.model.dto.StockReturnRequest;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,8 +26,9 @@ public class InventoryService {
   private final StockBatchDAO stockBatchDAO;
   private final InventoryTransactionDAO inventoryTransactionDAO;
   // Temporary dummy for user id and reference id
-  public static final int SYSTEM_USER_ID = 1;
-  public static final int SYSTEM_REFERENCE_ID = 0;
+  // private static final int SYSTEM_USER_ID = 1;
+  private static final int SYSTEM_REFERENCE_ID = 0;
+  private static final int SYSTEM_SUPPLIER_ID = 0;
 
   public InventoryService(Connection connection) {
     this.transactionManager = new TransactionManager(connection);
@@ -30,76 +37,108 @@ public class InventoryService {
     this.inventoryTransactionDAO = new InventoryTransactionDAO(connection);
   }
 
-  /* will be deleted soon
-    public void incrementStock(int productId, int quantity) throws SQLException {
-      transactionManager.executeInTransaction(() -> incrementStockInternal(productId, quantity));
-    }
-
-    public void decrementStock(int productId, int quantity)
-        throws SQLException, InsufficientStockException {
-      transactionManager.executeInTransaction(() -> decrementStockInternal(productId, quantity));
-    }
-  */
-  private List<StockAllocation> deductFromInventoryTransactional(
-      int productId, int userId, int quantity, String type, String reason) throws SQLException {
-    return transactionManager.executeInTransaction(
-        () -> deductFromInventory(productId, userId, quantity, type, reason));
-  }
-
-  private void returnToInventoryTransactional(int productId, int orderId, int batchId, int quantity)
-      throws SQLException {
-    transactionManager.executeInTransaction(
-        () -> returnToInventory(productId, orderId, batchId, quantity));
-  }
-
-  public void stockAdjust(int productId, int userId, int changeAmount, String type, String reason)
-      throws SQLException {
+  public void stockAdjust(StockAdjustRequest adjustRequest, int userId) throws SQLException {
     transactionManager.executeInTransaction(
         () -> {
-          if (changeAmount > 0) {
-            returnToInventory(productId, userId, changeAmount, type, reason);
-          } else {
-            deductFromInventory(productId, userId, changeAmount, type, reason);
+          if (adjustRequest.changeAmount() > 0) {
+            StockReceiveRequest receiveRequest =
+                new StockReceiveRequest(
+                    adjustRequest.productId(),
+                    SYSTEM_SUPPLIER_ID,
+                    null,
+                    adjustRequest.changeAmount(),
+                    BigDecimal.ZERO,
+                    null,
+                    adjustRequest.reason());
+            this.receiveNewStockInternal(receiveRequest, userId);
+          } else if (adjustRequest.changeAmount() < 0) {
+            StockDeductRequest deductRequest =
+                new StockDeductRequest(
+                    adjustRequest.productId(),
+                    Math.abs(adjustRequest.changeAmount()),
+                    adjustRequest.type(),
+                    adjustRequest.reason());
+            this.deductFromInventoryInternal(deductRequest, userId);
           }
         });
   }
 
   public List<StockBatch> listInventoryByProduct(int productId) throws SQLException {
-    return stockBatchDAO.findAllByProductId(productId);
+    return this.stockBatchDAO.findAllByProductId(productId);
   }
 
-  public void returnToInventory(int productId, int orderId, int batchId, int quantity)
+  public void receiveNewStock(StockReceiveRequest request, int userId) throws SQLException {
+    transactionManager.executeInTransaction(
+        () -> {
+          receiveNewStockInternal(request, userId);
+        });
+  }
+
+  private void receiveNewStockInternal(StockReceiveRequest request, int userId)
       throws SQLException {
-    this.applyStockChange(productId, quantity);
-    this.stockBatchDAO.incrementQuantity(batchId, quantity);
-    this.logTransaction(productId, batchId, orderId, batchId, quantity, null, null);
-    /*
-    inventoryTransactionDAO.add(
-        productId,
-        batchId,
-        quantity,
-        "REVERT",
-        orderId // Reference the order so we know why it's back
-    );*/
+    this.applyStockChange(request.productId(), request.quantity());
+    StockBatch newBatch =
+        new StockBatch(
+            request.productId(), request.supplierId(), request.quantity(), request.unitCost());
+    StockBatch savedBatch = this.stockBatchDAO.save(newBatch);
+    this.logTransaction(
+        request.productId(),
+        savedBatch.getId(),
+        userId,
+        SYSTEM_REFERENCE_ID,
+        request.quantity(),
+        TransactionType.STOCK_IN,
+        request.reason());
   }
 
-  public List<StockAllocation> deductFromInventory(
-      int productId, int userId, int quantity, String type, String reason) throws SQLException {
-    this.applyStockChange(productId, -quantity);
+  public List<InventoryTransaction> getTransactionHistory(int productId) throws SQLException {
+    return this.inventoryTransactionDAO.findAllByProductId(productId);
+  }
+
+  public void processReturn(StockReturnRequest returnRequest, int userId) throws SQLException {
+    transactionManager.executeInTransaction(
+        () -> {
+          this.applyStockChange(returnRequest.productId(), returnRequest.quantity());
+          boolean success =
+              this.stockBatchDAO.updateStockTotal(
+                  returnRequest.batchId(), returnRequest.quantity());
+          if (!success) {
+            throw new SQLException("Batch not found: " + returnRequest.batchId());
+          }
+          this.logTransaction(
+              returnRequest.productId(),
+              returnRequest.batchId(),
+              userId,
+              returnRequest.orderId(),
+              returnRequest.quantity(),
+              TransactionType.RETURN,
+              returnRequest.reason());
+        });
+  }
+
+  private List<StockAllocation> deductFromInventoryInternal(StockDeductRequest request, int userId)
+      throws SQLException {
+    this.applyStockChange(request.productId(), -request.quantity());
     List<StockAllocation> allocations = new ArrayList<>();
-    List<StockBatch> batches = this.stockBatchDAO.findAllAvailableByProductId(productId);
-    int remainingAmount = quantity;
+    List<StockBatch> batches = this.stockBatchDAO.findAllAvailableByProductId(request.productId());
+    int remainingAmount = request.quantity();
     for (StockBatch batch : batches) {
       if (remainingAmount <= 0) {
         break;
       }
       int takeAmount = Math.min(batch.getQuantityRemaining(), remainingAmount);
-      boolean success = this.stockBatchDAO.decrementQuantity(batch.getId(), takeAmount);
+      boolean success = this.stockBatchDAO.updateStockTotal(batch.getId(), -takeAmount);
       if (!success) {
         throw new SQLException("Concurrent inventory change detected. Please retry.");
       }
       this.logTransaction(
-          productId, batch.getId(), SYSTEM_USER_ID, SYSTEM_REFERENCE_ID, -takeAmount, type, reason);
+          request.productId(),
+          batch.getId(),
+          userId,
+          SYSTEM_REFERENCE_ID,
+          -takeAmount,
+          request.type(),
+          request.reason());
       allocations.add(new StockAllocation(batch.getId(), takeAmount, batch.getUnitCost()));
       remainingAmount -= takeAmount;
     }
@@ -128,7 +167,7 @@ public class InventoryService {
       int userId,
       int referenceId,
       int quantity,
-      String type,
+      TransactionType type,
       String reason)
       throws SQLException {
     InventoryTransaction transaction =

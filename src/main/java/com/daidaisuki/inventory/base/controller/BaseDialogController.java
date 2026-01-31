@@ -6,12 +6,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
-public abstract class BaseDialogController<T, VM extends BaseDialogViewModel<T>> {
+public abstract class BaseDialogController<R, VM extends BaseDialogViewModel<R>> {
   protected Stage dialogStage;
-  protected boolean saveClicked = false;
-  protected VM viewModel;
+  protected boolean confirmed = false;
+  protected final VM viewModel;
 
-  @FXML protected Button saveButton;
+  @FXML protected Button confirmButton;
 
   protected BaseDialogController(VM viewModel) {
     this.viewModel = viewModel;
@@ -21,35 +21,31 @@ public abstract class BaseDialogController<T, VM extends BaseDialogViewModel<T>>
     this.dialogStage = dialogStage;
   }
 
-  public boolean isSaveClicked() {
-    return this.saveClicked;
+  public boolean isConfirmed() {
+    return this.confirmed;
   }
 
-  protected void setupBaseBinding() {
-    if (this.saveButton != null && this.viewModel != null) {
-      this.saveButton.disableProperty().bind(this.viewModel.isInvalidProperty());
-    }
+  public R getResult() {
+    return confirmed ? this.viewModel.createResult() : null;
   }
 
   protected void showError(String message) {
     AlertHelper.showErrorAlert(dialogStage, "Invalid Input", "Please fix input errors", message);
   }
 
-  protected void closeDialog() {
-    if (dialogStage != null) {
-      dialogStage.close();
+  @FXML
+  protected void handleConfirm() {
+    if (!this.viewModel.isInvalidProperty().get()) {
+      this.confirmed = true;
+      this.dialogStage.close();
+    } else {
+      AlertHelper.showWarningAlert(
+          dialogStage, "Invalid Input", null, "Please check the required fields.");
     }
   }
 
-  public abstract T getModel();
-
-  public abstract void setModel(T model);
-
   @FXML
   protected void handleCancel() {
-    closeDialog();
+    this.dialogStage.close();
   }
-
-  @FXML
-  protected abstract void handleSave();
 }
