@@ -29,6 +29,20 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   private final StringProperty searchFilter = new SimpleStringProperty();
   private final FilteredList<Product> filteredList;
 
+  private final StringProperty userText = new SimpleStringProperty(this, "userText", "--");
+  private final StringProperty barcodeText = new SimpleStringProperty(this, "barcodeText", "--");
+  private final StringProperty reorderLevelText =
+      new SimpleStringProperty(this, "reorderLevelText", "--");
+  private final StringProperty taxText = new SimpleStringProperty(this, "taxText", "--");
+  private final StringProperty weightText = new SimpleStringProperty(this, "weightText", "0");
+  private final StringProperty unitTypeText = new SimpleStringProperty(this, "unitTypeText", "--");
+  private final StringProperty minStockText = new SimpleStringProperty(this, "minStockText", "--");
+  private final StringProperty averageUnitCostText =
+      new SimpleStringProperty(this, "averageUnitCostText", "$0.00");
+  private final StringProperty markupText = new SimpleStringProperty(this, "markupText", "0%");
+  private final StringProperty productTotalValueText =
+      new SimpleStringProperty(this, "productTotalValueText", "$0.00");
+
   public InventoryViewModel(
       ProductService productService,
       InventoryService inventoryService,
@@ -41,8 +55,9 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
           if (newProduct != null) {
             refreshDetail(newProduct.getId());
           } else {
-            selectedProductBatches.clear();
-            selectedProductTransactions.clear();
+            this.selectedProductBatches.clear();
+            this.selectedProductTransactions.clear();
+            this.clearLabel();
           }
         });
     this.filteredList = new FilteredList<>(this.getDataList(), p -> true);
@@ -100,6 +115,18 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
           task.getException().printStackTrace();
         });
     new Thread(task).start();
+  }
+
+  private void clearLabel() {
+    this.barcodeText.set("--");
+    this.reorderLevelText.set("--");
+    this.taxText.set("--");
+    this.weightText.set("--");
+    this.unitTypeText.set("--");
+    this.minStockText.set("--");
+    this.averageUnitCostText.set("$0.00");
+    this.markupText.set("0%");
+    this.productTotalValueText.set("$0.00");
   }
 
   public final ObservableList<StockBatch> getSelectedProductBatches() {

@@ -170,6 +170,7 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     TableColumnUtils.bindColumnWidthsByRatio(transactionTable, List.of(0.25, 0.25, 0.25, 0.25));
   }
 
+  /*  Will remove after implementing bindings in ViewModel
   private void updateDetailPanel(Product product) {
     unBindLabels();
     if (product == null) {
@@ -178,6 +179,7 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     }
     bindLabels(product);
   }
+  */
 
   private void bindLabels(Product product) {
     this.barcodeLabel.textProperty().bind(product.barcodeProperty());
@@ -236,18 +238,6 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     this.averageUnitCostLabel.textProperty().unbind();
     this.markupLabel.textProperty().unbind();
     this.productTotalValueLabel.textProperty().unbind();
-  }
-
-  private void clearLabel() {
-    this.barcodeLabel.setText("--");
-    this.reorderLevelLabel.setText("--");
-    this.taxLabel.setText("--");
-    this.weightLabel.setText("--");
-    this.unitTypeLabel.setText("--");
-    this.minStockLabel.setText("--");
-    this.averageUnitCostLabel.setText("$0.00");
-    this.markupLabel.setText("0%");
-    this.productTotalValueLabel.setText("$0.00");
   }
 
   private void setupRowFactory() {
