@@ -65,7 +65,7 @@ public class DatabaseManager {
 
       String createSupplierTable =
           """
-          CREATE TABLE IF NOT EXIST suppliers (
+          CREATE TABLE IF NOT EXISTS suppliers (
                   -- Primary Identity
                   id                    INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -259,8 +259,8 @@ public class DatabaseManager {
                   unit_cost_at_sale_cents     INTEGER NOT NULL,
 
                   -- Audit Metadata
-                  created_at                  DATETIME DEFAULT NOT NULL,
-                  updated_at                  DATETIME DEFAULT NOT NULL,
+                  created_at                  DATETIME NOT NULL,
+                  updated_at                  DATETIME NOT NULL,
                   is_deleted                  INTEGER NOT NULL,
 
                   -- Constraints

@@ -7,22 +7,20 @@ import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.OrderItem;
-import com.daidaisuki.inventory.model.dto.StockAllocation;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class OrderService {
   private final TransactionManager transactionManager;
   private final OrderDAO orderDAO;
-  private final InventoryService inventoryService;
+  // private final InventoryService inventoryService;
   private final OrderItemService orderItemService;
 
   public OrderService(Connection connection) {
     transactionManager = new TransactionManager(connection);
     this.orderDAO = new OrderDAO(connection);
-    this.inventoryService = new InventoryService(connection);
+    // this.inventoryService = new InventoryService(connection);
     this.orderItemService = new OrderItemService(connection);
   }
 
@@ -78,18 +76,22 @@ public class OrderService {
   }
 
   public void revertInventoryForOrderInternal(int orderId) throws SQLException {
+    /* Update this later as returnToInventoryInternal is not suitable now
     List<OrderItem> itemstoRevert = orderItemService.listByOrderId(orderId);
     for (OrderItem item : itemstoRevert) {
       inventoryService.returnToInventoryInternal(
           item.getProductId(), orderId, item.getBatchId(), item.getQuantity());
     }
+          */
   }
 
   private void processOrderItemsInternal(Order uiOrder) throws SQLException {
+    /* Update this later as returnToInventoryInternal is not suitable now
     List<OrderItem> persistentItems = new ArrayList<>();
     for (OrderItem uiItem : uiOrder.getItems()) {
       List<StockAllocation> allocations =
           inventoryService.deductFromInventoryInternal(uiItem.getProductId(), uiItem.getQuantity());
+
       for (StockAllocation allocation : allocations) {
         OrderItem savedItem =
             orderItemService.createItemInternal(uiItem, uiOrder.getId(), allocation);
@@ -98,6 +100,7 @@ public class OrderService {
       }
     }
     uiOrder.setItems(persistentItems);
+    */
   }
 
   public List<Order> getOrdersForCustomer(int customerId) throws SQLException {

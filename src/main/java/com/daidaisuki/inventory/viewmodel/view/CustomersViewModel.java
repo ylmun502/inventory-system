@@ -1,14 +1,7 @@
 package com.daidaisuki.inventory.viewmodel.view;
 
-import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.model.Order;
-import com.daidaisuki.inventory.service.CustomerService;
-import com.daidaisuki.inventory.service.OrderService;
-import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
-import java.sql.SQLException;
-import java.util.List;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class CustomersViewModel extends BaseListViewModel<Customer> {
   private final CustomerService customerService;
@@ -56,3 +49,4 @@ public class CustomersViewModel extends BaseListViewModel<Customer> {
     }
   }
 }
+*/

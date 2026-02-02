@@ -1,13 +1,9 @@
 package com.daidaisuki.inventory.controller.dialog;
 
-import com.daidaisuki.inventory.base.controller.BaseDialogController;
-import com.daidaisuki.inventory.model.OrderItem;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 
-public class EditQuantityDialogController extends BaseDialogController<OrderItem> {
+/* Comment out during mvvm migration as need to refactor view by view
+public class EditQuantityDialogController
+    extends BaseDialogController<OrderItem, OrderDialogViewModel> {
   @FXML private TextField quantityField;
   @FXML private Label errorLabel;
 
@@ -61,3 +57,4 @@ public class EditQuantityDialogController extends BaseDialogController<OrderItem
     dialogStage.close();
   }
 }
+  */
