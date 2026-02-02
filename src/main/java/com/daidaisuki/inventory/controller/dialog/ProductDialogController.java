@@ -1,13 +1,7 @@
 package com.daidaisuki.inventory.controller.dialog;
 
-import com.daidaisuki.inventory.base.controller.BaseDialogController;
-import com.daidaisuki.inventory.model.Product;
-import com.daidaisuki.inventory.viewmodel.dialog.ProductDialogViewModel;
-import javafx.beans.binding.Bindings;
-import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class ProductDialogController extends BaseDialogController<Product, ProductDialogViewModel> {
   @FXML private TextField skuField;
@@ -84,3 +78,4 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
     }
   }
 }
+  */

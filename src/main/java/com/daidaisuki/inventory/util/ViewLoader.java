@@ -1,7 +1,10 @@
 package com.daidaisuki.inventory.util;
 
+import com.daidaisuki.inventory.controller.view.InventoryController;
+import com.daidaisuki.inventory.controller.view.MainController;
 import com.daidaisuki.inventory.interfaces.FxmlView;
 import java.io.IOException;
+import java.sql.Connection;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.util.Callback;
@@ -37,8 +40,23 @@ public final class ViewLoader {
    * @return the root {@link Parent} node
    * @throws IOException if loading the FXML file fails
    */
-  public static Parent loadParent(FxmlView view) throws IOException {
-    return loadFxml(view).load();
+  public static Parent loadParent(FxmlView view, Connection connection) throws IOException {
+    FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(view.getFxml()));
+    loader.setControllerFactory(
+        type -> {
+          try {
+            if (type == InventoryController.class) {
+              return new InventoryController(connection);
+            }
+            if (type == MainController.class) {
+              return new MainController(connection);
+            }
+            return type.getDeclaredConstructor().newInstance();
+          } catch (Exception e) {
+            throw new RuntimeException("Dependency Injection failed for: " + type.getName(), e);
+          }
+        });
+    return loader.load();
   }
 
   /**

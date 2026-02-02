@@ -42,7 +42,7 @@
         <Separator orientation="VERTICAL"/>
 
         <Button fx:id="receiveStockButton" text="Receive Stock" styleClass="primary" onAction="#handleReceiveStock"/>
-        <MenuButton text="Adjust &amp; Return">
+        <MenuButton text="Adjust Return">
             <items>
                 <MenuItem text="Adjust Stock" onAction="#handleAdjustStock"/>
                 <MenuItem text="Customer Return" onAction="#handleProcessReturn"/>
@@ -52,7 +52,7 @@
     </HBox>
 
     <SplitPane orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
-        <items>
+        
 
             <VBox spacing="10">
                 <TableView fx:id="table" VBox.vgrow="ALWAYS">
@@ -72,10 +72,7 @@
                     <tabs>
 
                         <Tab text="Product Overview">
-                            <VBox spacing="15"> 
-                                <padding>
-                                    <Insets top="15" right="15" bottom="15" left="15"/>
-                                </padding>
+                            <VBox spacing="15" padding="15">
                                 <GridPane hgap="20" vgap="10">
                                     <columnConstraints>
                                         <ColumnConstraints prefWidth="150"/>
@@ -150,7 +147,7 @@
                 </TabPane>
             </VBox>
 
-        </items>
+        
     </SplitPane>
 
 </VBox>

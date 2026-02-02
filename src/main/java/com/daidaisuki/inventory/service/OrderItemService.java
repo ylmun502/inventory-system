@@ -40,6 +40,7 @@ public class OrderItemService {
 
   OrderItem createItemInternal(OrderItem uiItem, int persistentOrderId, StockAllocation allocation)
       throws SQLException {
+    // Need to update this later
     OrderItem itemToPersist =
         new OrderItem(
             persistentOrderId,
@@ -47,7 +48,7 @@ public class OrderItemService {
             allocation.batchId(),
             allocation.quantity(),
             uiItem.getUnitPriceAtSaleCents(),
-            allocation.unitCost());
+            0);
     return orderItemDAO.save(itemToPersist);
   }
 

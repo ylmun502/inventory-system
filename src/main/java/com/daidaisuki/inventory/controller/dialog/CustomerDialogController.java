@@ -1,16 +1,11 @@
 package com.daidaisuki.inventory.controller.dialog;
 
-import com.daidaisuki.inventory.base.controller.BaseDialogController;
-import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.viewmodel.dialog.CustomerDialogViewModel;
-import javafx.beans.binding.Bindings;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class CustomerDialogController
     extends BaseDialogController<Customer, CustomerDialogViewModel> {
+
   @FXML private TextField fullNameField;
   @FXML private TextField phoneNumberField;
   @FXML private TextField emailField;
@@ -22,6 +17,8 @@ public class CustomerDialogController
   public CustomerDialogController(CustomerDialogViewModel viewModel) {
     super(viewModel);
   }
+
+  // Comment out during mvvm migration as need to refactor view by view
 
   @Override
   public Customer getModel() {
@@ -69,4 +66,6 @@ public class CustomerDialogController
       showError("Failed to save customer: \n" + e.getMessage());
     }
   }
+  //
 }
+*/
