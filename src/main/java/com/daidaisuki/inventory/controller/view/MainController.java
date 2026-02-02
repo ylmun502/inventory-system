@@ -5,7 +5,7 @@ import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.ViewLoader;
 import java.io.IOException;
-import java.util.Stack;
+import java.sql.Connection;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,8 +22,12 @@ public class MainController {
 
   @FXML private Button defaultButton;
 
-  private final Stack<View> viewHistory = new Stack<>();
+  private final Connection connection;
   private Button activeButton = null;
+
+  public MainController(Connection connection) {
+    this.connection = connection;
+  }
 
   @FXML
   public void initialize() {
@@ -58,28 +62,21 @@ public class MainController {
     try {
       View view = View.valueOf(viewKey);
       switchView(view);
-    } catch (IllegalArgumentException | IOException e) {
-      System.err.println("Invalid view: " + viewKey);
-      e.printStackTrace();
+    } catch (Exception e) {
       // Use AlertHelper, passing the current window as owner for proper modality
       AlertHelper.showErrorAlert(
           FxWindowUtils.getWindow((Node) event.getSource()),
-          "View Error",
-          "Unable to load view",
-          "Something went wrong while trying to load the view.");
+          "Navigation Error",
+          "Unable to load " + viewKey,
+          e.getMessage());
     }
   }
 
   private void switchView(View view) throws IOException {
-    Parent newView = ViewLoader.loadParent(view);
+    Parent newView = ViewLoader.loadParent(view, this.connection);
 
-    if (!centerPane.getChildren().isEmpty()) {
-      // Save current view enum in history if you want to support goBack properly
-      viewHistory.push(view);
-    }
-
-    FadeTransition ft = new FadeTransition(Duration.millis(300), newView);
-    ft.setFromValue(0.0);
+    FadeTransition ft = new FadeTransition(Duration.millis(200), newView);
+    ft.setFromValue(0.5);
     ft.setToValue(1.0);
 
     centerPane.getChildren().setAll(newView);
@@ -90,19 +87,10 @@ public class MainController {
     // Remove 'active' style from previous button
     if (activeButton != null) {
       activeButton.getStyleClass().remove("active");
-      activeButton.setDisable(false); // enable previous button if you want
     }
 
     // Add 'active' style to the new button
     btn.getStyleClass().add("active");
     activeButton = btn;
-  }
-
-  public void goBack() throws IOException {
-    if (!viewHistory.isEmpty()) {
-      View previousView = viewHistory.pop();
-      Parent prevView = ViewLoader.loadParent(previousView);
-      centerPane.getChildren().setAll(prevView);
-    }
   }
 }

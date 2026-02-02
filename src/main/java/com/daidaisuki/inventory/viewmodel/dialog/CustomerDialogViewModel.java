@@ -1,16 +1,7 @@
 package com.daidaisuki.inventory.viewmodel.dialog;
 
-import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.service.CustomerService;
-import com.daidaisuki.inventory.ui.validation.ValidationStatus;
-import com.daidaisuki.inventory.util.StringCleaner;
-import com.daidaisuki.inventory.util.ValidationUtils;
-import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
-import java.util.regex.Pattern;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class CustomerDialogViewModel extends BaseDialogViewModel<Customer> {
   private final CustomerService customerService;
@@ -97,3 +88,5 @@ public class CustomerDialogViewModel extends BaseDialogViewModel<Customer> {
     }
   }
 }
+
+*/

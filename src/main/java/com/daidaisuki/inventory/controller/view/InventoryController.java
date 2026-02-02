@@ -14,14 +14,11 @@ import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.service.SupplierService;
 import com.daidaisuki.inventory.user.AppSession;
 import com.daidaisuki.inventory.util.AlertHelper;
-import com.daidaisuki.inventory.util.CurrencyUtil;
-import com.daidaisuki.inventory.util.NumberUtils;
 import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
 import com.daidaisuki.inventory.viewmodel.dialog.ReceiveStockDialogViewModel;
 import com.daidaisuki.inventory.viewmodel.view.InventoryViewModel;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -38,7 +35,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 
 public class InventoryController extends BaseTableController<Product, InventoryViewModel> {
-  @FXML private TableView<Product> productTable;
   @FXML private TableColumn<Product, String> skuCol;
   @FXML private TableColumn<Product, String> nameCol;
   @FXML private TableColumn<Product, String> categoryCol;
@@ -46,14 +42,11 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   @FXML private TableColumn<Product, BigDecimal> sellingPriceCol;
   @FXML private TableColumn<Product, String> statusCol;
   @FXML private TextField searchField;
-  @FXML private Button addButton;
-  @FXML private Button editButton;
-  @FXML private Button deleteButton;
   @FXML private Button receiveStockButton;
 
   @FXML private TableView<StockBatch> batchesTable;
   @FXML private TableColumn<StockBatch, Number> batchIdCol;
-  @FXML private TableColumn<StockBatch, String> batchCode;
+  @FXML private TableColumn<StockBatch, String> batchCodeCol;
   @FXML private TableColumn<StockBatch, OffsetDateTime> batchDateCol;
   @FXML private TableColumn<StockBatch, OffsetDateTime> batchExpiryCol;
   @FXML private TableColumn<StockBatch, Number> quantityRemainingCol;
@@ -68,11 +61,11 @@ public class InventoryController extends BaseTableController<Product, InventoryV
 
   @FXML private Label userLabel;
   @FXML private Label barcodeLabel;
-  @FXML private Label reorderLevelLabel;
-  @FXML private Label taxLabel;
+  @FXML private Label reorderingLevelLabel;
+  @FXML private Label taxCategoryLabel;
   @FXML private Label weightLabel;
   @FXML private Label unitTypeLabel;
-  @FXML private Label minStockLabel;
+  @FXML private Label minStockLevelLabel;
   @FXML private Label averageUnitCostLabel;
   @FXML private Label markupLabel;
   @FXML private Label productTotalValueLabel;
@@ -81,7 +74,7 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     this(DatabaseManager.getConnection());
   }
 
-  private InventoryController(Connection connection) throws SQLException {
+  public InventoryController(Connection connection) throws SQLException {
     super(
         new InventoryViewModel(
             new ProductService(connection),
@@ -92,43 +85,32 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   @FXML
   public void initialize() {
     this.userLabel.setText("User: " + AppSession.getInstance().getUserName());
-    this.setupMainTableColumns();
-    this.setupDetailTablesColumns();
-    this.initializeBase(productTable, addButton, editButton, deleteButton);
-    this.searchField.textProperty().bindBidirectional(viewModel.searchFilterProperty());
-    this.productTable.setItems(this.viewModel.getFilteredList());
+    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
+    this.table.setItems(this.viewModel.getFilteredList());
     this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
     this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
+    this.setupMainTableColumns();
+    this.setupDetailTablesColumns();
+    this.bindLabels();
+    this.initializeBase(this.table, this.addButton, this.editButton, this.deleteButton);
     this.setupRowFactory();
-    this.table
-        .getSelectionModel()
-        .selectedItemProperty()
-        .addListener(
-            (obs, oldVal, newVal) -> {
-              this.viewModel.setSelectedItem(newVal);
-            });
-    this.viewModel
-        .selectedItemProperty()
-        .addListener(
-            (obs, oldVal, newVal) -> {
-              updateDetailPanel(newVal);
-            });
   }
 
   private void setupMainTableColumns() {
-    nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-    skuCol.setCellValueFactory(cellData -> cellData.getValue().skuProperty());
-    categoryCol.setCellValueFactory(cellData -> cellData.getValue().categoryProperty());
-    currentStockCol.setCellValueFactory(cellData -> cellData.getValue().currentStockProperty());
-    sellingPriceCol.setCellValueFactory(cellData -> cellData.getValue().sellingPriceProperty());
-    statusCol.setCellValueFactory(cellData -> cellData.getValue().stockStatusProperty());
+    this.nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+    this.skuCol.setCellValueFactory(cellData -> cellData.getValue().skuProperty());
+    this.categoryCol.setCellValueFactory(cellData -> cellData.getValue().categoryProperty());
+    this.currentStockCol.setCellValueFactory(
+        cellData -> cellData.getValue().currentStockProperty());
+    this.sellingPriceCol.setCellValueFactory(
+        cellData -> cellData.getValue().sellingPriceProperty());
+    this.statusCol.setCellValueFactory(cellData -> cellData.getValue().stockStatusProperty());
 
-    TableCellUtils.setupStringCells(nameCol, skuCol, categoryCol, statusCol);
-    TableCellUtils.setupNumberCells(currentStockCol);
-    TableCellUtils.setupCurrencyCells(sellingPriceCol);
+    TableCellUtils.setupStringCells(this.nameCol, this.skuCol, this.categoryCol, this.statusCol);
+    TableCellUtils.setupNumberCells(this.currentStockCol);
+    TableCellUtils.setupCurrencyCells(this.sellingPriceCol);
 
-    TableColumnUtils.bindColumnWidthsByRatio(
-        productTable, List.of(0.15, 0.15, 0.15, 0.2, 0.2, 0.15));
+    TableColumnUtils.bindColumnWidthsByRatio(this.table, List.of(0.15, 0.15, 0.15, 0.2, 0.2, 0.15));
   }
 
   private void setupDetailTablesColumns() {
@@ -137,111 +119,58 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   }
 
   private void setupBatchesTable() {
-    batchIdCol.setCellValueFactory(celldata -> celldata.getValue().idProperty());
-    batchDateCol.setCellValueFactory(celldata -> celldata.getValue().createdAtProperty());
-    batchExpiryCol.setCellValueFactory(celldata -> celldata.getValue().expiryDateProperty());
-    quantityRemainingCol.setCellValueFactory(
+    this.batchIdCol.setCellValueFactory(celldata -> celldata.getValue().idProperty());
+    this.batchCodeCol.setCellValueFactory(celldata -> celldata.getValue().batchCodeProperty());
+    this.batchDateCol.setCellValueFactory(celldata -> celldata.getValue().createdAtProperty());
+    this.batchExpiryCol.setCellValueFactory(celldata -> celldata.getValue().expiryDateProperty());
+    this.quantityRemainingCol.setCellValueFactory(
         celldata -> celldata.getValue().quantityRemainingProperty());
-    unitCostCol.setCellValueFactory(celldata -> celldata.getValue().unitCostProperty());
-    landedCostCol.setCellValueFactory(celldata -> celldata.getValue().landedCostProperty());
+    this.unitCostCol.setCellValueFactory(celldata -> celldata.getValue().unitCostProperty());
+    this.landedCostCol.setCellValueFactory(celldata -> celldata.getValue().landedCostProperty());
 
-    TableCellUtils.setupNumberCells(batchIdCol, quantityRemainingCol);
-    TableCellUtils.setupCurrencyCells(unitCostCol, landedCostCol);
-    TableCellUtils.setupDateCells(batchDateCol, batchExpiryCol);
+    TableCellUtils.setupNumberCells(this.batchIdCol, this.quantityRemainingCol);
+    TableCellUtils.setupCurrencyCells(this.unitCostCol, this.landedCostCol);
+    TableCellUtils.setupDateCells(this.batchDateCol, this.batchExpiryCol);
 
-    TableColumnUtils.bindColumnWidthsByRatio(batchesTable, List.of(0.1, 0.2, 0.2, 0.2, 0.15, 0.15));
+    TableColumnUtils.bindColumnWidthsByRatio(
+        this.batchesTable, List.of(0.1, 0.1, 0.15, 0.15, 0.2, 0.15, 0.15));
   }
 
   private void setupTransactionsTable() {
-    transactionDateCol.setCellValueFactory(cellData -> cellData.getValue().createdAtProperty());
-    transactionTypeCol.setCellValueFactory(
+    this.transactionDateCol.setCellValueFactory(
+        cellData -> cellData.getValue().createdAtProperty());
+    this.transactionTypeCol.setCellValueFactory(
         cellData ->
             Bindings.createStringBinding(
                 () -> cellData.getValue().getTransactionType().getDisplayName(),
                 cellData.getValue().transactionTypeProperty()));
-    transactionAmountCol.setCellValueFactory(
+    this.transactionAmountCol.setCellValueFactory(
         cellData -> cellData.getValue().changeAmountProperty());
-    transactionReasonCol.setCellValueFactory(cellData -> cellData.getValue().reasonCodeProperty());
+    this.transactionReasonCol.setCellValueFactory(
+        cellData -> cellData.getValue().reasonCodeProperty());
 
-    TableCellUtils.setupStringCells(transactionTypeCol, transactionReasonCol);
-    TableCellUtils.setupNumberCells(transactionAmountCol);
-    TableCellUtils.setupDateCells(transactionDateCol);
+    TableCellUtils.setupStringCells(this.transactionTypeCol, this.transactionReasonCol);
+    TableCellUtils.setupNumberCells(this.transactionAmountCol);
+    TableCellUtils.setupDateCells(this.transactionDateCol);
 
-    TableColumnUtils.bindColumnWidthsByRatio(transactionTable, List.of(0.25, 0.25, 0.25, 0.25));
+    TableColumnUtils.bindColumnWidthsByRatio(
+        this.transactionTable, List.of(0.25, 0.25, 0.25, 0.25));
   }
 
-  /*  Will remove after implementing bindings in ViewModel
-  private void updateDetailPanel(Product product) {
-    unBindLabels();
-    if (product == null) {
-      clearLabel();
-      return;
-    }
-    bindLabels(product);
-  }
-  */
-
-  private void bindLabels(Product product) {
-    this.barcodeLabel.textProperty().bind(product.barcodeProperty());
-    this.reorderLevelLabel.textProperty().bind(product.reorderingLevelProperty().asString());
-    this.taxLabel.textProperty().bind(product.taxCategoryProperty());
-    this.weightLabel.textProperty().bind(product.weightProperty().asString());
-    this.unitTypeLabel.textProperty().bind(product.unitTypeProperty());
-    this.minStockLabel.textProperty().bind(product.minStockLevelProperty().asString());
-    this.averageUnitCostLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> CurrencyUtil.format(product.getAverageUnitCost()),
-                product.averageUnitCostProperty()));
-    this.markupLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> {
-                  BigDecimal cost = product.getAverageUnitCost();
-                  BigDecimal price = product.getSellingPrice();
-                  if (cost.compareTo(BigDecimal.ZERO) == 0) {
-                    return "0%";
-                  }
-                  BigDecimal markup =
-                      price
-                          .subtract(cost)
-                          .divide(cost, 4, RoundingMode.HALF_UP)
-                          .multiply(BigDecimal.valueOf(100));
-                  return NumberUtils.percentage(markup);
-                },
-                product.averageUnitCostProperty(),
-                product.sellingPriceProperty()));
-    this.productTotalValueLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> {
-                  BigDecimal totalValue =
-                      product
-                          .getAverageUnitCost()
-                          .multiply(BigDecimal.valueOf(product.getCurrentStock()));
-                  return CurrencyUtil.format(totalValue);
-                },
-                product.averageUnitCostProperty(),
-                product.currentStockProperty()));
-  }
-
-  private void unBindLabels() {
-    this.barcodeLabel.textProperty().unbind();
-    this.reorderLevelLabel.textProperty().unbind();
-    this.taxLabel.textProperty().unbind();
-    this.weightLabel.textProperty().unbind();
-    this.unitTypeLabel.textProperty().unbind();
-    this.minStockLabel.textProperty().unbind();
-    this.averageUnitCostLabel.textProperty().unbind();
-    this.markupLabel.textProperty().unbind();
-    this.productTotalValueLabel.textProperty().unbind();
+  private void bindLabels() {
+    this.barcodeLabel.textProperty().bind(this.viewModel.barcodeTextProperty());
+    this.reorderingLevelLabel.textProperty().bind(this.viewModel.reorderingLevelTextProperty());
+    this.taxCategoryLabel.textProperty().bind(this.viewModel.taxCategoryTextProperty());
+    this.weightLabel.textProperty().bind(this.viewModel.weightTextProperty());
+    this.unitTypeLabel.textProperty().bind(this.viewModel.unitTypeTextProperty());
+    this.minStockLevelLabel.textProperty().bind(this.viewModel.minStockLevelTextProperty());
+    this.averageUnitCostLabel.textProperty().bind(this.viewModel.averageUnitCostTextProperty());
+    this.markupLabel.textProperty().bind(this.viewModel.markupTextProperty());
+    this.productTotalValueLabel.textProperty().bind(this.viewModel.productTotalValueTextProperty());
   }
 
   private void setupRowFactory() {
-    productTable.setRowFactory(
+    this.table.setRowFactory(
         tv ->
             new TableRow<>() {
               @Override

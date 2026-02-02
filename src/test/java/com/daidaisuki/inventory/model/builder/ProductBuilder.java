@@ -1,6 +1,5 @@
 package com.daidaisuki.inventory.model.builder;
 
-import com.daidaisuki.inventory.model.Product;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -45,8 +44,8 @@ public class ProductBuilder {
   }
 
   // 3. The "Build" method calls the actual Product constructor
-  public Product build() {
+  /*public Product build() {
     return new Product(
         id, sku, "BAR-001", name, "Electronics", "Desc", 0, stock, price, 5, true, now, now, false);
-  }
+  }*/
 }

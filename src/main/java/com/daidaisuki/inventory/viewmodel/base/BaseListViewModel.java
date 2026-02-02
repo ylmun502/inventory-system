@@ -82,6 +82,7 @@ public abstract class BaseListViewModel<T> {
     if (errorReporter != null) {
       Platform.runLater(() -> errorReporter.accept(exception));
     } else {
+      // May change to logger in the future.
       exception.printStackTrace();
     }
   }

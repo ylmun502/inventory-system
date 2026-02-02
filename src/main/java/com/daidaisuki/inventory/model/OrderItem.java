@@ -79,7 +79,9 @@ public class OrderItem extends BaseModel {
     this();
     this.product.set(product);
     this.productId.set(product != null ? product.getId() : -1);
+    /* change this after refactoring the unitPriceAtSale to BigDecimal in OrderItem
     this.unitPriceAtSaleCents.set(product != null ? product.getSellingPriceCents() : 0);
+    */
     this.quantity.set(quantity);
   }
 
@@ -179,7 +181,9 @@ public class OrderItem extends BaseModel {
     this.product.set(product);
     this.productId.set(product != null ? product.getId() : -1);
     if (product != null && unitPriceAtSaleCents.get() <= 0) {
+      /* change this after refactoring the unitPriceAtSale to BigDecimal in OrderItem
       unitPriceAtSaleCents.set(product.getSellingPriceCents());
+      */
     }
   }
 

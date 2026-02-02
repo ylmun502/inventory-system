@@ -1,28 +1,7 @@
 package com.daidaisuki.inventory.controller.view;
 
-import com.daidaisuki.inventory.base.controller.BaseTableController;
-import com.daidaisuki.inventory.controller.dialog.CustomerDialogController;
-import com.daidaisuki.inventory.enums.DialogView;
-import com.daidaisuki.inventory.enums.FulfillmentStatus;
-import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.model.Order;
-import com.daidaisuki.inventory.util.CurrencyUtil;
-import com.daidaisuki.inventory.util.DateUtils;
-import com.daidaisuki.inventory.util.TableCellUtils;
-import com.daidaisuki.inventory.util.TableColumnUtils;
-import com.daidaisuki.inventory.viewmodel.dialog.CustomerDialogViewModel;
-import com.daidaisuki.inventory.viewmodel.view.CustomersViewModel;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javafx.beans.binding.Bindings;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class CustomersController extends BaseTableController<Customer, CustomersViewModel> {
   @FXML private TableColumn<Customer, String> fullNameCol;
@@ -215,3 +194,4 @@ public class CustomersController extends BaseTableController<Customer, Customers
     }
   }
 }
+*/

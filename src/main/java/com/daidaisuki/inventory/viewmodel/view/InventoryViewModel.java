@@ -7,16 +7,18 @@ import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
 import com.daidaisuki.inventory.service.InventoryService;
 import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.service.SupplierService;
+import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.NumberUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
-import java.util.concurrent.Callable;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.concurrent.Task;
 
 public class InventoryViewModel extends BaseListViewModel<Product> {
   private final ProductService productService;
@@ -31,12 +33,14 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
 
   private final StringProperty userText = new SimpleStringProperty(this, "userText", "--");
   private final StringProperty barcodeText = new SimpleStringProperty(this, "barcodeText", "--");
-  private final StringProperty reorderLevelText =
-      new SimpleStringProperty(this, "reorderLevelText", "--");
-  private final StringProperty taxText = new SimpleStringProperty(this, "taxText", "--");
+  private final StringProperty reorderingLevelText =
+      new SimpleStringProperty(this, "reorderingLevelText", "--");
+  private final StringProperty taxCategoryText =
+      new SimpleStringProperty(this, "taxCategoryText", "--");
   private final StringProperty weightText = new SimpleStringProperty(this, "weightText", "0");
   private final StringProperty unitTypeText = new SimpleStringProperty(this, "unitTypeText", "--");
-  private final StringProperty minStockText = new SimpleStringProperty(this, "minStockText", "--");
+  private final StringProperty minStockLevelText =
+      new SimpleStringProperty(this, "minStockLevelText", "--");
   private final StringProperty averageUnitCostText =
       new SimpleStringProperty(this, "averageUnitCostText", "$0.00");
   private final StringProperty markupText = new SimpleStringProperty(this, "markupText", "0%");
@@ -53,11 +57,12 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
     this.selectedItem.addListener(
         (obs, oldProduct, newProduct) -> {
           if (newProduct != null) {
-            refreshDetail(newProduct.getId());
+            this.updatePresentation(newProduct);
+            this.refreshDetail(newProduct.getId());
           } else {
             this.selectedProductBatches.clear();
             this.selectedProductTransactions.clear();
-            this.clearLabel();
+            this.clearPresentation();
           }
         });
     this.filteredList = new FilteredList<>(this.getDataList(), p -> true);
@@ -92,38 +97,52 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   private void refreshDetail(int productId) {
-    this.isBusy.set(true);
-    Task<Void> task =
-        new Task<>() {
-          @Override
-          protected Void call() throws Exception {
-            List<StockBatch> batches = inventoryService.listInventoryByProduct(productId);
-            List<InventoryTransaction> transactions =
-                inventoryService.getTransactionHistory(productId);
-            Platform.runLater(
-                () -> {
-                  selectedProductBatches.setAll(batches);
-                  selectedProductTransactions.setAll(transactions);
-                  isBusy.set(false);
-                });
-            return null;
-          }
-        };
-    task.setOnFailed(
-        e -> {
-          isBusy.set(false);
-          task.getException().printStackTrace();
-        });
-    new Thread(task).start();
+    this.runAsync(
+        () -> {
+          List<StockBatch> batches = inventoryService.listInventoryByProduct(productId);
+          List<InventoryTransaction> transactions =
+              inventoryService.getTransactionHistory(productId);
+          Platform.runLater(
+              () -> {
+                selectedProductBatches.setAll(batches);
+                selectedProductTransactions.setAll(transactions);
+              });
+        },
+        null);
   }
 
-  private void clearLabel() {
+  private void updatePresentation(Product product) {
+    this.barcodeText.set(product.getBarcode());
+    this.reorderingLevelText.set(String.valueOf(product.getReorderingLevel()));
+    this.taxCategoryText.set(product.getTaxCategory());
+    this.weightText.set(String.valueOf(product.getWeight()));
+    this.unitTypeText.set(product.getUnitType());
+    this.minStockLevelText.set(String.valueOf(product.getMinStockLevel()));
+    this.averageUnitCostText.set(CurrencyUtil.format(product.getAverageUnitCost()));
+    BigDecimal cost = product.getAverageUnitCost();
+    BigDecimal price = product.getSellingPrice();
+    if (cost == null || price == null || cost.compareTo(BigDecimal.ZERO) == 0) {
+      this.markupText.set("0%");
+    } else {
+      BigDecimal markup =
+          price
+              .subtract(cost)
+              .divide(cost, 4, RoundingMode.HALF_UP)
+              .multiply(BigDecimal.valueOf(100));
+      this.markupText.set(NumberUtils.percentage(markup));
+    }
+    BigDecimal totalValue =
+        product.getAverageUnitCost().multiply(BigDecimal.valueOf(product.getCurrentStock()));
+    this.productTotalValueText.set(CurrencyUtil.format(totalValue));
+  }
+
+  private void clearPresentation() {
     this.barcodeText.set("--");
-    this.reorderLevelText.set("--");
-    this.taxText.set("--");
+    this.reorderingLevelText.set("--");
+    this.taxCategoryText.set("--");
     this.weightText.set("--");
     this.unitTypeText.set("--");
-    this.minStockText.set("--");
+    this.minStockLevelText.set("--");
     this.averageUnitCostText.set("$0.00");
     this.markupText.set("0%");
     this.productTotalValueText.set("$0.00");
@@ -152,62 +171,71 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
 
   @Override
   public void add(Product item) {
-    this.runInventoryTask(
-        () -> {
-          productService.createProduct(item);
-          return null;
-        });
+    this.runInventoryTask(() -> productService.createProduct(item));
   }
 
   @Override
   public void update(Product item) {
-    this.runInventoryTask(
-        () -> {
-          productService.updateProduct(item);
-          return null;
-        });
+    this.runInventoryTask(() -> productService.updateProduct(item));
   }
 
   @Override
   public void delete(Product item) {
-    this.runInventoryTask(
-        () -> {
-          productService.removeProduct(item.getId());
-          return null;
-        });
+    this.runInventoryTask(() -> productService.removeProduct(item.getId()));
   }
 
   public void receiveStock(StockReceiveRequest receiveRequest, int userId) {
-    this.runInventoryTask(
+    this.runInventoryTask(() -> inventoryService.receiveNewStock(receiveRequest, userId));
+  }
+
+  private void runInventoryTask(TaskAction action) {
+    this.runAsync(
+        action,
         () -> {
-          inventoryService.receiveNewStock(receiveRequest, userId);
-          return null;
+          this.refresh();
+          if (this.selectedItem.get() != null) {
+            this.refreshDetail(this.selectedItem.get().getId());
+          }
         });
   }
 
-  private void runInventoryTask(Callable<Void> action) {
-    this.isBusy.set(true);
-    Task<Void> task =
-        new Task<>() {
-          @Override
-          protected Void call() throws Exception {
-            action.call();
-            return null;
-          }
-        };
-    task.setOnSucceeded(
-        e -> {
-          this.refresh();
-          if (selectedItem.get() != null) {
-            refreshDetail(selectedItem.get().getId());
-          }
-          this.isBusy.set(false);
-        });
-    task.setOnFailed(
-        e -> {
-          this.isBusy.set(false);
-          task.getException().printStackTrace();
-        });
-    new Thread(task).start();
+  public StringProperty userTextProperty() {
+    return userText;
+  }
+
+  public StringProperty barcodeTextProperty() {
+    return barcodeText;
+  }
+
+  public StringProperty reorderingLevelTextProperty() {
+    return reorderingLevelText;
+  }
+
+  public StringProperty taxCategoryTextProperty() {
+    return taxCategoryText;
+  }
+
+  public StringProperty weightTextProperty() {
+    return weightText;
+  }
+
+  public StringProperty unitTypeTextProperty() {
+    return unitTypeText;
+  }
+
+  public StringProperty minStockLevelTextProperty() {
+    return minStockLevelText;
+  }
+
+  public StringProperty averageUnitCostTextProperty() {
+    return averageUnitCostText;
+  }
+
+  public StringProperty markupTextProperty() {
+    return markupText;
+  }
+
+  public StringProperty productTotalValueTextProperty() {
+    return productTotalValueText;
   }
 }
