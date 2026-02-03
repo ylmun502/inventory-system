@@ -23,15 +23,28 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
   private final ObservableList<Supplier> suppliers = FXCollections.observableArrayList();
 
   private final ObjectProperty<Supplier> selectedSupplier = new SimpleObjectProperty<>();
-  private final StringProperty batchCode = new SimpleStringProperty();
-  private final StringProperty quantity = new SimpleStringProperty();
-  private final StringProperty unitCost = new SimpleStringProperty();
+  private final StringProperty batchCode = new SimpleStringProperty("");
+  private final StringProperty quantity = new SimpleStringProperty("");
+  private final StringProperty unitCost = new SimpleStringProperty("");
   private final ObjectProperty<LocalDate> expiryDate = new SimpleObjectProperty<>();
-  private final StringProperty reason = new SimpleStringProperty();
+  private final StringProperty reason = new SimpleStringProperty("");
 
   public ReceiveStockDialogViewModel(Product product, List<Supplier> supplierList) {
     this.product = product;
-    this.suppliers.setAll(supplierList);
+    if (this.product == null) {
+      this.resetProperties();
+    } else {
+      resetProperties();
+    }
+    if (supplierList == null) {
+      this.suppliers.add(
+          new Supplier(0, "Please add a supplier first", "None", "", "", "", null, null, false));
+    } else {
+      this.suppliers.setAll(supplierList);
+    }
+    if (!suppliers.isEmpty()) {
+      selectedSupplier.set(suppliers.get(0));
+    }
   }
 
   public void generateBatchCode() {
@@ -45,20 +58,31 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
   @Override
   public StockReceiveRequest createResult() {
     return new StockReceiveRequest(
-        product.getId(),
-        selectedSupplier.get().getId(),
-        batchCode.get(),
-        Integer.parseInt(quantity.get()),
-        new BigDecimal(unitCost.get()),
-        expiryDate.get() != null
-            ? expiryDate.get().atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
+        this.product.getId(),
+        this.selectedSupplier.get().getId(),
+        this.batchCode.get(),
+        Integer.parseInt(this.quantity.get()),
+        new BigDecimal(this.unitCost.get()),
+        this.expiryDate.get() != null
+            ? this.expiryDate.get().atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
             : null,
-        reason.get());
+        this.reason.get());
   }
 
   @Override
   public BooleanBinding isInvalidProperty() {
-    return selectedSupplier.isNull().or(batchCode.isEmpty()).or(quantity.isEmpty());
+    BooleanBinding invalidSupplier =
+        this.selectedSupplier
+            .isNull()
+            .or(
+                Bindings.createBooleanBinding(
+                    () ->
+                        this.selectedSupplier.get() != null && selectedSupplier.get().getId() == 0,
+                    this.selectedSupplier));
+    return invalidSupplier
+        .or(this.batchCode.isEmpty())
+        .or(this.quantity.isEmpty())
+        .or(this.unitCost.isEmpty());
   }
 
   @Override
@@ -68,10 +92,10 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
 
   @Override
   public void resetProperties() {
-    batchCode.set("");
-    quantity.set("");
-    unitCost.set("");
-    reason.set("");
+    this.batchCode.set("");
+    this.quantity.set("");
+    this.unitCost.set("");
+    this.reason.set("");
   }
 
   public final Product getProduct() {
