@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.util.StringConverter;
 
 public class ReceiveStockDialogController
     extends BaseDialogController<StockReceiveRequest, ReceiveStockDialogViewModel> {
@@ -28,17 +29,30 @@ public class ReceiveStockDialogController
 
   @FXML
   public void initialize() {
-    supplierComboBox.setItems(this.viewModel.getSuppliers());
-    supplierComboBox.valueProperty().bindBidirectional(this.viewModel.selectedSupplierProperty());
-    batchCodeTextField.textProperty().bindBidirectional(this.viewModel.batchCodeProperty());
-    quantityTextField.textProperty().bindBidirectional(this.viewModel.quantityProperty());
-    unitCostTextField.textProperty().bindBidirectional(this.viewModel.unitCostProperty());
-    expiryDatePicker.valueProperty().bindBidirectional(this.viewModel.expiryDateProperty());
-    reasonTextArea.textProperty().bindBidirectional(this.viewModel.reasonProperty());
+    this.productNameLabel.setText("Receiving for: " + this.viewModel.getProduct().getName());
+    this.supplierComboBox.setItems(this.viewModel.getSuppliers());
+    this.supplierComboBox
+        .valueProperty()
+        .bindBidirectional(this.viewModel.selectedSupplierProperty());
+    this.supplierComboBox.setConverter(
+        new StringConverter<>() {
+          @Override
+          public String toString(Supplier supplier) {
+            return supplier == null ? "" : supplier.getName();
+          }
+
+          @Override
+          public Supplier fromString(String string) {
+            return null;
+          }
+        });
+    this.batchCodeTextField.textProperty().bindBidirectional(this.viewModel.batchCodeProperty());
+    this.quantityTextField.textProperty().bindBidirectional(this.viewModel.quantityProperty());
+    this.unitCostTextField.textProperty().bindBidirectional(this.viewModel.unitCostProperty());
+    this.expiryDatePicker.valueProperty().bindBidirectional(this.viewModel.expiryDateProperty());
+    this.reasonTextArea.textProperty().bindBidirectional(this.viewModel.reasonProperty());
     setupNumericFormatters();
-    if (confirmButton != null) {
-      confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
-    }
+    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
   }
 
   private void setupNumericFormatters() {

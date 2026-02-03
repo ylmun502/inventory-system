@@ -3,6 +3,7 @@ package com.daidaisuki.inventory;
 import com.daidaisuki.inventory.controller.view.InventoryController;
 import com.daidaisuki.inventory.controller.view.MainController;
 import com.daidaisuki.inventory.db.DatabaseManager;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import com.daidaisuki.inventory.util.AlertHelper;
 import java.io.IOException;
 import java.sql.Connection;
@@ -37,14 +38,15 @@ public class App extends Application {
     }
 
     final Connection finalConnection = connection;
+    ServiceRegistry registry = new ServiceRegistry(finalConnection);
 
     Callback<Class<?>, Object> controllerFactory =
         type -> {
           try {
             if (type == MainController.class) {
-              return new MainController(finalConnection);
+              return new MainController(registry);
             } else if (type == InventoryController.class) {
-              return new InventoryController(finalConnection);
+              return new InventoryController(registry);
             }
             return type.getDeclaredConstructor().newInstance();
           } catch (Exception e) {

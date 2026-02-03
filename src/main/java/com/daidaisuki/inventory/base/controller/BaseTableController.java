@@ -1,24 +1,16 @@
 package com.daidaisuki.inventory.base.controller;
 
-import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
+import com.daidaisuki.inventory.ui.dialog.DialogService;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
-import com.daidaisuki.inventory.util.ViewLoader;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
-import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.util.Callback;
-import javafx.util.Pair;
 
 public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   @FXML protected TableView<T> table;
@@ -26,25 +18,21 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   @FXML protected Button editButton;
   @FXML protected Button deleteButton;
   protected VM viewModel;
+  private DialogService dialogService;
 
   protected BaseTableController(VM viewModel) {
     this.viewModel = viewModel;
   }
 
-  protected void initializeBase(
-      TableView<T> table, Button addButton, Button editButton, Button deleteButton) {
-    this.table = table;
-    this.addButton = addButton;
-    this.editButton = editButton;
-    this.deleteButton = deleteButton;
+  protected void initializeBase() {
     this.table.setItems(this.viewModel.getDataList());
     this.viewModel
         .selectedItemProperty()
         .bind(this.table.getSelectionModel().selectedItemProperty());
+    this.addButton.disableProperty().bind(this.viewModel.isBusyProperty());
     BooleanBinding nothingSelected = this.viewModel.selectedItemProperty().isNull();
     this.editButton.disableProperty().bind(nothingSelected);
     this.deleteButton.disableProperty().bind(nothingSelected);
-    this.addButton.disableProperty().bind(this.viewModel.isBusyProperty());
     this.viewModel.setOnError(
         exception -> {
           if (exception instanceof SQLException sqlException) {
@@ -60,53 +48,21 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
                 exception.getMessage());
           }
         });
+    this.table.setOnMouseClicked(
+        event -> {
+          if (event.getPickResult().getIntersectedNode() == this.table
+              || event.getTarget().getClass().getName().contains("Skin")) {
+            this.table.getSelectionModel().clearSelection();
+          }
+        });
     this.viewModel.refresh();
   }
 
-  protected <R, C extends BaseDialogController<R, ?>> R showDialog(
-      Class<C> controllerClass, DialogView dialogView, Object viewModel) {
-    try {
-      Callback<Class<?>, Object> factory =
-          type -> {
-            if (type == controllerClass) {
-              return newInstance(controllerClass, viewModel);
-            }
-            return null;
-          };
-      Pair<Parent, C> pair = ViewLoader.loadViewWithControllerFactory(dialogView, factory);
-      C controller = pair.getValue();
-
-      Stage dialogStage = new Stage();
-      dialogStage.initModality(Modality.APPLICATION_MODAL);
-      dialogStage.initOwner(this.getWindow());
-      dialogStage.setScene(new Scene(pair.getKey()));
-      controller.setDialogStage(dialogStage);
-      dialogStage.showAndWait();
-      return controller.getResult();
-    } catch (Exception e) {
-      this.viewModel.handleError(e);
-      return null;
+  protected DialogService getDialogService() {
+    if (dialogService == null) {
+      this.dialogService = new DialogService(this.getWindow());
     }
-  }
-
-  private <C, V> C newInstance(Class<C> controllerClass, V viewModel) {
-    if (viewModel == null) {
-      return null;
-    }
-    try {
-      for (Constructor<?> constructor : controllerClass.getConstructors()) {
-        if (constructor.getParameterCount() == 1) {
-          Class<?> paramType = constructor.getParameterTypes()[0];
-          if (paramType.isAssignableFrom(viewModel.getClass())) {
-            Object instance = constructor.newInstance(viewModel);
-            return controllerClass.cast(instance);
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+    return dialogService;
   }
 
   protected Window getWindow() {

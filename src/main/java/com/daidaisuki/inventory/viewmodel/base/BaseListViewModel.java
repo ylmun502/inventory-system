@@ -16,6 +16,7 @@ public abstract class BaseListViewModel<T> {
   protected final ObservableList<T> dataList = FXCollections.observableArrayList();
   protected final ObjectProperty<T> selectedItem = new SimpleObjectProperty<>();
   protected final BooleanProperty isBusy = new SimpleBooleanProperty(false);
+  protected final BooleanProperty isLoading = new SimpleBooleanProperty(false);
   private Consumer<Throwable> errorReporter;
 
   protected abstract List<T> fetchItems() throws Exception;
@@ -29,6 +30,35 @@ public abstract class BaseListViewModel<T> {
   @FunctionalInterface
   public interface TaskAction {
     void run() throws Exception;
+  }
+
+  protected <V> void executeLoadingTask(Callable<V> worker, Consumer<V> onSuccess) {
+    if (isLoading.get()) {
+      return;
+    }
+    isLoading.set(true);
+    Task<V> task =
+        new Task<>() {
+          @Override
+          protected V call() throws Exception {
+            return worker.call();
+          }
+        };
+    task.setOnSucceeded(
+        e -> {
+          isLoading.set(false);
+          if (onSuccess != null) {
+            onSuccess.accept(task.getValue());
+          }
+        });
+    task.setOnFailed(
+        e -> {
+          isLoading.set(false);
+          handleError(task.getException());
+        });
+    Thread thread = new Thread(task);
+    thread.setDaemon(true);
+    thread.start();
   }
 
   protected void runAsync(TaskAction action, Runnable onSucceeded) {
@@ -105,5 +135,9 @@ public abstract class BaseListViewModel<T> {
 
   public final BooleanProperty isBusyProperty() {
     return isBusy;
+  }
+
+  public final BooleanProperty isLoadingProperty() {
+    return isLoading;
   }
 }

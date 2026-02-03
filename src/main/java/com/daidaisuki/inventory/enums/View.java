@@ -7,6 +7,7 @@ public enum View implements FxmlView {
   CURRENCY_CONVERTER("currencyConverter.fxml"),
   ORDERS("orders.fxml"),
   CUSTOMERS("customers.fxml"),
+  SUPPLIER("supplier.fxml"),
   REPORTS("reports.fxml"),
   SETTINGS("settings.fxml");
 

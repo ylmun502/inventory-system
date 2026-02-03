@@ -13,12 +13,12 @@ import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.util.Pair;
 
 public class InventoryViewModel extends BaseListViewModel<Product> {
   private final ProductService productService;
@@ -97,18 +97,17 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   private void refreshDetail(int productId) {
-    this.runAsync(
+    this.executeLoadingTask(
         () -> {
           List<StockBatch> batches = inventoryService.listInventoryByProduct(productId);
           List<InventoryTransaction> transactions =
               inventoryService.getTransactionHistory(productId);
-          Platform.runLater(
-              () -> {
-                selectedProductBatches.setAll(batches);
-                selectedProductTransactions.setAll(transactions);
-              });
+          return new Pair<>(batches, transactions);
         },
-        null);
+        result -> {
+          selectedProductBatches.setAll(result.getKey());
+          selectedProductTransactions.setAll(result.getValue());
+        });
   }
 
   private void updatePresentation(Product product) {

@@ -6,6 +6,7 @@ public enum DialogView implements FxmlView {
   PRODUCT_DIALOG("productDialog.fxml"),
   RECEIVE_STOCK_DIALOG("receiveStockDialog.fxml"),
   CUSTOMER_DIALOG("customerDialog.fxml"),
+  SUPPLIER_DIALOG("supplierDialog.fxml"),
   ORDER_DIALOG("orderDialog.fxml"),
   EDIT_QUANTITY_DIALOG("editQuantityDialog.fxml");
 

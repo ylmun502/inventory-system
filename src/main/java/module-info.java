@@ -16,8 +16,11 @@ module com.daidaisuki.inventory {
       javafx.base;
 
   exports com.daidaisuki.inventory;
-  exports com.daidaisuki.inventory.util;
   exports com.daidaisuki.inventory.enums;
   exports com.daidaisuki.inventory.interfaces;
   exports com.daidaisuki.inventory.model;
+  exports com.daidaisuki.inventory.model.dto;
+  exports com.daidaisuki.inventory.service;
+  exports com.daidaisuki.inventory.serviceregistry;
+  exports com.daidaisuki.inventory.util;
 }

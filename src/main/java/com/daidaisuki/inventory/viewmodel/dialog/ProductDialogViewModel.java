@@ -7,6 +7,7 @@ import com.daidaisuki.inventory.util.StringCleaner;
 import com.daidaisuki.inventory.util.ValidationUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import java.math.BigDecimal;
+import java.util.UUID;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -25,7 +26,6 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
   public final StringProperty description = new SimpleStringProperty("");
   public final StringProperty weight = new SimpleStringProperty("");
   public final StringProperty price = new SimpleStringProperty("");
-  public final StringProperty stock = new SimpleStringProperty("");
   public final BooleanProperty isActive = new SimpleBooleanProperty(true);
 
   // Need to check validations
@@ -51,7 +51,6 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
               ValidationUtils.isFieldEmpty(cleanCategory, "Category", errors);
               ValidationUtils.isNumeric(this.weight.get(), "Weight", errors, true);
               ValidationUtils.isNumeric(this.price.get(), "Price", errors, true);
-              ValidationUtils.isNumeric(this.stock.get(), "Stock", errors, false);
               return new ValidationStatus(errors.isEmpty(), errors.toString());
             },
             sku,
@@ -59,21 +58,20 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
             category,
             description,
             weight,
-            price,
-            stock);
+            price);
   }
 
   @Override
   public Product createResult() {
-    Product result = this.product == null ? new Product() : product;
+    Product result = this.product == null ? new Product() : this.product;
     result.setSku(this.sku.get());
     result.setName(this.name.get());
     result.setCategory(this.category.get());
     result.setDescription(this.description.get());
     result.setWeight(Integer.parseInt(this.weight.get().isEmpty() ? "0" : weight.get()));
     result.setSellingPrice(new BigDecimal(price.get().isEmpty() ? "0" : price.get()));
-    result.setCurrentStock(Integer.parseInt(stock.get().isEmpty() ? "0" : stock.get()));
     result.setActive(isActive.get());
+    result.setBarcode(UUID.randomUUID().toString().substring(0, 8));
     return result;
   }
 
@@ -90,7 +88,6 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.description.set("");
     this.weight.set("");
     this.price.set("");
-    this.stock.set("");
     this.isActive.set(true);
   }
 
@@ -100,7 +97,6 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.category.set(model.getCategory());
     this.description.set(model.getDescription());
     this.price.set(CurrencyUtil.format(model.getSellingPrice()));
-    this.stock.set(String.valueOf(model.getCurrentStock()));
     this.isActive.set(model.isActive());
   }
 

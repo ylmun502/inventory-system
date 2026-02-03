@@ -15,29 +15,6 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     super(connection);
   }
 
-  public Supplier save(Supplier supplier) throws SQLException {
-    String sql =
-        """
-        INSERT INTO suppliers(
-          name,
-          short_code,
-          created_at,
-          updated_at,
-          is_deleted)
-        VALUES(?, ?, ?, ?, ?)
-        """;
-    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-    return insert(
-        sql,
-        (newId) ->
-            new Supplier(newId, supplier.getName(), supplier.getShortCode(), now, now, false),
-        supplier.getName(),
-        supplier.getShortCode(),
-        now,
-        now,
-        0);
-  }
-
   public List<Supplier> findAll() throws SQLException {
     String sql =
         """
@@ -45,6 +22,9 @@ public class SupplierDAO extends BaseDAO<Supplier> {
           id,
           name,
           short_code,
+          email,
+          phone,
+          address,
           created_at,
           updated_at,
           is_deleted
@@ -55,6 +35,78 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     return query(sql, this::mapResultSetToSupplier);
   }
 
+  public Supplier save(Supplier supplier) throws SQLException {
+    String sql =
+        """
+        INSERT INTO suppliers(
+          name,
+          short_code,
+          email,
+          phone,
+          address,
+          created_at,
+          updated_at,
+          is_deleted)
+        VALUES(?, ?, ?, ?,
+               ?, ?, ?, ?)
+        """;
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    return insert(
+        sql,
+        (newId) ->
+            new Supplier(
+                newId,
+                supplier.getName(),
+                supplier.getShortCode(),
+                supplier.getEmail(),
+                supplier.getPhone(),
+                supplier.getAddress(),
+                now,
+                now,
+                false),
+        supplier.getName(),
+        supplier.getShortCode(),
+        supplier.getEmail(),
+        supplier.getPhone(),
+        supplier.getAddress(),
+        now,
+        now,
+        0);
+  }
+
+  public void update(Supplier supplier) throws SQLException {
+    String sql =
+        """
+          UPDATE suppliers
+          SET
+            name,
+            email,
+            phone,
+            address,
+            updated_at
+          WHERE id = ?
+        )
+        """;
+    int affectedRows =
+        update(
+            sql,
+            supplier.getName(),
+            supplier.getEmail(),
+            supplier.getPhone(),
+            supplier.getAddress(),
+            OffsetDateTime.now(ZoneOffset.UTC),
+            supplier.getId());
+    if (affectedRows == 0) {
+      throw new SQLException("Updating product failed, no rows affected.");
+    }
+  }
+
+  public void delete(int supplierId) throws SQLException {
+    String sql =
+        "UPDATE suppliers SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
+    update(sql, OffsetDateTime.now(ZoneOffset.UTC), supplierId);
+  }
+
   public Optional<Supplier> findById(int id) throws SQLException {
     String sql =
         """
@@ -62,6 +114,9 @@ public class SupplierDAO extends BaseDAO<Supplier> {
           id,
           name,
           short_code,
+          email,
+          phone,
+          address,
           created_at,
           updated_at,
           is_deleted
@@ -81,10 +136,16 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     try {
       String name = rs.getString("name");
       String shortCode = rs.getString("short_code");
-      OffsetDateTime createdAt = rs.getObject("createdAt", OffsetDateTime.class);
-      OffsetDateTime updatedAt = rs.getObject("updatedAt", OffsetDateTime.class);
+      String email = rs.getString("email");
+      String phone = rs.getString("phone");
+      String address = rs.getString("address");
+      String createdAtString = rs.getString("created_at");
+      String updatedAtString = rs.getString("updated_at");
+      OffsetDateTime createdAt = OffsetDateTime.parse(createdAtString);
+      OffsetDateTime updatedAt = OffsetDateTime.parse(updatedAtString);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
-      return new Supplier(id, name, shortCode, createdAt, updatedAt, isDeleted);
+      return new Supplier(
+          id, name, shortCode, email, phone, address, createdAt, updatedAt, isDeleted);
     } catch (Exception e) {
       throw new SQLException("Mapping failed for Supplier ID: " + id, e);
     }
