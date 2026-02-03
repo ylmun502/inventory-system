@@ -19,6 +19,7 @@
                 <Button text="Currency Converter" userData="CURRENCY_CONVERTER" onAction="#handleViewSwitch" wrapText="true" styleClass="wrap-text-button"/>
                 <Button text="Orders" userData="ORDERS" onAction="#handleViewSwitch"/>
                 <Button text="Customers" userData="CUSTOMERS" onAction="#handleViewSwitch"/>
+                <Button text="Supplier" userData="SUPPLIER" onAction="#handleViewSwitch"/>
                 <Button text="Reports" userData="REPORTS" onAction="#handleViewSwitch"/>
                 <Button text="Settings" userData="SETTINGS" onAction="#handleViewSwitch"/>
             </children>

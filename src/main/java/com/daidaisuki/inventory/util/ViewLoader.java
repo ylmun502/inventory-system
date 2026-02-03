@@ -1,10 +1,10 @@
 package com.daidaisuki.inventory.util;
 
-import com.daidaisuki.inventory.controller.view.InventoryController;
-import com.daidaisuki.inventory.controller.view.MainController;
 import com.daidaisuki.inventory.interfaces.FxmlView;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import java.io.IOException;
-import java.sql.Connection;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.util.Callback;
@@ -23,71 +23,52 @@ public final class ViewLoader {
     throw new UnsupportedOperationException("Utility class");
   }
 
-  /**
-   * Creates a new {@link FXMLLoader} for the specified FXML view.
-   *
-   * @param view the {@link FxmlView} enum or object that provides the FXML file path
-   * @return a new {@link FXMLLoader} instance
-   */
-  public static FXMLLoader loadFxml(FxmlView view) {
-    return new FXMLLoader(ViewLoader.class.getResource(view.getFxml()));
-  }
-
-  /**
-   * Loads the root {@link Parent} node from the specified FXML view.
-   *
-   * @param view the {@link FxmlView} to load
-   * @return the root {@link Parent} node
-   * @throws IOException if loading the FXML file fails
-   */
-  public static Parent loadParent(FxmlView view, Connection connection) throws IOException {
+  public static Parent loadParent(FxmlView view, ServiceRegistry registry) throws IOException {
     FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(view.getFxml()));
-    loader.setControllerFactory(
-        type -> {
-          try {
-            if (type == InventoryController.class) {
-              return new InventoryController(connection);
-            }
-            if (type == MainController.class) {
-              return new MainController(connection);
-            }
-            return type.getDeclaredConstructor().newInstance();
-          } catch (Exception e) {
-            throw new RuntimeException("Dependency Injection failed for: " + type.getName(), e);
-          }
-        });
+    loader.setControllerFactory(type -> createControllerInstance(type, registry));
     return loader.load();
   }
 
-  /**
-   * Loads the controller associated with the specified FXML view.
-   *
-   * @param view the {@link FxmlView} to load
-   * @param <T> the expected controller type
-   * @return the controller instance
-   * @throws IOException if loading the FXML file fails
-   */
-  public static <T> T loadController(FxmlView view) throws IOException {
-    FXMLLoader loader = loadFxml(view);
-    loader.load();
-    return loader.getController();
-  }
+  public static <C> C createControllerInstance(Class<C> controllerClass, Object... args) {
+    try {
+      Object[] finalArgs = args;
+      if (args != null && args.length == 1 && args[0] instanceof Object[]) {
+        finalArgs = (Object[]) args[0];
+      }
+      if (args == null || args.length == 0) {
+        return controllerClass.getDeclaredConstructor().newInstance();
+      }
 
-  /**
-   * Loads both the root {@link Parent} and the controller from the specified FXML view.
-   *
-   * @param view the {@link FxmlView} to load
-   * @param <T> the expected controller type
-   * @return a {@link Pair} containing the root node and its controller
-   * @throws IOException if loading the FXML file fails
-   */
-  public static <T> Pair<Parent, T> loadViewAndController(FxmlView view) throws IOException {
-    return loadViewWithControllerFactory(view, null);
+      for (Constructor<?> constructor : controllerClass.getDeclaredConstructors()) {
+        if (constructor.getParameterCount() == finalArgs.length) {
+          boolean match = true;
+          for (int i = 0; i < finalArgs.length; i++) {
+            Class<?> paramType = constructor.getParameterTypes()[i];
+            if (finalArgs[i] != null && !paramType.isAssignableFrom(finalArgs[i].getClass())) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            constructor.setAccessible(true);
+            return controllerClass.cast(constructor.newInstance(finalArgs));
+          }
+        }
+      }
+      throw new NoSuchMethodException(
+          "No suitable constructor found for "
+              + controllerClass.getName()
+              + " with args "
+              + Arrays.toString(args));
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "Failed to instantiate controller: " + controllerClass.getName(), e);
+    }
   }
 
   public static <T> Pair<Parent, T> loadViewWithControllerFactory(
-      FxmlView view, Callback<Class<?>, Object> factory) throws IOException {
-    FXMLLoader loader = loadFxml(view);
+      FxmlView view, Callback<Class<?>, Object> factory) throws Exception {
+    FXMLLoader loader = new FXMLLoader(ViewLoader.class.getResource(view.getFxml()));
     if (factory != null) {
       loader.setControllerFactory(factory);
     }

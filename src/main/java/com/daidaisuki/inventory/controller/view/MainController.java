@@ -1,11 +1,11 @@
 package com.daidaisuki.inventory.controller.view;
 
 import com.daidaisuki.inventory.enums.View;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.ViewLoader;
 import java.io.IOException;
-import java.sql.Connection;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,11 +22,11 @@ public class MainController {
 
   @FXML private Button defaultButton;
 
-  private final Connection connection;
+  private final ServiceRegistry registry;
   private Button activeButton = null;
 
-  public MainController(Connection connection) {
-    this.connection = connection;
+  public MainController(ServiceRegistry registry) {
+    this.registry = registry;
   }
 
   @FXML
@@ -73,7 +73,7 @@ public class MainController {
   }
 
   private void switchView(View view) throws IOException {
-    Parent newView = ViewLoader.loadParent(view, this.connection);
+    Parent newView = ViewLoader.loadParent(view, this.registry);
 
     FadeTransition ft = new FadeTransition(Duration.millis(200), newView);
     ft.setFromValue(0.5);

@@ -1,25 +1,22 @@
 package com.daidaisuki.inventory.controller.view;
 
 import com.daidaisuki.inventory.base.controller.BaseTableController;
+import com.daidaisuki.inventory.controller.dialog.ProductDialogController;
 import com.daidaisuki.inventory.controller.dialog.ReceiveStockDialogController;
-import com.daidaisuki.inventory.db.DatabaseManager;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.InventoryTransaction;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.model.StockBatch;
 import com.daidaisuki.inventory.model.Supplier;
 import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
-import com.daidaisuki.inventory.service.InventoryService;
-import com.daidaisuki.inventory.service.ProductService;
-import com.daidaisuki.inventory.service.SupplierService;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import com.daidaisuki.inventory.user.AppSession;
-import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.TableCellUtils;
 import com.daidaisuki.inventory.util.TableColumnUtils;
+import com.daidaisuki.inventory.viewmodel.dialog.ProductDialogViewModel;
 import com.daidaisuki.inventory.viewmodel.dialog.ReceiveStockDialogViewModel;
 import com.daidaisuki.inventory.viewmodel.view.InventoryViewModel;
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -70,16 +67,12 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   @FXML private Label markupLabel;
   @FXML private Label productTotalValueLabel;
 
-  public InventoryController() throws SQLException {
-    this(DatabaseManager.getConnection());
-  }
-
-  public InventoryController(Connection connection) throws SQLException {
+  public InventoryController(ServiceRegistry registry) throws SQLException {
     super(
         new InventoryViewModel(
-            new ProductService(connection),
-            new InventoryService(connection),
-            new SupplierService(connection)));
+            registry.getProductService(),
+            registry.getInventoryService(),
+            registry.getSupplierService()));
   }
 
   @FXML
@@ -92,7 +85,7 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     this.setupMainTableColumns();
     this.setupDetailTablesColumns();
     this.bindLabels();
-    this.initializeBase(this.table, this.addButton, this.editButton, this.deleteButton);
+    this.initializeBase();
     this.setupRowFactory();
   }
 
@@ -171,62 +164,66 @@ public class InventoryController extends BaseTableController<Product, InventoryV
 
   private void setupRowFactory() {
     this.table.setRowFactory(
-        tv ->
-            new TableRow<>() {
-              @Override
-              protected void updateItem(Product item, boolean empty) {
-                super.updateItem(item, empty);
-                setStyle("");
-                setTooltip(null);
-                if (item != null && !empty) {
-                  if (item.getCurrentStock() <= 0) {
-                    setStyle("-fx-background-color: #ffcdd2");
-                  } else if (item.getCurrentStock() <= item.getReorderingLevel()) {
-                    setStyle("-fx-background-color: #fff9c4");
-                    setTooltip(new Tooltip("Stock is low! Please reorder."));
+        tv -> {
+          TableRow<Product> row =
+              new TableRow<>() {
+                @Override
+                protected void updateItem(Product item, boolean empty) {
+                  super.updateItem(item, empty);
+                  setStyle("");
+                  setTooltip(null);
+                  if (item != null && !empty) {
+                    if (item.getCurrentStock() <= 0) {
+                      setStyle("-fx-background-color: #ffcdd2");
+                    } else if (item.getCurrentStock() <= item.getReorderingLevel()) {
+                      setStyle("-fx-background-color: #fff9c4");
+                      setTooltip(new Tooltip("Stock is low! Please reorder."));
+                    }
                   }
                 }
-              }
-            });
+              };
+
+          row.setOnMouseClicked(
+              event -> {
+                if (row.isEmpty()) {
+                  this.table.getSelectionModel().clearSelection();
+                }
+              });
+          return row;
+        });
   }
 
   @FXML
   protected void handleAdd() throws Exception {
-    /* fix after ui representation is completed
+    ProductDialogViewModel dialogViewModel = new ProductDialogViewModel(null);
     Product product =
-        this.showDialog(
-            ProductDialogController.class,
-            DialogView.PRODUCT_DIALOG,
-            new ProductDialogViewModel(this.viewModel.getProductService(), null));
+        this.getDialogService()
+            .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
     if (product != null) {
       this.viewModel.add(product);
     }
-      */
   }
 
   @FXML
   protected void handleEdit() throws Exception {
-    /* fix after ui represenation is completed
-    Product selecteProduct = this.viewModel.selectedItemProperty().get();
-    if (selecteProduct != null) {
-      ProductDialogViewModel dialogViewModel =
-          new ProductDialogViewModel(this.viewModel.getProductService(), selecteProduct);
-      Product updatedProduct =
-          this.showDialog(
-              ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
-      if (updatedProduct != null) {
-        this.viewModel.update(updatedProduct);
+    Product selecte = this.viewModel.selectedItemProperty().get();
+    if (selecte != null) {
+      ProductDialogViewModel dialogViewModel = new ProductDialogViewModel(selecte);
+      Product updated =
+          this.getDialogService()
+              .showDialog(
+                  ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
+      if (updated != null) {
+        this.viewModel.update(updated);
       }
     }
-      */
   }
 
   @FXML
   protected void handleDelete() throws Exception {
-    Product selectedProduct = this.viewModel.selectedItemProperty().get();
-    ;
-    if (selectedProduct != null) {
-      this.viewModel.delete(selectedProduct);
+    Product selected = this.viewModel.selectedItemProperty().get();
+    if (selected != null) {
+      this.viewModel.delete(selected);
     }
   }
 
@@ -241,14 +238,17 @@ public class InventoryController extends BaseTableController<Product, InventoryV
       ReceiveStockDialogViewModel dialogViewModel =
           new ReceiveStockDialogViewModel(selected, suppliers);
       StockReceiveRequest request =
-          showDialog(
-              ReceiveStockDialogController.class, DialogView.RECEIVE_STOCK_DIALOG, dialogViewModel);
+          this.getDialogService()
+              .<StockReceiveRequest, ReceiveStockDialogController>showDialog(
+                  ReceiveStockDialogController.class,
+                  DialogView.RECEIVE_STOCK_DIALOG,
+                  dialogViewModel);
       if (request != null) {
         this.viewModel.receiveStock(
             dialogViewModel.createResult(), AppSession.getInstance().getUserId());
       }
     } catch (SQLException e) {
-      AlertHelper.showDatabaseError(getWindow(), "Failed to load suppliers", e);
+      this.viewModel.handleError(e);
     }
   }
 

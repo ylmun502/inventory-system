@@ -89,7 +89,7 @@ public class ProductDAO extends BaseDAO<Product> {
                 product.getTaxCategory(),
                 product.getDescription(),
                 product.getWeight(),
-                product.getCurrentStock(),
+                0,
                 product.getMinStockLevel(),
                 product.getMaxStockLevel(),
                 product.getReorderingLevel(),
@@ -106,7 +106,7 @@ public class ProductDAO extends BaseDAO<Product> {
         product.getTaxCategory(),
         product.getDescription(),
         product.getWeight(),
-        product.getCurrentStock(),
+        0,
         product.getMinStockLevel(),
         product.getMaxStockLevel(),
         product.getReorderingLevel(),
@@ -223,6 +223,16 @@ public class ProductDAO extends BaseDAO<Product> {
     return result.isPresent();
   }
 
+  public boolean existsBySku(String sku) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM products WHERE sku = ? AND is_deleted = 0";
+    return queryForObject(sql, rs -> rs.getInt(1) > 0, sku).orElse(false);
+  }
+
+  public boolean existsByBarcode(String barcode) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM suppliers WHERE barcode = ? AND is_deleted = 0";
+    return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
+  }
+
   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
     try {
@@ -240,8 +250,10 @@ public class ProductDAO extends BaseDAO<Product> {
       int reorderingLevel = rs.getInt("reordering_level");
       BigDecimal sellingPrice = CurrencyUtil.longToBigDecimal(rs.getLong("selling_price_cents"));
       boolean isActive = rs.getInt("is_active") == 1;
-      OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
-      OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
+      String createdAtString = rs.getString("created_at");
+      String updatedAtString = rs.getString("updated_at");
+      OffsetDateTime createdAt = OffsetDateTime.parse(createdAtString);
+      OffsetDateTime updatedAt = OffsetDateTime.parse(updatedAtString);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Product(
           id,

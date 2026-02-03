@@ -70,8 +70,11 @@ public class DatabaseManager {
                   id                    INTEGER PRIMARY KEY AUTOINCREMENT,
 
                   -- Core Data
-                  name                  TEXT,
-                  short_code            TEXT,
+                  name                  TEXT NOT NULL,
+                  short_code            TEXT UNIQUE,
+                  email                 TEXT,
+                  phone                 TEXT,
+                  address               TEXT,
 
                   -- Audit Metadata
                   created_at            DATETIME NOT NULL,
