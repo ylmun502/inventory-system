@@ -42,6 +42,11 @@ public class ProductService {
   }
 
   public void createProduct(Product product) throws SQLException {
+    if (productDAO.existsBySku(product.getSku())) {
+      throw new IllegalArgumentException("A product with this sku already exists.");
+    } else if (productDAO.existsByBarcode(product.getBarcode())) {
+      throw new IllegalArgumentException("A product with this barcode already exists.");
+    }
     transactionManager.executeInTransaction(() -> productDAO.save(product));
   }
 
