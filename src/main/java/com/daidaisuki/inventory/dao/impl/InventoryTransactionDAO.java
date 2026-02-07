@@ -3,6 +3,7 @@ package com.daidaisuki.inventory.dao.impl;
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.enums.TransactionType;
 import com.daidaisuki.inventory.model.InventoryTransaction;
+import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,6 +56,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
           ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    String nowString = now.toString();
     return insert(
         sql,
         (newId) ->
@@ -77,8 +79,8 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
         transaction.getChangeAmount(),
         transaction.getTransactionType().name(),
         transaction.getReasonCode(),
-        now,
-        now,
+        nowString,
+        nowString,
         0);
   }
 
@@ -158,8 +160,10 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
       int changeAmount = rs.getInt("change_amount");
       TransactionType transactionType = TransactionType.valueOf(rs.getString("transaction_type"));
       String reasonCode = rs.getString("reason_code");
-      OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
-      OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "InventoryTrabsaction ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "InventoryTrabsaction ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new InventoryTransaction(
           id,
