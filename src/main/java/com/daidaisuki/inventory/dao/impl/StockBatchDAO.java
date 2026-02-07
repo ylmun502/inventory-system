@@ -3,6 +3,7 @@ package com.daidaisuki.inventory.dao.impl;
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.model.StockBatch;
 import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,10 +38,11 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
         ?, ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    String nowString = now.toString();
     return insert(
         sql,
         (newId) ->
-            new StockBatch(
+            StockBatch.forDatabase(
                 newId,
                 batch.getProductId(),
                 batch.getSupplierId(),
@@ -61,8 +63,8 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
         batch.getQuantityRemaining(),
         CurrencyUtil.bigDecimalToLong(batch.getUnitCost()),
         CurrencyUtil.bigDecimalToLong(batch.getLandedCost()),
-        now,
-        now,
+        nowString,
+        nowString,
         0);
   }
 
@@ -155,19 +157,25 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
 
   private StockBatch mapResultSetToStockBatch(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
+    // Remove this try block before production
     try {
       int productId = rs.getInt("product_id");
       int supplierId = rs.getInt("supplier_id");
       String batchCode = rs.getString("batch_code");
-      OffsetDateTime expiryDate = rs.getObject("expiry_date", OffsetDateTime.class);
+      OffsetDateTime expiryDate =
+          DatabaseUtils.getOffsetDateTime(rs, "expiry_date", "StockBatch ID: " + id);
       int quantityReceived = rs.getInt("quantity_received");
       int quantityRemaining = rs.getInt("quantity_remaining");
-      BigDecimal unitCost = CurrencyUtil.longToBigDecimal(rs.getLong("unit_cost_cents"));
-      BigDecimal landedCost = CurrencyUtil.longToBigDecimal(rs.getLong("landed_cost_cents"));
-      OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
-      OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
+      BigDecimal unitCost =
+          DatabaseUtils.getBigDecimalFromCents(rs, "unit_cost_cents", "StockBatch ID: " + id);
+      BigDecimal landedCost =
+          DatabaseUtils.getBigDecimalFromCents(rs, "landed_cost_cents", "StockBatch ID: " + id);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "StockBatch ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "StockBatch ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
-      return new StockBatch(
+      return StockBatch.forDatabase(
           id,
           productId,
           supplierId,
@@ -181,6 +189,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
           updatedAt,
           isDeleted);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new SQLException("Mapping failed for StockBatch ID: " + id, e);
     }
   }

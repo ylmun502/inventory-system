@@ -59,6 +59,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
           ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    String nowString = now.toString();
     return insert(
         sql,
         (newId) ->
@@ -82,8 +83,8 @@ public class CustomerDAO extends BaseDAO<Customer> {
         customer.getEmail(),
         customer.getAddress(),
         customer.getAcquisitionSource(),
-        now,
-        now,
+        nowString,
+        nowString,
         0);
   }
 

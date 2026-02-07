@@ -76,6 +76,7 @@ public class ProductDAO extends BaseDAO<Product> {
           ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    String nowString = now.toString();
     return insert(
         sql,
         (newId) ->
@@ -112,8 +113,8 @@ public class ProductDAO extends BaseDAO<Product> {
         product.getReorderingLevel(),
         CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
         1,
-        now,
-        now,
+        nowString,
+        nowString,
         0);
   }
 
@@ -229,7 +230,7 @@ public class ProductDAO extends BaseDAO<Product> {
   }
 
   public boolean existsByBarcode(String barcode) throws SQLException {
-    String sql = "SELECT COUNT(*) FROM suppliers WHERE barcode = ? AND is_deleted = 0";
+    String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
   }
 

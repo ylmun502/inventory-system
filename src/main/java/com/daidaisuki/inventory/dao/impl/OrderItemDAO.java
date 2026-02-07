@@ -32,6 +32,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
           ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+    String nowString = now.toString();
     return insert(
         sql,
         (newId) ->
@@ -52,8 +53,8 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
         item.getQuantity(),
         item.getUnitPriceAtSaleCents(),
         item.getUnitCostAtSaleCents(),
-        now,
-        now,
+        nowString,
+        nowString,
         0);
   }
 
