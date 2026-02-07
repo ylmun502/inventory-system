@@ -6,31 +6,11 @@ import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class ProductService {
   private final TransactionManager transactionManager;
   private final ProductDAO productDAO;
-
-  /* Will migrate to view model later and change the name to InventoryService
-  private final ObservableList<StockBatch> masterList = FXCollections.observableArrayList();
-  private final SortedList<StockBatch> fifoView =
-      new SortedList<>(
-          masterList,
-          Comparator.comparing(StockBatch::getCreatedAt).thenComparing(StockBatch::getId));
-
-  public ObservableList<StockBatch> getMasterList() {
-    return masterList;
-  }
-
-  public void loadInventory(int productId) throws SQLException {
-    List<StockBatch> data = batchDAO.fetchByProductId(productId);
-    masterList.setAll(data);
-  }
-
-  public SortedList<StockBatch> getFifoView() {
-    return fifoView;
-  }
-  */
 
   public ProductService(Connection connection) {
     this.transactionManager = new TransactionManager(connection);
@@ -38,29 +18,40 @@ public class ProductService {
   }
 
   public List<Product> listProducts() throws SQLException {
-    return productDAO.findAll();
+    return this.productDAO.findAll();
   }
 
   public void createProduct(Product product) throws SQLException {
-    if (productDAO.existsBySku(product.getSku())) {
+    if (this.productDAO.existsBySku(product.getSku())) {
       throw new IllegalArgumentException("A product with this sku already exists.");
-    } else if (productDAO.existsByBarcode(product.getBarcode())) {
+    } else if (this.productDAO.existsByBarcode(product.getBarcode())) {
       throw new IllegalArgumentException("A product with this barcode already exists.");
     }
-    transactionManager.executeInTransaction(() -> productDAO.save(product));
+    if (product.getBarcode() == null || product.getBarcode().isEmpty()) {
+      product.setBarcode(generateBarcode());
+    }
+    transactionManager.executeInTransaction(() -> this.productDAO.save(product));
+  }
+
+  private String generateBarcode() {
+    return UUID.randomUUID().toString().substring(0, 8);
   }
 
   public void updateProduct(Product product) throws SQLException {
-    transactionManager.executeInTransaction(() -> productDAO.update(product));
+    transactionManager.executeInTransaction(() -> this.productDAO.update(product));
   }
 
   public void removeProduct(int productId) throws SQLException {
-    transactionManager.executeInTransaction(() -> productDAO.delete(productId));
+    transactionManager.executeInTransaction(() -> this.productDAO.delete(productId));
   }
 
   public Product getProduct(int productId) throws SQLException {
-    return productDAO
+    return this.productDAO
         .findById(productId)
         .orElseThrow(() -> new SQLException("Product not found:" + productId));
+  }
+
+  public List<String> listDistinctUnitTypes() throws SQLException {
+    return this.productDAO.findAllDistinctUnitTypes();
   }
 }

@@ -39,18 +39,7 @@ public class StockBatch extends BaseModel {
   private final ReadOnlyObjectWrapper<BigDecimal> totalValue =
       new ReadOnlyObjectWrapper<>(this, "totalValue", BigDecimal.ZERO);
 
-  public StockBatch(int productId, int supplierId, int quantity, BigDecimal unitCost) {
-    super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
-    this.productId.set(productId);
-    this.supplierId.set(supplierId);
-    this.quantityReceived.set(quantity);
-    this.quantityRemaining.set(quantity);
-    this.unitCost.set(unitCost);
-    this.landedCost.set(unitCost);
-    initBindings();
-  }
-
-  public StockBatch(
+  private StockBatch(
       int id,
       int productId,
       int supplierId,
@@ -73,6 +62,56 @@ public class StockBatch extends BaseModel {
     this.unitCost.set(unitCost);
     this.landedCost.set(landedCost);
     initBindings();
+  }
+
+  public static StockBatch forDatabase(
+      int id,
+      int productId,
+      int supplierId,
+      String batchCode,
+      OffsetDateTime expiryDate,
+      int quantityReceived,
+      int quantityRemaining,
+      BigDecimal unitCost,
+      BigDecimal landedCost,
+      OffsetDateTime createdAt,
+      OffsetDateTime updatedAt,
+      boolean deleted) {
+    return new StockBatch(
+        id,
+        productId,
+        supplierId,
+        batchCode,
+        expiryDate,
+        quantityReceived,
+        quantityRemaining,
+        unitCost,
+        landedCost,
+        createdAt,
+        updatedAt,
+        deleted);
+  }
+
+  public static StockBatch createNew(
+      int productId,
+      int suppierId,
+      String batchcode,
+      OffsetDateTime expiryDate,
+      int quantity,
+      BigDecimal unitCost) {
+    return new StockBatch(
+        NEW_ENTITY_ID,
+        productId,
+        suppierId,
+        batchcode,
+        expiryDate,
+        quantity,
+        quantity,
+        unitCost,
+        unitCost,
+        null,
+        null,
+        false);
   }
 
   private void initBindings() {

@@ -78,8 +78,14 @@ public class InventoryService {
       throws SQLException {
     this.applyStockChange(request.productId(), request.quantity());
     StockBatch newBatch =
-        new StockBatch(
-            request.productId(), request.supplierId(), request.quantity(), request.unitCost());
+        StockBatch.createNew(
+            request.productId(),
+            request.supplierId(),
+            request.batchCode(),
+            request.expiryDate(),
+            request.quantity(),
+            request.unitCost());
+
     StockBatch savedBatch = this.stockBatchDAO.save(newBatch);
     this.logTransaction(
         request.productId(),
