@@ -218,6 +218,11 @@ public class ProductDAO extends BaseDAO<Product> {
     return queryForObject(sql, this::mapResultSetToProduct, id);
   }
 
+  public List<String> findAllDistinctUnitTypes() throws SQLException {
+    String sql = "SELECT DISTINCT unit_type FROM products";
+    return query(sql, this::mapResultSetToUnitType);
+  }
+
   public boolean exists(int productId) throws SQLException {
     String sql = "SELECT 1 FROM products WHERE id = ? AND is_deleted = 0";
     Optional<Integer> result = queryForObject(sql, rs -> rs.getInt(1), productId);
@@ -232,6 +237,10 @@ public class ProductDAO extends BaseDAO<Product> {
   public boolean existsByBarcode(String barcode) throws SQLException {
     String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
+  }
+
+  private String mapResultSetToUnitType(ResultSet rs) throws SQLException {
+    return rs.getString("unit_type");
   }
 
   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
