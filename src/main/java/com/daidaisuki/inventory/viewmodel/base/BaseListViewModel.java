@@ -33,10 +33,10 @@ public abstract class BaseListViewModel<T> {
   }
 
   protected <V> void executeLoadingTask(Callable<V> worker, Consumer<V> onSuccess) {
-    if (isLoading.get()) {
+    if (this.isLoading.get()) {
       return;
     }
-    isLoading.set(true);
+    this.isLoading.set(true);
     Task<V> task =
         new Task<>() {
           @Override
@@ -46,14 +46,14 @@ public abstract class BaseListViewModel<T> {
         };
     task.setOnSucceeded(
         e -> {
-          isLoading.set(false);
+          this.isLoading.set(false);
           if (onSuccess != null) {
             onSuccess.accept(task.getValue());
           }
         });
     task.setOnFailed(
         e -> {
-          isLoading.set(false);
+          this.isLoading.set(false);
           handleError(task.getException());
         });
     Thread thread = new Thread(task);
@@ -80,10 +80,10 @@ public abstract class BaseListViewModel<T> {
   }
 
   private <V> void executeTask(Callable<V> worker, Consumer<V> onSuccess) {
-    if (isBusy.get()) {
+    if (this.isBusy.get()) {
       return;
     }
-    isBusy.set(true);
+    this.isBusy.set(true);
     Task<V> task =
         new Task<>() {
           @Override
@@ -93,14 +93,14 @@ public abstract class BaseListViewModel<T> {
         };
     task.setOnSucceeded(
         e -> {
-          isBusy.set(false);
+          this.isBusy.set(false);
           if (onSuccess != null) {
             onSuccess.accept(task.getValue());
           }
         });
     task.setOnFailed(
         e -> {
-          isBusy.set(false);
+          this.isBusy.set(false);
           handleError(task.getException());
         });
     Thread thread = new Thread(task);
