@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
-import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -77,16 +76,43 @@ public class InventoryController extends BaseTableController<Product, InventoryV
 
   @FXML
   public void initialize() {
+    // Static UI Setup
     this.userLabel.setText("User: " + AppSession.getInstance().getUserName());
-    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
-    this.table.setItems(this.viewModel.getFilteredList());
-    this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
-    this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
     this.setupMainTableColumns();
     this.setupDetailTablesColumns();
-    this.bindLabels();
-    this.initializeBase();
     this.setupRowFactory();
+
+    // Event / Shortcut Setup
+    this.initializeBase(); // Set up selection and table shortcuts
+    this.receiveStockButton
+        .disableProperty()
+        .bind(this.viewModel.selectedItemProperty().isNull().or(this.viewModel.isBusyProperty()));
+    this.setupEscapeHandler(
+        this.searchField,
+        () -> {
+          if (!searchField.getText().isEmpty()) {
+            searchField.clear();
+          } else {
+            clearSelection();
+          }
+        });
+    this.setupDeselectOnEmptySpace(batchesTable);
+    this.setupDeselectOnEmptySpace(transactionTable);
+    this.setupEscapeHandler(
+        this.batchesTable, () -> this.batchesTable.getSelectionModel().clearSelection());
+    this.setupEscapeHandler(
+        this.transactionTable, () -> this.transactionTable.getSelectionModel().clearSelection());
+
+    // Property Bindings
+    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
+    this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
+    this.bindLabels();
+
+    // Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading
+    // rows)
+    this.table.setItems(this.viewModel.getSortedList());
+    this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
+    this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 
   private void setupMainTableColumns() {
@@ -133,10 +159,9 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     this.transactionDateCol.setCellValueFactory(
         cellData -> cellData.getValue().createdAtProperty());
     this.transactionTypeCol.setCellValueFactory(
-        cellData ->
-            Bindings.createStringBinding(
-                () -> cellData.getValue().getTransactionType().getDisplayName(),
-                cellData.getValue().transactionTypeProperty()));
+        cellData -> {
+          return cellData.getValue().transactionTypeProperty().map(type -> type.getDisplayName());
+        });
     this.transactionAmountCol.setCellValueFactory(
         cellData -> cellData.getValue().changeAmountProperty());
     this.transactionReasonCol.setCellValueFactory(
@@ -164,38 +189,29 @@ public class InventoryController extends BaseTableController<Product, InventoryV
 
   private void setupRowFactory() {
     this.table.setRowFactory(
-        tv -> {
-          TableRow<Product> row =
-              new TableRow<>() {
-                @Override
-                protected void updateItem(Product item, boolean empty) {
-                  super.updateItem(item, empty);
-                  setStyle("");
-                  setTooltip(null);
-                  if (item != null && !empty) {
-                    if (item.getCurrentStock() <= 0) {
-                      setStyle("-fx-background-color: #ffcdd2");
-                    } else if (item.getCurrentStock() <= item.getReorderingLevel()) {
-                      setStyle("-fx-background-color: #fff9c4");
-                      setTooltip(new Tooltip("Stock is low! Please reorder."));
-                    }
+        tv ->
+            new TableRow<>() {
+              @Override
+              protected void updateItem(Product item, boolean empty) {
+                super.updateItem(item, empty);
+                setStyle("");
+                setTooltip(null);
+                if (item != null && !empty) {
+                  if (item.getCurrentStock() <= 0) {
+                    setStyle("-fx-background-color: #ffcdd2");
+                  } else if (item.getCurrentStock() <= item.getReorderingLevel()) {
+                    setStyle("-fx-background-color: #fff9c4");
+                    setTooltip(new Tooltip("Stock is low! Please reorder."));
                   }
                 }
-              };
-
-          row.setOnMouseClicked(
-              event -> {
-                if (row.isEmpty()) {
-                  this.table.getSelectionModel().clearSelection();
-                }
-              });
-          return row;
-        });
+              }
+            });
   }
 
   @FXML
-  protected void handleAdd() throws Exception {
-    ProductDialogViewModel dialogViewModel = new ProductDialogViewModel(null);
+  private void handleAdd() {
+    ProductDialogViewModel dialogViewModel =
+        new ProductDialogViewModel(this.viewModel.getProductService(), null);
     Product product =
         this.getDialogService()
             .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
@@ -205,10 +221,11 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   }
 
   @FXML
-  protected void handleEdit() throws Exception {
-    Product selecte = this.viewModel.selectedItemProperty().get();
-    if (selecte != null) {
-      ProductDialogViewModel dialogViewModel = new ProductDialogViewModel(selecte);
+  private void handleEdit() {
+    Product selected = this.viewModel.selectedItemProperty().get();
+    if (selected != null) {
+      ProductDialogViewModel dialogViewModel =
+          new ProductDialogViewModel(this.viewModel.getProductService(), selected);
       Product updated =
           this.getDialogService()
               .showDialog(
@@ -219,20 +236,14 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     }
   }
 
-  @FXML
-  protected void handleDelete() throws Exception {
-    Product selected = this.viewModel.selectedItemProperty().get();
-    if (selected != null) {
-      this.viewModel.delete(selected);
-    }
+  @Override
+  protected String getDeleteConfirmationMessage(Product item) {
+    return "Are you sure you want to delete " + item.getName() + "?";
   }
 
   @FXML
   private void handleReceiveStock() {
     Product selected = this.viewModel.selectedItemProperty().get();
-    if (selected == null) {
-      return;
-    }
     try {
       List<Supplier> suppliers = this.viewModel.getSupplierService().listAll();
       ReceiveStockDialogViewModel dialogViewModel =
