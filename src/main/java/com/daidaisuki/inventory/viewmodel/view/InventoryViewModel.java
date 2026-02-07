@@ -12,12 +12,15 @@ import com.daidaisuki.inventory.util.NumberUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.util.Pair;
 
 public class InventoryViewModel extends BaseListViewModel<Product> {
@@ -30,6 +33,7 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
       FXCollections.observableArrayList();
   private final StringProperty searchFilter = new SimpleStringProperty();
   private final FilteredList<Product> filteredList;
+  private final SortedList<Product> sortedList;
 
   private final StringProperty userText = new SimpleStringProperty(this, "userText", "--");
   private final StringProperty barcodeText = new SimpleStringProperty(this, "barcodeText", "--");
@@ -66,26 +70,30 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
           }
         });
     this.filteredList = new FilteredList<>(this.getDataList(), p -> true);
-    this.searchFilter.addListener(
-        (obs, oldVal, newVal) -> {
-          filteredList.setPredicate(
-              product -> {
-                if (newVal == null || newVal.isBlank()) {
-                  return true;
-                }
-                String lowerCaseFilter = newVal.toLowerCase();
-                if (product.getName().toLowerCase().contains(lowerCaseFilter)) {
-                  return true;
-                }
-                if (product.getSku().toLowerCase().contains(lowerCaseFilter)) {
-                  return true;
-                }
-                if (product.getCategory().toLowerCase().contains(lowerCaseFilter)) {
-                  return true;
-                }
-                return false;
-              });
-        });
+    this.filteredList
+        .predicateProperty()
+        .bind(
+            Bindings.createObjectBinding(
+                () -> {
+                  String text = this.searchFilter.get();
+                  if (text == null || text.trim().isEmpty()) {
+                    return p -> true;
+                  }
+                  String filter = text.toLowerCase();
+                  return product -> {
+                    String name = product.getName();
+                    String sku = product.getSku();
+                    String category = product.getCategory();
+                    boolean nameMatch = name != null && name.toLowerCase().contains(filter);
+                    boolean skuMatch = sku != null && sku.toLowerCase().contains(filter);
+                    boolean categoryMatch =
+                        category != null && category.toLowerCase().contains(filter);
+                    return nameMatch || skuMatch || categoryMatch;
+                  };
+                },
+                searchFilter));
+    this.sortedList = new SortedList<>(this.filteredList);
+    this.sortedList.setComparator(Comparator.comparing(Product::getName));
   }
 
   public ProductService getProductService() {
@@ -99,14 +107,16 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   private void refreshDetail(int productId) {
     this.executeLoadingTask(
         () -> {
-          List<StockBatch> batches = inventoryService.listInventoryByProduct(productId);
+          List<StockBatch> batches = this.inventoryService.listInventoryByProduct(productId);
           List<InventoryTransaction> transactions =
-              inventoryService.getTransactionHistory(productId);
+              this.inventoryService.getTransactionHistory(productId);
           return new Pair<>(batches, transactions);
         },
         result -> {
-          selectedProductBatches.setAll(result.getKey());
-          selectedProductTransactions.setAll(result.getValue());
+          if (this.selectedItem.get() != null && this.selectedItem.get().getId() == productId) {
+            this.selectedProductBatches.setAll(result.getKey());
+            this.selectedProductTransactions.setAll(result.getValue());
+          }
         });
   }
 
@@ -148,43 +158,47 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   public final ObservableList<StockBatch> getSelectedProductBatches() {
-    return selectedProductBatches;
+    return this.selectedProductBatches;
   }
 
   public final ObservableList<InventoryTransaction> getSelectedProductTransactions() {
-    return selectedProductTransactions;
-  }
-
-  public final FilteredList<Product> getFilteredList() {
-    return filteredList;
+    return this.selectedProductTransactions;
   }
 
   public final StringProperty searchFilterProperty() {
-    return searchFilter;
+    return this.searchFilter;
+  }
+
+  public final FilteredList<Product> getFilteredList() {
+    return this.filteredList;
+  }
+
+  public final SortedList<Product> getSortedList() {
+    return this.sortedList;
   }
 
   @Override
   protected List<Product> fetchItems() throws Exception {
-    return productService.listProducts();
+    return this.productService.listProducts();
   }
 
   @Override
   public void add(Product item) {
-    this.runInventoryTask(() -> productService.createProduct(item));
+    this.runInventoryTask(() -> this.productService.createProduct(item));
   }
 
   @Override
   public void update(Product item) {
-    this.runInventoryTask(() -> productService.updateProduct(item));
+    this.runInventoryTask(() -> this.productService.updateProduct(item));
   }
 
   @Override
   public void delete(Product item) {
-    this.runInventoryTask(() -> productService.removeProduct(item.getId()));
+    this.runInventoryTask(() -> this.productService.removeProduct(item.getId()));
   }
 
   public void receiveStock(StockReceiveRequest receiveRequest, int userId) {
-    this.runInventoryTask(() -> inventoryService.receiveNewStock(receiveRequest, userId));
+    this.runInventoryTask(() -> this.inventoryService.receiveNewStock(receiveRequest, userId));
   }
 
   private void runInventoryTask(TaskAction action) {
@@ -199,42 +213,42 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   public StringProperty userTextProperty() {
-    return userText;
+    return this.userText;
   }
 
   public StringProperty barcodeTextProperty() {
-    return barcodeText;
+    return this.barcodeText;
   }
 
   public StringProperty reorderingLevelTextProperty() {
-    return reorderingLevelText;
+    return this.reorderingLevelText;
   }
 
   public StringProperty taxCategoryTextProperty() {
-    return taxCategoryText;
+    return this.taxCategoryText;
   }
 
   public StringProperty weightTextProperty() {
-    return weightText;
+    return this.weightText;
   }
 
   public StringProperty unitTypeTextProperty() {
-    return unitTypeText;
+    return this.unitTypeText;
   }
 
   public StringProperty minStockLevelTextProperty() {
-    return minStockLevelText;
+    return this.minStockLevelText;
   }
 
   public StringProperty averageUnitCostTextProperty() {
-    return averageUnitCostText;
+    return this.averageUnitCostText;
   }
 
   public StringProperty markupTextProperty() {
-    return markupText;
+    return this.markupText;
   }
 
   public StringProperty productTotalValueTextProperty() {
-    return productTotalValueText;
+    return this.productTotalValueText;
   }
 }
