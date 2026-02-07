@@ -67,13 +67,50 @@
 }
 
 .button.secondary {
-    -fx-font-size: 11px;
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-border-color: #cfcfcf;
 }
 
 .button.danger {
     -fx-background-color: #e74c3c;
     -fx-text-fill: white;
     -fx-border-color: #c0392b;
+}
+
+.menu-button {
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #cfcfcf;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.menu-button .arrow {
+    -fx-background-color: #555555;
+}
+
+.menu-button .label {
+    -fx-text-fill: #555555;
+    -fx-padding: 6 12;
+}
+
+.context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #dcdcdc;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.menu-item:hover {
+    -fx-background-color: #3498db;
+}
+
+.menu-item .label {
+    -fx-text-fill: #555555;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: white;
 }
 
 /* =========================
@@ -148,10 +185,6 @@
 /* =========================
    HELPERS
    ========================= */
-
-.wrap-text {
-    -fx-text-alignment: center;
-}
 
 .search-field {
     -fx-font-size: 14px;

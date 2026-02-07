@@ -29,8 +29,9 @@
 
     <HBox alignment="CENTER_LEFT" spacing="20">
         <Label text="Inventory Management" styleClass="page-title"/>
+
         <Region HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>
+        
         <Label fx:id="userLabel" styleClass="user-label"/>
     </HBox>
 
@@ -48,7 +49,10 @@
                 <MenuItem text="Customer Return" onAction="#handleProcessReturn"/>
             </items>
         </MenuButton>
+
         <Region HBox.hgrow="ALWAYS"/>
+
+        <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>  
     </HBox>
 
     <SplitPane orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
