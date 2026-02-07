@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 public abstract class BaseModel {
+  public static final int NEW_ENTITY_ID = -1;
   protected final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
   protected final ReadOnlyObjectWrapper<OffsetDateTime> createdAt =
       new ReadOnlyObjectWrapper<>(this, "createdAt");
