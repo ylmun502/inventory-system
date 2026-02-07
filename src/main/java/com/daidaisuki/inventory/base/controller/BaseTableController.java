@@ -7,9 +7,14 @@ import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.sql.SQLException;
 import javafx.beans.binding.BooleanBinding;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Window;
 
 public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
@@ -19,13 +24,19 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   @FXML protected Button deleteButton;
   protected VM viewModel;
   private DialogService dialogService;
+  private EventHandler<KeyEvent> escapeFilter =
+      event -> {
+        if (event.getCode() == KeyCode.ESCAPE && !event.isConsumed()) {
+          this.clearSelection();
+          event.consume();
+        }
+      };
 
   protected BaseTableController(VM viewModel) {
     this.viewModel = viewModel;
   }
 
   protected void initializeBase() {
-    this.table.setItems(this.viewModel.getDataList());
     this.viewModel
         .selectedItemProperty()
         .bind(this.table.getSelectionModel().selectedItemProperty());
@@ -48,14 +59,58 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
                 exception.getMessage());
           }
         });
-    this.table.setOnMouseClicked(
+    this.setupDeselectOnEmptySpace(this.table);
+    this.table
+        .sceneProperty()
+        .addListener(
+            (obs, oldScene, newScene) -> {
+              if (oldScene != null) {
+                oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
+              if (newScene != null) {
+                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
+            });
+    this.viewModel.refresh();
+  }
+
+  protected void setupDeselectOnEmptySpace(TableView<?> targetTable) {
+    targetTable.setOnMouseClicked(
         event -> {
-          if (event.getPickResult().getIntersectedNode() == this.table
-              || event.getTarget().getClass().getName().contains("Skin")) {
-            this.table.getSelectionModel().clearSelection();
+          Node target = (Node) event.getTarget();
+          while (target != null && target != targetTable) {
+            if (target instanceof TableCell<?, ?> cell) {
+              if (!cell.getTableRow().isEmpty()) {
+                return;
+              }
+            }
+            if (target.getStyleClass().contains("column-header-background")) {
+              return;
+            }
+            target = target.getParent();
+          }
+          targetTable.getSelectionModel().clearSelection();
+        });
+  }
+
+  protected void setupEscapeHandler(Node node, Runnable action) {
+    if (node == null) {
+      return;
+    }
+    node.addEventFilter(
+        KeyEvent.KEY_PRESSED,
+        event -> {
+          if (event.getCode() == KeyCode.ESCAPE) {
+            action.run();
+            event.consume();
           }
         });
-    this.viewModel.refresh();
+  }
+
+  protected void clearSelection() {
+    if (this.table != null && this.table.getSelectionModel() != null) {
+      this.table.getSelectionModel().clearSelection();
+    }
   }
 
   protected DialogService getDialogService() {
@@ -69,139 +124,21 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     return FxWindowUtils.getWindow(this.table);
   }
 
-  protected void deleteItem(T itemToDelete) {
-    boolean confirmed =
-        AlertHelper.showConfirmationAlert(
-            this.getWindow(),
-            "Delete Item",
-            "Are you sure you want to delete this item?",
-            "This action can not be undone.");
-    if (confirmed) {
-      this.viewModel.delete(itemToDelete);
-    }
-  }
-}
-
-/* MVC Structure
-public abstract class BaseTableController<T> {
-  protected TableView<T> table;
-  protected Button addButton, editButton, deleteButton;
-
-  protected ObservableList<T> dataList = FXCollections.observableArrayList();
-
-  protected abstract List<T> fetchFromDB() throws SQLException;
-
-  protected abstract void addItem(T item) throws SQLException;
-
-  protected abstract void updateItem(T item) throws SQLException;
-
-  protected abstract void deleteItem(T item) throws SQLException;
-
-  protected abstract T showDialog(T itemToEdit);
-
-  protected abstract Window getWindow();
-
-  protected void initializeBase(
-      TableView<T> table, Button addButton, Button editButton, Button deleteButton) {
-    this.table = table;
-    this.addButton = addButton;
-    this.editButton = editButton;
-    this.deleteButton = deleteButton;
-
-    table.setItems(dataList);
-
-    table
-        .getSelectionModel()
-        .selectedItemProperty()
-        .addListener(
-            (obs, oldVal, newVal) -> {
-              boolean selected = newVal != null;
-              editButton.setDisable(!selected);
-              deleteButton.setDisable(!selected);
-            });
-
-    editButton.setDisable(true);
-    deleteButton.setDisable(true);
-
-    try {
-      refreshTable();
-    } catch (SQLException e) {
-      AlertHelper.showDatabaseError(getWindow(), "Unable to load data.", e);
-    }
-  }
-
-  protected void refreshTable() throws SQLException {
-    dataList.setAll(fetchFromDB());
-    table.sort();
-  }
-
-  @FXML
-  protected void handleAdd() {
-    T newItem = showDialog(null);
-    if (newItem != null) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              addItem(newItem);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not add item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
-    }
-  }
-
-  @FXML
-  protected void handleEdit() {
-    T selected = table.getSelectionModel().getSelectedItem();
-    if (selected == null) {
-      AlertHelper.showSelectionRequiredAlert(getWindow(), "edit");
-      return;
-    }
-    T edited = showDialog(selected);
-    if (edited != null) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              updateItem(edited);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not edit item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
-    }
-  }
-
   @FXML
   protected void handleDelete() {
-    T selected = table.getSelectionModel().getSelectedItem();
-    if (selected == null) {
-      AlertHelper.showSelectionRequiredAlert(getWindow(), "delete");
-      return;
-    }
-    boolean confirmed =
-        AlertHelper.showConfirmationAlert(
-            getWindow(), "Delete", null, "Are you sure you want to delete this item?");
-    if (confirmed) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              deleteItem(selected);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not delete item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
+    T selected = this.viewModel.selectedItemProperty().get();
+    if (selected != null) {
+      String message = getDeleteConfirmationMessage(selected);
+      boolean confirmed =
+          AlertHelper.showConfirmationAlert(
+              this.getWindow(), "Confirm Delete", message, "This item will be deactivated.");
+      if (confirmed) {
+        this.viewModel.delete(selected);
+      }
     }
   }
+
+  protected String getDeleteConfirmationMessage(T item) {
+    return "Are you sure you want to delete this item?";
+  }
 }
-*/
