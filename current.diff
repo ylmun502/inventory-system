@@ -1,0 +1,600 @@
+diff --git a/src/main/java/com/daidaisuki/inventory/controller/dialog/ProductDialogController.java b/src/main/java/com/daidaisuki/inventory/controller/dialog/ProductDialogController.java
+index 11259d4..19508f9 100644
+--- a/src/main/java/com/daidaisuki/inventory/controller/dialog/ProductDialogController.java
++++ b/src/main/java/com/daidaisuki/inventory/controller/dialog/ProductDialogController.java
+@@ -3,9 +3,12 @@ package com.daidaisuki.inventory.controller.dialog;
+ import com.daidaisuki.inventory.base.controller.BaseDialogController;
+ import com.daidaisuki.inventory.model.Product;
+ import com.daidaisuki.inventory.viewmodel.dialog.ProductDialogViewModel;
++import java.util.List;
+ import javafx.beans.binding.Bindings;
++import javafx.collections.FXCollections;
+ import javafx.fxml.FXML;
+ import javafx.scene.control.CheckBox;
++import javafx.scene.control.ComboBox;
+ import javafx.scene.control.Label;
+ import javafx.scene.control.TextField;
+ 
+@@ -17,6 +20,8 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
+   @FXML private TextField weightField;
+   @FXML private TextField priceField;
+ 
++  @FXML private ComboBox<String> unitTypeComboBox;
++
+   @FXML private CheckBox activeCheckBox;
+ 
+   @FXML private Label dialogTitle;
+@@ -27,6 +32,10 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
+ 
+   @FXML
+   public void initialize() {
++    // Setting items first then followed by binding
++    List<String> existingUnitTypes = this.viewModel.getAvailableUnitTypes();
++    this.unitTypeComboBox.setEditable(true);
++    this.unitTypeComboBox.setItems(FXCollections.observableArrayList(existingUnitTypes));
+     setupBinding();
+     this.dialogTitle
+         .textProperty()
+@@ -44,25 +53,6 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
+     return confirmed ? this.viewModel.createResult() : null;
+   }
+ 
+-  /*
+-  @Override
+-  public void setModel(Product product) {
+-    this.viewModel.setModel(product);
+-    setupBinding();
+-    this.dialogTitle
+-        .textProperty()
+-        .bind(
+-            Bindings.when(this.viewModel.isNewProperty())
+-                .then("Create Product")
+-                .otherwise("Edit Product"));
+-    this.dialogStage
+-        .titleProperty()
+-        .bind(
+-            Bindings.when(this.viewModel.isNewProperty())
+-                .then("Add Product")
+-                .otherwise("Edit Product"));
+-  }*/
+-
+   private void setupBinding() {
+     this.skuField.textProperty().bindBidirectional(this.viewModel.sku);
+     this.nameField.textProperty().bindBidirectional(this.viewModel.name);
+@@ -70,6 +60,7 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
+     this.descriptionField.textProperty().bindBidirectional(this.viewModel.description);
+     this.weightField.textProperty().bindBidirectional(this.viewModel.weight);
+     this.priceField.textProperty().bindBidirectional(this.viewModel.price);
++    this.unitTypeComboBox.valueProperty().bindBidirectional(this.viewModel.unitType);
+     this.activeCheckBox.selectedProperty().bindBidirectional(this.viewModel.isActive);
+   }
+ 
+diff --git a/src/main/java/com/daidaisuki/inventory/controller/view/MainController.java b/src/main/java/com/daidaisuki/inventory/controller/view/MainController.java
+index 89ccf72..e1fb7c2 100644
+--- a/src/main/java/com/daidaisuki/inventory/controller/view/MainController.java
++++ b/src/main/java/com/daidaisuki/inventory/controller/view/MainController.java
+@@ -31,7 +31,8 @@ public class MainController {
+ 
+   @FXML
+   public void initialize() {
+-    for (var node : leftPane.getChildren()) {
++    this.leftPane.setPrefWidth(150);
++    for (var node : this.leftPane.getChildren()) {
+       if (node instanceof Button) {
+         Button button = (Button) node;
+         button.setOnAction(this::handleViewSwitch);
+@@ -39,7 +40,7 @@ public class MainController {
+       }
+     }
+     try {
+-      setActiveButton(defaultButton);
++      setActiveButton(this.defaultButton);
+       switchView(View.INVENTORY); // Load default view
+     } catch (IOException e) {
+       e.printStackTrace();
+@@ -50,7 +51,7 @@ public class MainController {
+   private void handleViewSwitch(ActionEvent event) {
+     Button btn = (Button) event.getSource();
+ 
+-    if (btn == activeButton) {
++    if (btn == this.activeButton) {
+       // Ignore click if already active
+       return;
+     }
+@@ -85,12 +86,12 @@ public class MainController {
+ 
+   private void setActiveButton(Button btn) {
+     // Remove 'active' style from previous button
+-    if (activeButton != null) {
++    if (this.activeButton != null) {
+       activeButton.getStyleClass().remove("active");
+     }
+ 
+     // Add 'active' style to the new button
+     btn.getStyleClass().add("active");
+-    activeButton = btn;
++    this.activeButton = btn;
+   }
+ }
+diff --git a/src/main/java/com/daidaisuki/inventory/dao/impl/ProductDAO.java b/src/main/java/com/daidaisuki/inventory/dao/impl/ProductDAO.java
+index e7b140e..189ad3d 100644
+--- a/src/main/java/com/daidaisuki/inventory/dao/impl/ProductDAO.java
++++ b/src/main/java/com/daidaisuki/inventory/dao/impl/ProductDAO.java
+@@ -218,6 +218,11 @@ public class ProductDAO extends BaseDAO<Product> {
+     return queryForObject(sql, this::mapResultSetToProduct, id);
+   }
+ 
++  public List<String> findAllDistinctUnitTypes() throws SQLException {
++    String sql = "SELECT DISTINCT unit_type FROM products";
++    return query(sql, this::mapResultSetToUnitType);
++  }
++
+   public boolean exists(int productId) throws SQLException {
+     String sql = "SELECT 1 FROM products WHERE id = ? AND is_deleted = 0";
+     Optional<Integer> result = queryForObject(sql, rs -> rs.getInt(1), productId);
+@@ -234,6 +239,10 @@ public class ProductDAO extends BaseDAO<Product> {
+     return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
+   }
+ 
++  private String mapResultSetToUnitType(ResultSet rs) throws SQLException {
++    return rs.getString("unit_type");
++  }
++
+   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
+     int id = rs.getInt("id");
+     try {
+diff --git a/src/main/java/com/daidaisuki/inventory/model/StockBatch.java b/src/main/java/com/daidaisuki/inventory/model/StockBatch.java
+index ed410b9..a3f4e4d 100644
+--- a/src/main/java/com/daidaisuki/inventory/model/StockBatch.java
++++ b/src/main/java/com/daidaisuki/inventory/model/StockBatch.java
+@@ -39,18 +39,7 @@ public class StockBatch extends BaseModel {
+   private final ReadOnlyObjectWrapper<BigDecimal> totalValue =
+       new ReadOnlyObjectWrapper<>(this, "totalValue", BigDecimal.ZERO);
+ 
+-  public StockBatch(int productId, int supplierId, int quantity, BigDecimal unitCost) {
+-    super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
+-    this.productId.set(productId);
+-    this.supplierId.set(supplierId);
+-    this.quantityReceived.set(quantity);
+-    this.quantityRemaining.set(quantity);
+-    this.unitCost.set(unitCost);
+-    this.landedCost.set(unitCost);
+-    initBindings();
+-  }
+-
+-  public StockBatch(
++  private StockBatch(
+       int id,
+       int productId,
+       int supplierId,
+@@ -75,6 +64,56 @@ public class StockBatch extends BaseModel {
+     initBindings();
+   }
+ 
++  public static StockBatch forDatabase(
++      int id,
++      int productId,
++      int supplierId,
++      String batchCode,
++      OffsetDateTime expiryDate,
++      int quantityReceived,
++      int quantityRemaining,
++      BigDecimal unitCost,
++      BigDecimal landedCost,
++      OffsetDateTime createdAt,
++      OffsetDateTime updatedAt,
++      boolean deleted) {
++    return new StockBatch(
++        id,
++        productId,
++        supplierId,
++        batchCode,
++        expiryDate,
++        quantityReceived,
++        quantityRemaining,
++        unitCost,
++        landedCost,
++        createdAt,
++        updatedAt,
++        deleted);
++  }
++
++  public static StockBatch createNew(
++      int productId,
++      int suppierId,
++      String batchcode,
++      OffsetDateTime expiryDate,
++      int quantity,
++      BigDecimal unitCost) {
++    return new StockBatch(
++        NEW_ENTITY_ID,
++        productId,
++        suppierId,
++        batchcode,
++        expiryDate,
++        quantity,
++        quantity,
++        unitCost,
++        unitCost,
++        null,
++        null,
++        false);
++  }
++
+   private void initBindings() {
+     this.productName.bind(
+         this.product.flatMap(Product::nameProperty).orElse("No Product Assigned"));
+diff --git a/src/main/java/com/daidaisuki/inventory/model/base/BaseModel.java b/src/main/java/com/daidaisuki/inventory/model/base/BaseModel.java
+index 6c85076..e57a442 100644
+--- a/src/main/java/com/daidaisuki/inventory/model/base/BaseModel.java
++++ b/src/main/java/com/daidaisuki/inventory/model/base/BaseModel.java
+@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleBooleanProperty;
+ import javafx.beans.property.SimpleObjectProperty;
+ 
+ public abstract class BaseModel {
++  public static final int NEW_ENTITY_ID = -1;
+   protected final ReadOnlyIntegerWrapper id = new ReadOnlyIntegerWrapper(this, "id", -1);
+   protected final ReadOnlyObjectWrapper<OffsetDateTime> createdAt =
+       new ReadOnlyObjectWrapper<>(this, "createdAt");
+diff --git a/src/main/java/com/daidaisuki/inventory/service/InventoryService.java b/src/main/java/com/daidaisuki/inventory/service/InventoryService.java
+index 8e4b9cc..c394c3c 100644
+--- a/src/main/java/com/daidaisuki/inventory/service/InventoryService.java
++++ b/src/main/java/com/daidaisuki/inventory/service/InventoryService.java
+@@ -78,8 +78,14 @@ public class InventoryService {
+       throws SQLException {
+     this.applyStockChange(request.productId(), request.quantity());
+     StockBatch newBatch =
+-        new StockBatch(
+-            request.productId(), request.supplierId(), request.quantity(), request.unitCost());
++        StockBatch.createNew(
++            request.productId(),
++            request.supplierId(),
++            request.batchCode(),
++            request.expiryDate(),
++            request.quantity(),
++            request.unitCost());
++
+     StockBatch savedBatch = this.stockBatchDAO.save(newBatch);
+     this.logTransaction(
+         request.productId(),
+diff --git a/src/main/java/com/daidaisuki/inventory/service/ProductService.java b/src/main/java/com/daidaisuki/inventory/service/ProductService.java
+index 25ee37b..d318e2d 100644
+--- a/src/main/java/com/daidaisuki/inventory/service/ProductService.java
++++ b/src/main/java/com/daidaisuki/inventory/service/ProductService.java
+@@ -6,61 +6,52 @@ import com.daidaisuki.inventory.model.Product;
+ import java.sql.Connection;
+ import java.sql.SQLException;
+ import java.util.List;
++import java.util.UUID;
+ 
+ public class ProductService {
+   private final TransactionManager transactionManager;
+   private final ProductDAO productDAO;
+ 
+-  /* Will migrate to view model later and change the name to InventoryService
+-  private final ObservableList<StockBatch> masterList = FXCollections.observableArrayList();
+-  private final SortedList<StockBatch> fifoView =
+-      new SortedList<>(
+-          masterList,
+-          Comparator.comparing(StockBatch::getCreatedAt).thenComparing(StockBatch::getId));
+-
+-  public ObservableList<StockBatch> getMasterList() {
+-    return masterList;
+-  }
+-
+-  public void loadInventory(int productId) throws SQLException {
+-    List<StockBatch> data = batchDAO.fetchByProductId(productId);
+-    masterList.setAll(data);
+-  }
+-
+-  public SortedList<StockBatch> getFifoView() {
+-    return fifoView;
+-  }
+-  */
+-
+   public ProductService(Connection connection) {
+     this.transactionManager = new TransactionManager(connection);
+     this.productDAO = new ProductDAO(connection);
+   }
+ 
+   public List<Product> listProducts() throws SQLException {
+-    return productDAO.findAll();
++    return this.productDAO.findAll();
+   }
+ 
+   public void createProduct(Product product) throws SQLException {
+-    if (productDAO.existsBySku(product.getSku())) {
++    if (this.productDAO.existsBySku(product.getSku())) {
+       throw new IllegalArgumentException("A product with this sku already exists.");
+-    } else if (productDAO.existsByBarcode(product.getBarcode())) {
++    } else if (this.productDAO.existsByBarcode(product.getBarcode())) {
+       throw new IllegalArgumentException("A product with this barcode already exists.");
+     }
+-    transactionManager.executeInTransaction(() -> productDAO.save(product));
++    if (product.getBarcode() == null || product.getBarcode().isEmpty()) {
++      product.setBarcode(generateBarcode());
++    }
++    transactionManager.executeInTransaction(() -> this.productDAO.save(product));
++  }
++
++  private String generateBarcode() {
++    return UUID.randomUUID().toString().substring(0, 8);
+   }
+ 
+   public void updateProduct(Product product) throws SQLException {
+-    transactionManager.executeInTransaction(() -> productDAO.update(product));
++    transactionManager.executeInTransaction(() -> this.productDAO.update(product));
+   }
+ 
+   public void removeProduct(int productId) throws SQLException {
+-    transactionManager.executeInTransaction(() -> productDAO.delete(productId));
++    transactionManager.executeInTransaction(() -> this.productDAO.delete(productId));
+   }
+ 
+   public Product getProduct(int productId) throws SQLException {
+-    return productDAO
++    return this.productDAO
+         .findById(productId)
+         .orElseThrow(() -> new SQLException("Product not found:" + productId));
+   }
++
++  public List<String> listDistinctUnitTypes() throws SQLException {
++    return this.productDAO.findAllDistinctUnitTypes();
++  }
+ }
+diff --git a/src/main/java/com/daidaisuki/inventory/viewmodel/dialog/ProductDialogViewModel.java b/src/main/java/com/daidaisuki/inventory/viewmodel/dialog/ProductDialogViewModel.java
+index 09d8f2d..602e146 100644
+--- a/src/main/java/com/daidaisuki/inventory/viewmodel/dialog/ProductDialogViewModel.java
++++ b/src/main/java/com/daidaisuki/inventory/viewmodel/dialog/ProductDialogViewModel.java
+@@ -1,13 +1,13 @@
+ package com.daidaisuki.inventory.viewmodel.dialog;
+ 
+ import com.daidaisuki.inventory.model.Product;
++import com.daidaisuki.inventory.service.ProductService;
+ import com.daidaisuki.inventory.ui.validation.ValidationStatus;
+-import com.daidaisuki.inventory.util.CurrencyUtil;
+ import com.daidaisuki.inventory.util.StringCleaner;
+ import com.daidaisuki.inventory.util.ValidationUtils;
+ import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
+ import java.math.BigDecimal;
+-import java.util.UUID;
++import java.sql.SQLException;
+ import javafx.beans.binding.Bindings;
+ import javafx.beans.binding.BooleanBinding;
+ import javafx.beans.binding.ObjectBinding;
+@@ -15,8 +15,11 @@ import javafx.beans.property.BooleanProperty;
+ import javafx.beans.property.SimpleBooleanProperty;
+ import javafx.beans.property.SimpleStringProperty;
+ import javafx.beans.property.StringProperty;
++import javafx.collections.FXCollections;
++import javafx.collections.ObservableList;
+ 
+ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
++  private final ProductService productService;
+   private final Product product;
+   private final ObjectBinding<ValidationStatus> validationStatus;
+ 
+@@ -26,10 +29,12 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+   public final StringProperty description = new SimpleStringProperty("");
+   public final StringProperty weight = new SimpleStringProperty("");
+   public final StringProperty price = new SimpleStringProperty("");
++  public final StringProperty unitType = new SimpleStringProperty("");
+   public final BooleanProperty isActive = new SimpleBooleanProperty(true);
+ 
+   // Need to check validations
+-  public ProductDialogViewModel(Product productToEdit) {
++  public ProductDialogViewModel(ProductService productService, Product productToEdit) {
++    this.productService = productService;
+     this.product = productToEdit;
+ 
+     if (productToEdit != null) {
+@@ -45,10 +50,12 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+               String cleanSku = StringCleaner.cleanOrNull(this.sku.get());
+               String cleanName = StringCleaner.cleanOrNull(this.name.get());
+               String cleanCategory = StringCleaner.cleanOrNull(this.category.get());
++              String cleanUnitType = StringCleaner.cleanOrNull(this.unitType.get());
+ 
+               ValidationUtils.isFieldEmpty(cleanSku, "SKU", errors);
+               ValidationUtils.isFieldEmpty(cleanName, "Name", errors);
+               ValidationUtils.isFieldEmpty(cleanCategory, "Category", errors);
++              ValidationUtils.isFieldEmpty(cleanUnitType, "Unit Type", errors);
+               ValidationUtils.isNumeric(this.weight.get(), "Weight", errors, true);
+               ValidationUtils.isNumeric(this.price.get(), "Price", errors, true);
+               return new ValidationStatus(errors.isEmpty(), errors.toString());
+@@ -56,7 +63,7 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+             sku,
+             name,
+             category,
+-            description,
++            unitType,
+             weight,
+             price);
+   }
+@@ -70,8 +77,8 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+     result.setDescription(this.description.get());
+     result.setWeight(Integer.parseInt(this.weight.get().isEmpty() ? "0" : weight.get()));
+     result.setSellingPrice(new BigDecimal(price.get().isEmpty() ? "0" : price.get()));
++    result.setUnitType(this.unitType.get());
+     result.setActive(isActive.get());
+-    result.setBarcode(UUID.randomUUID().toString().substring(0, 8));
+     return result;
+   }
+ 
+@@ -88,6 +95,7 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+     this.description.set("");
+     this.weight.set("");
+     this.price.set("");
++    this.unitType.set("each");
+     this.isActive.set(true);
+   }
+ 
+@@ -96,11 +104,25 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
+     this.name.set(model.getName());
+     this.category.set(model.getCategory());
+     this.description.set(model.getDescription());
+-    this.price.set(CurrencyUtil.format(model.getSellingPrice()));
++    this.weight.set(Integer.toString(model.getWeight()));
++    this.price.set(model.getSellingPrice().toPlainString());
++    this.unitType.set(model.getUnitType());
+     this.isActive.set(model.isActive());
+   }
+ 
+   public BooleanBinding isNewProperty() {
+     return Bindings.createBooleanBinding(() -> product == null);
+   }
++
++  public Product getProduct() {
++    return this.product;
++  }
++
++  public ObservableList<String> getAvailableUnitTypes() {
++    try {
++      return FXCollections.observableArrayList(this.productService.listDistinctUnitTypes());
++    } catch (SQLException e) {
++      return FXCollections.observableArrayList("each", "piece", "box");
++    }
++  }
+ }
+diff --git a/src/main/resources/com/daidaisuki/inventory/inventory.fxml b/src/main/resources/com/daidaisuki/inventory/inventory.fxml
+index 087bea4..3a3fd2a 100644
+--- a/src/main/resources/com/daidaisuki/inventory/inventory.fxml
++++ b/src/main/resources/com/daidaisuki/inventory/inventory.fxml
+@@ -29,8 +29,9 @@
+ 
+     <HBox alignment="CENTER_LEFT" spacing="20">
+         <Label text="Inventory Management" styleClass="page-title"/>
++
+         <Region HBox.hgrow="ALWAYS"/>
+-        <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>
++        
+         <Label fx:id="userLabel" styleClass="user-label"/>
+     </HBox>
+ 
+@@ -48,7 +49,10 @@
+                 <MenuItem text="Customer Return" onAction="#handleProcessReturn"/>
+             </items>
+         </MenuButton>
++
+         <Region HBox.hgrow="ALWAYS"/>
++
++        <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>  
+     </HBox>
+ 
+     <SplitPane orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
+diff --git a/src/main/resources/com/daidaisuki/inventory/main.fxml b/src/main/resources/com/daidaisuki/inventory/main.fxml
+index 03c3c1b..b3969d0 100644
+--- a/src/main/resources/com/daidaisuki/inventory/main.fxml
++++ b/src/main/resources/com/daidaisuki/inventory/main.fxml
+@@ -16,7 +16,7 @@
+         <VBox fx:id="leftPane" style="-fx-background-color: #f0f0f0;">
+             <children>
+                 <Button fx:id="defaultButton" text="Inventory" userData="INVENTORY" onAction="#handleViewSwitch"/>
+-                <Button text="Currency Converter" userData="CURRENCY_CONVERTER" onAction="#handleViewSwitch" wrapText="true" styleClass="wrap-text-button"/>
++                <Button text="Currency Converter" userData="CURRENCY_CONVERTER" onAction="#handleViewSwitch"/>
+                 <Button text="Orders" userData="ORDERS" onAction="#handleViewSwitch"/>
+                 <Button text="Customers" userData="CUSTOMERS" onAction="#handleViewSwitch"/>
+                 <Button text="Supplier" userData="SUPPLIER" onAction="#handleViewSwitch"/>
+diff --git a/src/main/resources/com/daidaisuki/inventory/productDialog.fxml b/src/main/resources/com/daidaisuki/inventory/productDialog.fxml
+index c70c5a5..e4c829a 100644
+--- a/src/main/resources/com/daidaisuki/inventory/productDialog.fxml
++++ b/src/main/resources/com/daidaisuki/inventory/productDialog.fxml
+@@ -6,6 +6,7 @@
+ <?import javafx.scene.layout.VBox?>
+ <?import javafx.scene.control.Button?>
+ <?import javafx.scene.control.CheckBox?>
++<?import javafx.scene.control.ComboBox?>
+ <?import javafx.scene.control.Label?>
+ <?import javafx.scene.control.TextField?>
+ 
+@@ -32,14 +33,17 @@
+         <Label text="Description:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+         <TextField fx:id="descriptionField" promptText="Description" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+ 
+-        <Label text="Weight:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+-        <TextField fx:id="weightField" promptText="Weight" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
++        <Label text="Unit Type" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
++        <ComboBox fx:id="unitTypeComboBox" editable="true" promptText="Select or type unit..." GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+ 
+-        <Label text="Price:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+-        <TextField fx:id="priceField" promptText="Price" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
++        <Label text="Weight:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
++        <TextField fx:id="weightField" promptText="Weight" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+ 
+-        <Label text="Active" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+-        <CheckBox fx:id="activeCheckBox" text="Active" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
++        <Label text="Price:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
++        <TextField fx:id="priceField" promptText="Price" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
++
++        <Label text="Active" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
++        <CheckBox fx:id="activeCheckBox" text="Active" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+     </GridPane>
+ 
+ 
+diff --git a/src/main/resources/com/daidaisuki/inventory/styles.css b/src/main/resources/com/daidaisuki/inventory/styles.css
+index de35d07..30f88c8 100644
+--- a/src/main/resources/com/daidaisuki/inventory/styles.css
++++ b/src/main/resources/com/daidaisuki/inventory/styles.css
+@@ -67,7 +67,9 @@
+ }
+ 
+ .button.secondary {
+-    -fx-font-size: 11px;
++    -fx-background-color: #e0e0e0;
++    -fx-text-fill: #333333;
++    -fx-border-color: #cfcfcf;
+ }
+ 
+ .button.danger {
+@@ -76,6 +78,41 @@
+     -fx-border-color: #c0392b;
+ }
+ 
++.menu-button {
++    -fx-background-color: #e0e0e0;
++    -fx-border-color: #cfcfcf;
++    -fx-border-radius: 3;
++    -fx-background-radius: 3;
++}
++
++.menu-button .arrow {
++    -fx-background-color: #555555;
++}
++
++.menu-button .label {
++    -fx-text-fill: #555555;
++    -fx-padding: 6 12;
++}
++
++.context-menu {
++    -fx-background-color: white;
++    -fx-border-color: #dcdcdc;
++    -fx-background-radius: 5;
++    -fx-border-radius: 5;
++}
++
++.menu-item:hover {
++    -fx-background-color: #3498db;
++}
++
++.menu-item .label {
++    -fx-text-fill: #555555;
++}
++
++.menu-item:hover .label {
++    -fx-text-fill: white;
++}
++
+ /* =========================
+    FORMS AND INPUTS
+    ========================= */
+@@ -149,10 +186,6 @@
+    HELPERS
+    ========================= */
+ 
+-.wrap-text {
+-    -fx-text-alignment: center;
+-}
+-
+ .search-field {
+     -fx-font-size: 14px;
+     -fx-padding: 5px;
