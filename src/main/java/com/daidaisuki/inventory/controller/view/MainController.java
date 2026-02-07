@@ -31,7 +31,8 @@ public class MainController {
 
   @FXML
   public void initialize() {
-    for (var node : leftPane.getChildren()) {
+    this.leftPane.setPrefWidth(150);
+    for (var node : this.leftPane.getChildren()) {
       if (node instanceof Button) {
         Button button = (Button) node;
         button.setOnAction(this::handleViewSwitch);
@@ -39,7 +40,7 @@ public class MainController {
       }
     }
     try {
-      setActiveButton(defaultButton);
+      setActiveButton(this.defaultButton);
       switchView(View.INVENTORY); // Load default view
     } catch (IOException e) {
       e.printStackTrace();
@@ -50,7 +51,7 @@ public class MainController {
   private void handleViewSwitch(ActionEvent event) {
     Button btn = (Button) event.getSource();
 
-    if (btn == activeButton) {
+    if (btn == this.activeButton) {
       // Ignore click if already active
       return;
     }
@@ -85,12 +86,12 @@ public class MainController {
 
   private void setActiveButton(Button btn) {
     // Remove 'active' style from previous button
-    if (activeButton != null) {
+    if (this.activeButton != null) {
       activeButton.getStyleClass().remove("active");
     }
 
     // Add 'active' style to the new button
     btn.getStyleClass().add("active");
-    activeButton = btn;
+    this.activeButton = btn;
   }
 }
