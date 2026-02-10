@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ public class ProductDAO extends BaseDAO<Product> {
     super(connection);
   }
 
-  public List<Product> findAll() throws SQLException {
+  public List<Product> findAll() {
     String sql =
         """
         SELECT
@@ -46,7 +47,7 @@ public class ProductDAO extends BaseDAO<Product> {
     return query(sql, this::mapResultSetToProduct);
   }
 
-  public Product save(Product product) throws SQLException {
+  public Product save(Product product) {
     // Reminder for future columns
     // "INSERT INTO products(name, ..., last_modified, sync_status) VALUES (?, ...,
     // CURRENT_TIMESTAMP, 'PENDING')"
@@ -118,7 +119,7 @@ public class ProductDAO extends BaseDAO<Product> {
         0);
   }
 
-  public void update(Product product) throws SQLException {
+  public void update(Product product) {
     // Reminder for future columns
     // "UPDATE products SET ..., last_modified = CURRENT_TIMESTAMP, sync_status = 'PENDING' WHERE id
     // = ?"
@@ -144,53 +145,50 @@ public class ProductDAO extends BaseDAO<Product> {
           updated_at = ?
         WHERE id = ?
         """;
-    int affectedRows =
-        update(
-            sql,
-            product.getSku(),
-            product.getBarcode(),
-            product.getName(),
-            product.getCategory(),
-            product.getUnitType(),
-            product.getTaxCategory(),
-            product.getDescription(),
-            product.getWeight(),
-            product.getCurrentStock(),
-            product.getMinStockLevel(),
-            product.getMaxStockLevel(),
-            product.getReorderingLevel(),
-            CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
-            product.isActive() ? 1 : 0,
-            OffsetDateTime.now(ZoneOffset.UTC),
-            product.getId());
-    if (affectedRows == 0) {
-      throw new SQLException("Updating product failed, no rows affected.");
-    }
+    update(
+        sql,
+        product.getSku(),
+        product.getBarcode(),
+        product.getName(),
+        product.getCategory(),
+        product.getUnitType(),
+        product.getTaxCategory(),
+        product.getDescription(),
+        product.getWeight(),
+        product.getCurrentStock(),
+        product.getMinStockLevel(),
+        product.getMaxStockLevel(),
+        product.getReorderingLevel(),
+        CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
+        product.isActive() ? 1 : 0,
+        OffsetDateTime.now(ZoneOffset.UTC),
+        product.getId());
   }
 
-  public void delete(int productId) throws SQLException {
+  public void delete(int productId) {
     String sql = "UPDATE products SET is_deleted = 1, updated_at = ? WHERE id = ?";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), productId);
   }
 
-  public void restore(int productId) throws SQLException {
+  public void restore(int productId) {
     String sql =
         "UPDATE products SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), productId);
   }
 
-  public boolean updateStockTotal(int productId, int changeAmount) throws SQLException {
+  public boolean updateStockTotal(int productId, int changeAmount) {
     String sql =
         """
         UPDATE products
         SET current_stock = current_stock + ?, updated_at = ?
         WHERE id = ? AND is_deleted = 0 AND current_stock + ? >= 0
         """;
-    return update(sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), productId, changeAmount)
+    return updateReturningAffectedRows(
+            sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), productId, changeAmount)
         > 0;
   }
 
-  public Optional<Product> findById(int id) throws SQLException {
+  public Optional<Product> findById(int id) {
     String sql =
         """
         SELECT
@@ -218,34 +216,38 @@ public class ProductDAO extends BaseDAO<Product> {
     return queryForObject(sql, this::mapResultSetToProduct, id);
   }
 
-  public List<String> findAllDistinctUnitTypes() throws SQLException {
+  public List<String> findAllDistinctUnitTypes() {
     String sql = "SELECT DISTINCT unit_type FROM products";
     return query(sql, this::mapResultSetToUnitType);
   }
 
-  public boolean exists(int productId) throws SQLException {
+  public boolean exists(int productId) {
     String sql = "SELECT 1 FROM products WHERE id = ? AND is_deleted = 0";
     Optional<Integer> result = queryForObject(sql, rs -> rs.getInt(1), productId);
     return result.isPresent();
   }
 
-  public boolean existsBySku(String sku) throws SQLException {
+  public boolean existsBySku(String sku) {
     String sql = "SELECT COUNT(*) FROM products WHERE sku = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, sku).orElse(false);
   }
 
-  public boolean existsByBarcode(String barcode) throws SQLException {
+  public boolean existsByBarcode(String barcode) {
     String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
   }
 
-  private String mapResultSetToUnitType(ResultSet rs) throws SQLException {
-    return rs.getString("unit_type");
+  private String mapResultSetToUnitType(ResultSet rs) {
+    try {
+      return rs.getString("unit_type");
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed.", e);
+    }
   }
 
-  private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
+  private Product mapResultSetToProduct(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       String sku = rs.getString("sku");
       String barcode = rs.getString("barcode");
       String name = rs.getString("name");
@@ -284,8 +286,8 @@ public class ProductDAO extends BaseDAO<Product> {
           createdAt,
           updatedAt,
           isDeleted);
-    } catch (Exception e) {
-      throw new SQLException("Mapping failed for Product ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed.", e);
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.StockBatch;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.DatabaseUtils;
@@ -18,7 +19,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     super(connection);
   }
 
-  public StockBatch save(StockBatch batch) throws SQLException {
+  public StockBatch save(StockBatch batch) {
     String sql =
         """
         INSERT INTO stock_batches(
@@ -68,15 +69,12 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
         0);
   }
 
-  public void updateRemainingStock(int batchId, int newQuantity) throws SQLException {
+  public void updateRemainingStock(int batchId, int newQuantity) {
     String sql = "UPDATE stock_batches SET quantity_remaining = ?, updated_at = ? WHERE id = ?";
-    int affectedRow = update(sql, newQuantity, OffsetDateTime.now(ZoneOffset.UTC), batchId);
-    if (affectedRow == 0) {
-      throw new SQLException("Batch not found with ID: " + batchId);
-    }
+    update(sql, newQuantity, OffsetDateTime.now(ZoneOffset.UTC), batchId);
   }
 
-  public List<StockBatch> findAllByProductId(int productId) throws SQLException {
+  public List<StockBatch> findAllByProductId(int productId) {
     String sql =
         """
         SELECT
@@ -98,7 +96,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return query(sql, this::mapResultSetToStockBatch, productId);
   }
 
-  public List<StockBatch> findAllAvailableByProductId(int productId) throws SQLException {
+  public List<StockBatch> findAllAvailableByProductId(int productId) {
     String sql =
         """
         SELECT
@@ -121,17 +119,19 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return query(sql, this::mapResultSetToStockBatch, productId);
   }
 
-  public boolean updateStockTotal(int batchId, int changeAmount) throws SQLException {
+  public boolean updateStockTotal(int batchId, int changeAmount) {
     String sql =
         """
         UPDATE stock_batches
         SET quantity_remaining = quantity_remaining + ?, updated_at = ?
         WHERE id = ? AND quantity_remaining + ? >= 0
         """;
-    return update(sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), batchId, changeAmount) > 0;
+    return updateReturningAffectedRows(
+            sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), batchId, changeAmount)
+        > 0;
   }
 
-  public Optional<StockBatch> findOldestAvailableBatch(int productId) throws SQLException {
+  public Optional<StockBatch> findOldestAvailableBatch(int productId) {
     String sql =
         """
         SELECT
@@ -155,10 +155,9 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return queryForObject(sql, this::mapResultSetToStockBatch, productId);
   }
 
-  private StockBatch mapResultSetToStockBatch(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
-    // Remove this try block before production
+  private StockBatch mapResultSetToStockBatch(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       int productId = rs.getInt("product_id");
       int supplierId = rs.getInt("supplier_id");
       String batchCode = rs.getString("batch_code");
@@ -188,9 +187,8 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
           createdAt,
           updatedAt,
           isDeleted);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new SQLException("Mapping failed for StockBatch ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
     }
   }
 }

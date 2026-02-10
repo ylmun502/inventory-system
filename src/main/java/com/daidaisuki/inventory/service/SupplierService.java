@@ -4,7 +4,6 @@ import com.daidaisuki.inventory.dao.impl.SupplierDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.model.Supplier;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class SupplierService {
@@ -16,22 +15,22 @@ public class SupplierService {
     this.supplierDAO = new SupplierDAO(connection);
   }
 
-  public List<Supplier> listAll() throws SQLException {
+  public List<Supplier> listAll() {
     return supplierDAO.findAll();
   }
 
-  public void createSupplier(Supplier supplier) throws SQLException {
+  public void createSupplier(Supplier supplier) {
     if (this.supplierDAO.existsByShortCode(supplier.getShortCode())) {
       throw new IllegalArgumentException("A supplier with this short code already exists.");
     }
     transactionManager.executeInTransaction(() -> supplierDAO.save(supplier));
   }
 
-  public void updateSupplier(Supplier supplier) throws SQLException {
+  public void updateSupplier(Supplier supplier) {
     transactionManager.executeInTransaction(() -> supplierDAO.update(supplier));
   }
 
-  public void removeSupplier(int supplierId) throws SQLException {
+  public void removeSupplier(int supplierId) {
     transactionManager.executeInTransaction(() -> supplierDAO.delete(supplierId));
   }
 }

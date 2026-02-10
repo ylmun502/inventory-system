@@ -5,7 +5,6 @@ import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.model.Customer;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class CustomerService {
@@ -17,30 +16,29 @@ public class CustomerService {
     this.customerDAO = new CustomerDAO(connection);
   }
 
-  public List<Customer> listCustomers() throws SQLException {
+  public List<Customer> listCustomers() {
     return customerDAO.findAll();
   }
 
-  public void createCustomer(Customer customer) throws SQLException {
+  public void createCustomer(Customer customer) {
     transactionManager.executeInTransaction(() -> customerDAO.save(customer));
   }
 
-  public void updateCustomer(Customer customer) throws SQLException {
+  public void updateCustomer(Customer customer) {
     transactionManager.executeInTransaction(() -> customerDAO.update(customer));
   }
 
-  public void removeCustomer(int customerId) throws SQLException {
+  public void removeCustomer(int customerId) {
     transactionManager.executeInTransaction(() -> customerDAO.delete(customerId));
   }
 
-  public Customer getCustomer(int customerId) throws SQLException {
+  public Customer getCustomer(int customerId) {
     return customerDAO
         .findById(customerId)
-        .orElseThrow(
-            () -> new EntityNotFoundException("Customer ID " + customerId + " not found."));
+        .orElseThrow(() -> new EntityNotFoundException("The customer could not be found."));
   }
 
-  public List<Customer> searchCustomersByName(String name) throws SQLException {
+  public List<Customer> searchCustomersByName(String name) {
     return customerDAO.findAllByName(name);
   }
 }

@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
     super(connection);
   }
 
-  public List<Customer> findAll() throws SQLException {
+  public List<Customer> findAll() {
     String sql =
         """
         SELECT
@@ -42,7 +43,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
     return query(sql, this::mapResultSetToCustomer);
   }
 
-  public Customer save(Customer customer) throws SQLException {
+  public Customer save(Customer customer) {
     String sql =
         """
         INSERT INTO customers(
@@ -88,7 +89,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
         0);
   }
 
-  public void update(Customer customer) throws SQLException {
+  public void update(Customer customer) {
     String sql =
         """
         UPDATE customers
@@ -101,33 +102,30 @@ public class CustomerDAO extends BaseDAO<Customer> {
           updated_at = ?
         WHERE id = ?
         """;
-    int affectedRows =
-        update(
-            sql,
-            customer.getFullName(),
-            customer.getPhoneNumber(),
-            customer.getEmail(),
-            customer.getAddress(),
-            customer.getAcquisitionSource(),
-            OffsetDateTime.now(ZoneOffset.UTC),
-            customer.getId());
-    if (affectedRows == 0) {
-      throw new SQLException("Updating customer failed, no rows affected.");
-    }
+
+    update(
+        sql,
+        customer.getFullName(),
+        customer.getPhoneNumber(),
+        customer.getEmail(),
+        customer.getAddress(),
+        customer.getAcquisitionSource(),
+        OffsetDateTime.now(ZoneOffset.UTC),
+        customer.getId());
   }
 
-  public void delete(int customerId) throws SQLException {
+  public void delete(int customerId) {
     String sql = "UPDATE customers SET is_deleted = 1, updated_at = ? WHERE id = ?";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), customerId);
   }
 
-  public void restore(int customerId) throws SQLException {
+  public void restore(int customerId) {
     String sql =
         "UPDATE customers SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), customerId);
   }
 
-  public Optional<Customer> findById(int id) throws SQLException {
+  public Optional<Customer> findById(int id) {
     String sql =
         """
         SELECT
@@ -150,7 +148,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
     return queryForObject(sql, this::mapResultSetToCustomer, id);
   }
 
-  public List<Customer> findAllByName(String fullName) throws SQLException {
+  public List<Customer> findAllByName(String fullName) {
     String sql =
         """
         SELECT
@@ -173,7 +171,7 @@ public class CustomerDAO extends BaseDAO<Customer> {
     return query(sql, this::mapResultSetToCustomer, fullName);
   }
 
-  public List<Customer> findAllDeleted() throws SQLException {
+  public List<Customer> findAllDeleted() {
     String sql =
         """
         SELECT
@@ -197,9 +195,9 @@ public class CustomerDAO extends BaseDAO<Customer> {
     return query(sql, this::mapResultSetToCustomer);
   }
 
-  private Customer mapResultSetToCustomer(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
+  private Customer mapResultSetToCustomer(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       String fullName = rs.getString("full_name");
       String phoneNumber = rs.getString("phone_number");
       String email = rs.getString("email");
@@ -231,8 +229,8 @@ public class CustomerDAO extends BaseDAO<Customer> {
           createdAt,
           updatedAt,
           isDeleted);
-    } catch (Exception e) {
-      throw new SQLException("Mapping failed for Customer ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.OrderItem;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -14,7 +15,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     super(connection);
   }
 
-  public OrderItem save(OrderItem item) throws SQLException {
+  public OrderItem save(OrderItem item) {
     String sql =
         """
         INSERT INTO order_items(
@@ -58,7 +59,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
         0);
   }
 
-  public void update(OrderItem item) throws SQLException {
+  public void update(OrderItem item) {
     String sql =
         """
         UPDATE order_items
@@ -78,16 +79,13 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
         item.getId());
   }
 
-  public void delete(int orderItemId) throws SQLException {
+  public void delete(int orderItemId) {
     String sql =
         "UPDATE order_items SET is_deleted = 1, updated_at = ? WHERE id = ? AND is_deleted = 0";
-    int affectedRows = update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderItemId);
-    if (affectedRows == 0) {
-      throw new SQLException("Deleting order item failed, no rows affected.");
-    }
+    update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderItemId);
   }
 
-  public List<OrderItem> findAllByOrderId(int orderId) throws SQLException {
+  public List<OrderItem> findAllByOrderId(int orderId) {
     String sql =
         """
         SELECT
@@ -108,7 +106,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     return query(sql, this::mapResultSetToOrderItem, orderId);
   }
 
-  public void deleteAllByOrderId(int orderId) throws SQLException {
+  public void deleteAllByOrderId(int orderId) {
     String sql =
         """
         UPDATE order_items
@@ -119,9 +117,9 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderId);
   }
 
-  private OrderItem mapResultSetToOrderItem(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
+  private OrderItem mapResultSetToOrderItem(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       int orderId = rs.getInt("order_id");
       int productId = rs.getInt("product_id");
       int batchId = rs.getInt("batch_id");
@@ -142,8 +140,8 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
           createdAt,
           updatedAt,
           isDeleted);
-    } catch (Exception e) {
-      throw new SQLException("Mapping failed for OrderItem ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
     }
   }
 }

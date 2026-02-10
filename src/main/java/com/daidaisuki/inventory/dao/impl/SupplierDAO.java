@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Supplier;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -15,7 +16,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     super(connection);
   }
 
-  public List<Supplier> findAll() throws SQLException {
+  public List<Supplier> findAll() {
     String sql =
         """
         SELECT
@@ -35,7 +36,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     return query(sql, this::mapResultSetToSupplier);
   }
 
-  public Supplier save(Supplier supplier) throws SQLException {
+  public Supplier save(Supplier supplier) {
     String sql =
         """
         INSERT INTO suppliers(
@@ -75,7 +76,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
         0);
   }
 
-  public void update(Supplier supplier) throws SQLException {
+  public void update(Supplier supplier) {
     String sql =
         """
           UPDATE suppliers
@@ -88,27 +89,24 @@ public class SupplierDAO extends BaseDAO<Supplier> {
           WHERE id = ?
         )
         """;
-    int affectedRows =
-        update(
-            sql,
-            supplier.getName(),
-            supplier.getEmail(),
-            supplier.getPhone(),
-            supplier.getAddress(),
-            OffsetDateTime.now(ZoneOffset.UTC),
-            supplier.getId());
-    if (affectedRows == 0) {
-      throw new SQLException("Updating product failed, no rows affected.");
-    }
+
+    update(
+        sql,
+        supplier.getName(),
+        supplier.getEmail(),
+        supplier.getPhone(),
+        supplier.getAddress(),
+        OffsetDateTime.now(ZoneOffset.UTC),
+        supplier.getId());
   }
 
-  public void delete(int supplierId) throws SQLException {
+  public void delete(int supplierId) {
     String sql =
         "UPDATE suppliers SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), supplierId);
   }
 
-  public Optional<Supplier> findById(int id) throws SQLException {
+  public Optional<Supplier> findById(int id) {
     String sql =
         """
         SELECT
@@ -127,14 +125,14 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     return queryForObject(sql, this::mapResultSetToSupplier, id);
   }
 
-  public boolean existsByShortCode(String shortCode) throws SQLException {
+  public boolean existsByShortCode(String shortCode) {
     String sql = "SELECT COUNT(*) FROM suppliers WHERE short_code = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, shortCode).orElse(false);
   }
 
-  private Supplier mapResultSetToSupplier(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
+  private Supplier mapResultSetToSupplier(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       String name = rs.getString("name");
       String shortCode = rs.getString("short_code");
       String email = rs.getString("email");
@@ -147,8 +145,8 @@ public class SupplierDAO extends BaseDAO<Supplier> {
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Supplier(
           id, name, shortCode, email, phone, address, createdAt, updatedAt, isDeleted);
-    } catch (Exception e) {
-      throw new SQLException("Mapping failed for Supplier ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed.", e);
     }
   }
 }

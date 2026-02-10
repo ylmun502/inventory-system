@@ -1,5 +1,6 @@
 package com.daidaisuki.inventory.db;
 
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -13,16 +14,15 @@ public class TransactionManager {
 
   @FunctionalInterface
   public interface TransactionAction {
-    void execute() throws SQLException, InsufficientStockException;
+    void execute() throws InsufficientStockException;
   }
 
   @FunctionalInterface
   public interface TransactionCallable<T> {
-    T execute() throws SQLException, InsufficientStockException;
+    T execute() throws InsufficientStockException;
   }
 
-  public void executeInTransaction(TransactionAction action)
-      throws SQLException, InsufficientStockException {
+  public void executeInTransaction(TransactionAction action) throws InsufficientStockException {
     executeInTransaction(
         () -> {
           action.execute();
@@ -31,23 +31,55 @@ public class TransactionManager {
   }
 
   public <T> T executeInTransaction(TransactionCallable<T> action)
-      throws SQLException, InsufficientStockException {
-    boolean alreadyInTransaction = !connection.getAutoCommit();
+      throws InsufficientStockException {
+    boolean alreadyInTransaction = false;
+    try {
+      alreadyInTransaction = !connection.getAutoCommit();
+    } catch (SQLException e) {
+      throw new DataAccessException("Failed to check transaction state", e);
+    }
     if (alreadyInTransaction) {
       return action.execute();
     }
     try {
-      connection.setAutoCommit(false);
+      this.safeSetAutoCommit(false);
       T result = action.execute();
-      connection.commit();
+      this.safeCommit();
       return result;
-    } catch (SQLException | InsufficientStockException e) {
-      connection.rollback();
+    } catch (InsufficientStockException e) {
+      this.safeRollback();
+      throw e;
+    } catch (RuntimeException e) {
+      this.safeRollback();
       throw e;
     } finally {
       if (!alreadyInTransaction) {
-        connection.setAutoCommit(true);
+        this.safeSetAutoCommit(true);
       }
+    }
+  }
+
+  private void safeSetAutoCommit(boolean autoCommit) {
+    try {
+      connection.setAutoCommit(autoCommit);
+    } catch (SQLException e) {
+      throw new DataAccessException("Failed to set auto-commit.", e);
+    }
+  }
+
+  private void safeCommit() {
+    try {
+      connection.commit();
+    } catch (SQLException e) {
+      throw new DataAccessException("Commit failed.", e);
+    }
+  }
+
+  private void safeRollback() {
+    try {
+      connection.rollback();
+    } catch (SQLException e) {
+      throw new DataAccessException("Rollback failed.", e);
     }
   }
 }

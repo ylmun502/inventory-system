@@ -2,6 +2,7 @@ package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.enums.TransactionType;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.InventoryTransaction;
 import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.sql.Connection;
@@ -16,7 +17,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     super(connection);
   }
 
-  public List<InventoryTransaction> findAll() throws SQLException {
+  public List<InventoryTransaction> findAll() {
     String sql =
         """
         SELECT
@@ -37,7 +38,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction);
   }
 
-  public InventoryTransaction save(InventoryTransaction transaction) throws SQLException {
+  public InventoryTransaction save(InventoryTransaction transaction) {
     String sql =
         """
         INSERT INTO inventory_transactions(
@@ -84,7 +85,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
         0);
   }
 
-  public List<InventoryTransaction> findAllByProductId(int productId) throws SQLException {
+  public List<InventoryTransaction> findAllByProductId(int productId) {
     String sql =
         """
         SELECT
@@ -106,7 +107,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, productId);
   }
 
-  public List<InventoryTransaction> findAllByBatchId(int batchId) throws SQLException {
+  public List<InventoryTransaction> findAllByBatchId(int batchId) {
     String sql =
         """
         SELECT
@@ -127,8 +128,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, batchId);
   }
 
-  public List<InventoryTransaction> findAllByDateRange(OffsetDateTime start, OffsetDateTime end)
-      throws SQLException {
+  public List<InventoryTransaction> findAllByDateRange(OffsetDateTime start, OffsetDateTime end) {
     String sql =
         """
         SELECT
@@ -150,9 +150,9 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, start, end);
   }
 
-  private InventoryTransaction mapResultSetToTransaction(ResultSet rs) throws SQLException {
-    int id = rs.getInt("id");
+  private InventoryTransaction mapResultSetToTransaction(ResultSet rs) {
     try {
+      int id = rs.getInt("id");
       int productId = rs.getInt("product_id");
       int batchId = rs.getInt("batch_id");
       int userId = rs.getInt("user_id");
@@ -177,8 +177,8 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
           createdAt,
           updatedAt,
           isDeleted);
-    } catch (Exception e) {
-      throw new SQLException("Mapping failed for InventoryTransaction ID: " + id, e);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
     }
   }
 }

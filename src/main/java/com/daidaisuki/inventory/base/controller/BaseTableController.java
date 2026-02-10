@@ -1,6 +1,6 @@
 package com.daidaisuki.inventory.base.controller;
 
-import com.daidaisuki.inventory.exception.InsufficientStockException;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.ui.dialog.DialogService;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
@@ -37,6 +37,7 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   }
 
   protected void initializeBase() {
+    this.viewModel.setOnError(this::handleError);
     this.viewModel
         .selectedItemProperty()
         .bind(this.table.getSelectionModel().selectedItemProperty());
@@ -44,21 +45,6 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     BooleanBinding nothingSelected = this.viewModel.selectedItemProperty().isNull();
     this.editButton.disableProperty().bind(nothingSelected);
     this.deleteButton.disableProperty().bind(nothingSelected);
-    this.viewModel.setOnError(
-        exception -> {
-          if (exception instanceof SQLException sqlException) {
-            AlertHelper.showDatabaseError(this.getWindow(), "Database Error", sqlException);
-          } else if (exception instanceof InsufficientStockException) {
-            AlertHelper.showWarningAlert(
-                getWindow(), "Stock Warning", null, exception.getMessage());
-          } else {
-            AlertHelper.showErrorAlert(
-                getWindow(),
-                "System Error",
-                "An unexpected error occurred",
-                exception.getMessage());
-          }
-        });
     this.setupDeselectOnEmptySpace(this.table);
     this.table
         .sceneProperty()
@@ -72,6 +58,22 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
               }
             });
     this.viewModel.refresh();
+  }
+
+  protected void handleError(Throwable exception) {
+    // Remove sout after testing
+    System.out.println("task wrapped outermost exception: " + exception);
+    Throwable cause = exception.getCause() != null ? exception.getCause() : exception;
+    if (cause.getCause() instanceof SQLException) {
+      AlertHelper.showDatabaseError(
+          this.getWindow(), "A database operation failed", cause.getMessage());
+    } else if (cause instanceof DataAccessException dataAcessException) {
+      AlertHelper.showWarningAlert(
+          getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
+    } else {
+      AlertHelper.showErrorAlert(
+          getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());
+    }
   }
 
   protected void setupDeselectOnEmptySpace(TableView<?> targetTable) {

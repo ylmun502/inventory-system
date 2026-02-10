@@ -1,5 +1,6 @@
 package com.daidaisuki.inventory.viewmodel.dialog;
 
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.ui.validation.ValidationStatus;
@@ -7,7 +8,6 @@ import com.daidaisuki.inventory.util.StringCleaner;
 import com.daidaisuki.inventory.util.ValidationUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -121,7 +121,7 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
   public ObservableList<String> getAvailableUnitTypes() {
     try {
       return FXCollections.observableArrayList(this.productService.listDistinctUnitTypes());
-    } catch (SQLException e) {
+    } catch (DataAccessException e) {
       return FXCollections.observableArrayList("each", "piece", "box");
     }
   }

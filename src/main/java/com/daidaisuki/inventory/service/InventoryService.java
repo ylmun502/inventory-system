@@ -5,6 +5,7 @@ import com.daidaisuki.inventory.dao.impl.ProductDAO;
 import com.daidaisuki.inventory.dao.impl.StockBatchDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.enums.TransactionType;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.InventoryTransaction;
@@ -16,7 +17,6 @@ import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
 import com.daidaisuki.inventory.model.dto.StockReturnRequest;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class InventoryService {
     this.inventoryTransactionDAO = new InventoryTransactionDAO(connection);
   }
 
-  public void stockAdjust(StockAdjustRequest adjustRequest, int userId) throws SQLException {
+  public void stockAdjust(StockAdjustRequest adjustRequest, int userId) {
     transactionManager.executeInTransaction(
         () -> {
           if (adjustRequest.changeAmount() > 0) {
@@ -63,19 +63,18 @@ public class InventoryService {
         });
   }
 
-  public List<StockBatch> listInventoryByProduct(int productId) throws SQLException {
+  public List<StockBatch> listInventoryByProduct(int productId) {
     return this.stockBatchDAO.findAllByProductId(productId);
   }
 
-  public void receiveNewStock(StockReceiveRequest request, int userId) throws SQLException {
+  public void receiveNewStock(StockReceiveRequest request, int userId) {
     transactionManager.executeInTransaction(
         () -> {
           receiveNewStockInternal(request, userId);
         });
   }
 
-  private void receiveNewStockInternal(StockReceiveRequest request, int userId)
-      throws SQLException {
+  private void receiveNewStockInternal(StockReceiveRequest request, int userId) {
     this.applyStockChange(request.productId(), request.quantity());
     StockBatch newBatch =
         StockBatch.createNew(
@@ -97,11 +96,11 @@ public class InventoryService {
         request.reason());
   }
 
-  public List<InventoryTransaction> getTransactionHistory(int productId) throws SQLException {
+  public List<InventoryTransaction> getTransactionHistory(int productId) {
     return this.inventoryTransactionDAO.findAllByProductId(productId);
   }
 
-  public void processReturn(StockReturnRequest returnRequest, int userId) throws SQLException {
+  public void processReturn(StockReturnRequest returnRequest, int userId) {
     transactionManager.executeInTransaction(
         () -> {
           this.applyStockChange(returnRequest.productId(), returnRequest.quantity());
@@ -109,7 +108,7 @@ public class InventoryService {
               this.stockBatchDAO.updateStockTotal(
                   returnRequest.batchId(), returnRequest.quantity());
           if (!success) {
-            throw new SQLException("Batch not found: " + returnRequest.batchId());
+            throw new DataAccessException("The stock batch could not be found.");
           }
           this.logTransaction(
               returnRequest.productId(),
@@ -122,8 +121,8 @@ public class InventoryService {
         });
   }
 
-  private List<StockAllocation> deductFromInventoryInternal(StockDeductRequest request, int userId)
-      throws SQLException {
+  private List<StockAllocation> deductFromInventoryInternal(
+      StockDeductRequest request, int userId) {
     this.applyStockChange(request.productId(), -request.quantity());
     List<StockAllocation> allocations = new ArrayList<>();
     List<StockBatch> batches = this.stockBatchDAO.findAllAvailableByProductId(request.productId());
@@ -135,7 +134,7 @@ public class InventoryService {
       int takeAmount = Math.min(batch.getQuantityRemaining(), remainingAmount);
       boolean success = this.stockBatchDAO.updateStockTotal(batch.getId(), -takeAmount);
       if (!success) {
-        throw new SQLException("Concurrent inventory change detected. Please retry.");
+        throw new DataAccessException("Concurrent inventory change detected. Please retry.");
       }
       this.logTransaction(
           request.productId(),
@@ -151,17 +150,17 @@ public class InventoryService {
     return allocations;
   }
 
-  private void applyStockChange(int productId, int amount) throws SQLException {
+  private void applyStockChange(int productId, int amount) {
     boolean success = this.productDAO.updateStockTotal(productId, amount);
     if (!success) {
       if (amount >= 0) {
-        throw new EntityNotFoundException("Product ID " + productId + " not found.");
+        throw new EntityNotFoundException("The product could not be found.");
       } else {
         boolean exist = this.productDAO.exists(productId);
         if (exist) {
-          throw new InsufficientStockException("Insufficient stock for Product ID " + productId);
+          throw new InsufficientStockException("Insufficient stock for the product.");
         } else {
-          throw new EntityNotFoundException("Product ID " + productId + " not found.");
+          throw new EntityNotFoundException("The product could not be found.");
         }
       }
     }
@@ -174,8 +173,7 @@ public class InventoryService {
       int referenceId,
       int quantity,
       TransactionType type,
-      String reason)
-      throws SQLException {
+      String reason) {
     InventoryTransaction transaction =
         new InventoryTransaction(
             -1, productId, batchId, userId, referenceId, quantity, type, reason, null, null, false);
