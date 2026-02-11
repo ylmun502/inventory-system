@@ -25,7 +25,10 @@ public final class FxUiUtils {
    *
    * @param operation the task to execute
    * @param buttons the buttons to disable during execution
+   * 
+   * @deprecated Use ViewModel busyProperty binding instead (MVVM).
    */
+  @Deprecated
   public static void runWithButtonsDisabled(Runnable operation, Button... buttons) {
     for (Button btn : buttons) {
       btn.setDisable(true);
