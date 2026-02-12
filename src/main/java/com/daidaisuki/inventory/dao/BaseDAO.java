@@ -101,4 +101,13 @@ public abstract class BaseDAO<T> {
         String.format("UPDATE %s SET is_deleted = ?, updated_at = ? WHERE id = ?", tableName);
     update(sql, isDeleted ? 1 : 0, OffsetDateTime.now(ZoneOffset.UTC).toString(), id);
   }
+
+  protected void deleteById(String tableName, int id) {
+    String sql = String.format("DELETE FROM %s WHERE id = ?", tableName);
+    try {
+      update(sql, id);
+    } catch (DataAccessException e) {
+      throw new DataAccessException("Database delete failed.", e);
+    }
+  }
 }

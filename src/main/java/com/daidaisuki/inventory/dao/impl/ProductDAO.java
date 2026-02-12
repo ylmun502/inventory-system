@@ -2,6 +2,8 @@ package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.interfaces.Archivable;
+import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import java.math.BigDecimal;
@@ -13,38 +15,36 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-public class ProductDAO extends BaseDAO<Product> {
+public class ProductDAO extends BaseDAO<Product> implements Archivable, Removable {
+  private static final String TABLE_NAME = "products";
+  private static final String SELECT_PRODUCT_BY_DELETION =
+      """
+      SELECT
+        id,
+        sku,
+        barcode,
+        name,
+        category,
+        unit_type,
+        tax_category,
+        description,
+        weight,
+        current_stock,
+        min_stock_level,
+        max_stock_level,
+        reordering_level,
+        selling_price_cents,
+        is_active,
+        created_at,
+        updated_at,
+        is_deleted
+      FROM products
+      WHERE is_deleted = ?
+      ORDER BY name ASC
+      """;
+
   public ProductDAO(Connection connection) {
     super(connection);
-  }
-
-  public List<Product> findAll() {
-    String sql =
-        """
-        SELECT
-          id,
-          sku,
-          barcode,
-          name,
-          category,
-          unit_type,
-          tax_category,
-          description,
-          weight,
-          current_stock,
-          min_stock_level,
-          max_stock_level,
-          reordering_level,
-          selling_price_cents,
-          is_active,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM products
-        WHERE is_deleted = 0
-        ORDER BY name ASC
-        """;
-    return query(sql, this::mapResultSetToProduct);
   }
 
   public Product save(Product product) {
@@ -165,27 +165,19 @@ public class ProductDAO extends BaseDAO<Product> {
         product.getId());
   }
 
-  public void delete(int productId) {
-    String sql = "UPDATE products SET is_deleted = 1, updated_at = ? WHERE id = ?";
-    update(sql, OffsetDateTime.now(ZoneOffset.UTC), productId);
+  @Override
+  public void archive(int productId) {
+    this.setDeletionStatus(TABLE_NAME, productId, true);
   }
 
+  @Override
   public void restore(int productId) {
-    String sql =
-        "UPDATE products SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
-    update(sql, OffsetDateTime.now(ZoneOffset.UTC), productId);
+    this.setDeletionStatus(TABLE_NAME, productId, false);
   }
 
-  public boolean updateStockTotal(int productId, int changeAmount) {
-    String sql =
-        """
-        UPDATE products
-        SET current_stock = current_stock + ?, updated_at = ?
-        WHERE id = ? AND is_deleted = 0 AND current_stock + ? >= 0
-        """;
-    return updateReturningAffectedRows(
-            sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), productId, changeAmount)
-        > 0;
+  @Override
+  public void remove(int productId) {
+    this.deleteById(TABLE_NAME, productId);
   }
 
   public Optional<Product> findById(int id) {
@@ -213,28 +205,52 @@ public class ProductDAO extends BaseDAO<Product> {
         FROM products
         WHERE id = ?
         """;
-    return queryForObject(sql, this::mapResultSetToProduct, id);
+    return this.queryForObject(sql, this::mapResultSetToProduct, id);
+  }
+
+  public List<Product> findAll() {
+    return findByDeletionStatus(false);
+  }
+
+  public List<Product> findAllArchived() {
+    return findByDeletionStatus(true);
+  }
+
+  private List<Product> findByDeletionStatus(Boolean isDeleted) {
+    return this.query(SELECT_PRODUCT_BY_DELETION, this::mapResultSetToProduct, isDeleted ? 1 : 0);
+  }
+
+  public boolean updateStockTotal(int productId, int changeAmount) {
+    String sql =
+        """
+        UPDATE products
+        SET current_stock = current_stock + ?, updated_at = ?
+        WHERE id = ? AND is_deleted = 0 AND current_stock + ? >= 0
+        """;
+    return this.updateReturningAffectedRows(
+            sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), productId, changeAmount)
+        > 0;
   }
 
   public List<String> findAllDistinctUnitTypes() {
     String sql = "SELECT DISTINCT unit_type FROM products";
-    return query(sql, this::mapResultSetToUnitType);
+    return this.query(sql, this::mapResultSetToUnitType);
   }
 
   public boolean exists(int productId) {
     String sql = "SELECT 1 FROM products WHERE id = ? AND is_deleted = 0";
-    Optional<Integer> result = queryForObject(sql, rs -> rs.getInt(1), productId);
+    Optional<Integer> result = this.queryForObject(sql, rs -> rs.getInt(1), productId);
     return result.isPresent();
   }
 
   public boolean existsBySku(String sku) {
     String sql = "SELECT COUNT(*) FROM products WHERE sku = ? AND is_deleted = 0";
-    return queryForObject(sql, rs -> rs.getInt(1) > 0, sku).orElse(false);
+    return this.queryForObject(sql, rs -> rs.getInt(1) > 0, sku).orElse(false);
   }
 
   public boolean existsByBarcode(String barcode) {
     String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND is_deleted = 0";
-    return queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
+    return this.queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
   }
 
   private String mapResultSetToUnitType(ResultSet rs) {

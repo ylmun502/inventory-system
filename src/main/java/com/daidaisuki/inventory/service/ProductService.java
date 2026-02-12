@@ -41,8 +41,16 @@ public class ProductService {
     transactionManager.executeInTransaction(() -> this.productDAO.update(product));
   }
 
+  public void archiveProduct(int productId) {
+    transactionManager.executeInTransaction(() -> this.productDAO.archive(productId));
+  }
+
+  public void restoreProduct(int productId) {
+    transactionManager.executeInTransaction(() -> this.productDAO.restore(productId));
+  }
+
   public void removeProduct(int productId) {
-    transactionManager.executeInTransaction(() -> this.productDAO.delete(productId));
+    transactionManager.executeInTransaction(() -> this.productDAO.remove(productId));
   }
 
   public Product getProduct(int productId) {
