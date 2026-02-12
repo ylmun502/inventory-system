@@ -183,6 +183,23 @@
 }
 
 /* =========================
+   TABLES / ROW STYLING
+   ========================= */
+
+.table-row-cell.out-of-stock {
+    -fx-background-color: #ffcdd2;
+}
+
+.table-row-cell.low-stock {
+    -fx-background-color: #fff9c4;
+}
+
+.table-row-cell.low-stock:selected,
+.table-row-cell.out-of-stock:selected {
+    -fx-background-color: -fx-selection-bar;
+}
+
+/* =========================
    HELPERS
    ========================= */
 

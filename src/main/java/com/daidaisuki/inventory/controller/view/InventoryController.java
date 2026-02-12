@@ -195,13 +195,13 @@ public class InventoryController extends BaseTableController<Product, InventoryV
               @Override
               protected void updateItem(Product item, boolean empty) {
                 super.updateItem(item, empty);
-                setStyle("");
+                getStyleClass().removeAll("out-of-stock", "low-stock");
                 setTooltip(null);
                 if (item != null && !empty) {
                   if (item.getCurrentStock() <= 0) {
-                    setStyle("-fx-background-color: #ffcdd2");
+                    getStyleClass().add("out-of-stock");
                   } else if (item.getCurrentStock() <= item.getReorderingLevel()) {
-                    setStyle("-fx-background-color: #fff9c4");
+                    getStyleClass().add("low-stock");
                     setTooltip(new Tooltip("Stock is low! Please reorder."));
                   }
                 }
