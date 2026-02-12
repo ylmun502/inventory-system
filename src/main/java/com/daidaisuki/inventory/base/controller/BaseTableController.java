@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Window;
@@ -27,8 +28,19 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   private EventHandler<KeyEvent> escapeFilter =
       event -> {
         if (event.getCode() == KeyCode.ESCAPE && !event.isConsumed()) {
-          this.clearSelection();
-          event.consume();
+          Node focusOwner = this.table.getScene().getFocusOwner();
+          if (focusOwner instanceof TextInputControl textInput) {
+            if (!textInput.getText().isEmpty()) {
+              textInput.clear();
+            } else {
+              this.clearSelection();
+              this.table.requestFocus();
+            }
+            event.consume();
+          } else {
+            this.clearSelection();
+            event.consume();
+          }
         }
       };
 
@@ -37,27 +49,18 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   }
 
   protected void initializeBase() {
+    this.bindViewModelProperties();
+    this.setupTableSelection();
+    this.setupSceneKeyFilter();
+    this.viewModel.refresh();
+  }
+
+  private void bindViewModelProperties() {
     this.viewModel.setOnError(this::handleError);
-    this.viewModel
-        .selectedItemProperty()
-        .bind(this.table.getSelectionModel().selectedItemProperty());
     this.addButton.disableProperty().bind(this.viewModel.isBusyProperty());
     BooleanBinding nothingSelected = this.viewModel.selectedItemProperty().isNull();
     this.editButton.disableProperty().bind(nothingSelected);
     this.deleteButton.disableProperty().bind(nothingSelected);
-    this.setupDeselectOnEmptySpace(this.table);
-    this.table
-        .sceneProperty()
-        .addListener(
-            (obs, oldScene, newScene) -> {
-              if (oldScene != null) {
-                oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
-              }
-              if (newScene != null) {
-                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
-              }
-            });
-    this.viewModel.refresh();
   }
 
   protected void handleError(Throwable exception) {
@@ -74,6 +77,13 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
       AlertHelper.showErrorAlert(
           getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());
     }
+  }
+
+  private void setupTableSelection() {
+    this.viewModel
+        .selectedItemProperty()
+        .bind(this.table.getSelectionModel().selectedItemProperty());
+    this.setupDeselectOnEmptySpace(this.table);
   }
 
   protected void setupDeselectOnEmptySpace(TableView<?> targetTable) {
@@ -95,18 +105,18 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
         });
   }
 
-  protected void setupEscapeHandler(Node node, Runnable action) {
-    if (node == null) {
-      return;
-    }
-    node.addEventFilter(
-        KeyEvent.KEY_PRESSED,
-        event -> {
-          if (event.getCode() == KeyCode.ESCAPE) {
-            action.run();
-            event.consume();
-          }
-        });
+  private void setupSceneKeyFilter() {
+    this.table
+        .sceneProperty()
+        .addListener(
+            (obs, oldScene, newScene) -> {
+              if (oldScene != null) {
+                oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
+              if (newScene != null) {
+                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
+            });
   }
 
   protected void clearSelection() {

@@ -78,42 +78,24 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   @FXML
   public void initialize() {
     // Static UI Setup
+    this.setupStaticUI();
+
+    // Event / Shortcut Setup
+    this.setupEventShortcuts();
+
+    // Property Bindings
+    this.setupBinding();
+
+    // Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading
+    // rows)
+    this.setupData();
+  }
+
+  private void setupStaticUI() {
     this.userLabel.setText("User: " + AppSession.getInstance().getUserName());
     this.setupMainTableColumns();
     this.setupDetailTablesColumns();
     this.setupRowFactory();
-
-    // Event / Shortcut Setup
-    this.initializeBase(); // Set up selection and table shortcuts
-    this.receiveStockButton
-        .disableProperty()
-        .bind(this.viewModel.selectedItemProperty().isNull().or(this.viewModel.isBusyProperty()));
-    this.setupEscapeHandler(
-        this.searchField,
-        () -> {
-          if (!searchField.getText().isEmpty()) {
-            searchField.clear();
-          } else {
-            clearSelection();
-          }
-        });
-    this.setupDeselectOnEmptySpace(batchesTable);
-    this.setupDeselectOnEmptySpace(transactionTable);
-    this.setupEscapeHandler(
-        this.batchesTable, () -> this.batchesTable.getSelectionModel().clearSelection());
-    this.setupEscapeHandler(
-        this.transactionTable, () -> this.transactionTable.getSelectionModel().clearSelection());
-
-    // Property Bindings
-    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
-    this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
-    this.bindLabels();
-
-    // Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading
-    // rows)
-    this.table.setItems(this.viewModel.getSortedList());
-    this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
-    this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 
   private void setupMainTableColumns() {
@@ -176,18 +158,6 @@ public class InventoryController extends BaseTableController<Product, InventoryV
         this.transactionTable, List.of(0.25, 0.25, 0.25, 0.25));
   }
 
-  private void bindLabels() {
-    this.barcodeLabel.textProperty().bind(this.viewModel.barcodeTextProperty());
-    this.reorderingLevelLabel.textProperty().bind(this.viewModel.reorderingLevelTextProperty());
-    this.taxCategoryLabel.textProperty().bind(this.viewModel.taxCategoryTextProperty());
-    this.weightLabel.textProperty().bind(this.viewModel.weightTextProperty());
-    this.unitTypeLabel.textProperty().bind(this.viewModel.unitTypeTextProperty());
-    this.minStockLevelLabel.textProperty().bind(this.viewModel.minStockLevelTextProperty());
-    this.averageUnitCostLabel.textProperty().bind(this.viewModel.averageUnitCostTextProperty());
-    this.markupLabel.textProperty().bind(this.viewModel.markupTextProperty());
-    this.productTotalValueLabel.textProperty().bind(this.viewModel.productTotalValueTextProperty());
-  }
-
   private void setupRowFactory() {
     this.table.setRowFactory(
         tv ->
@@ -207,6 +177,39 @@ public class InventoryController extends BaseTableController<Product, InventoryV
                 }
               }
             });
+  }
+
+  private void setupEventShortcuts() {
+    this.initializeBase(); // Set up selection and table shortcuts
+    this.receiveStockButton
+        .disableProperty()
+        .bind(this.viewModel.selectedItemProperty().isNull().or(this.viewModel.isBusyProperty()));
+    this.setupDeselectOnEmptySpace(batchesTable);
+    this.setupDeselectOnEmptySpace(transactionTable);
+  }
+
+  private void setupBinding() {
+    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
+    this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
+    this.bindLabels();
+  }
+
+  private void bindLabels() {
+    this.barcodeLabel.textProperty().bind(this.viewModel.barcodeTextProperty());
+    this.reorderingLevelLabel.textProperty().bind(this.viewModel.reorderingLevelTextProperty());
+    this.taxCategoryLabel.textProperty().bind(this.viewModel.taxCategoryTextProperty());
+    this.weightLabel.textProperty().bind(this.viewModel.weightTextProperty());
+    this.unitTypeLabel.textProperty().bind(this.viewModel.unitTypeTextProperty());
+    this.minStockLevelLabel.textProperty().bind(this.viewModel.minStockLevelTextProperty());
+    this.averageUnitCostLabel.textProperty().bind(this.viewModel.averageUnitCostTextProperty());
+    this.markupLabel.textProperty().bind(this.viewModel.markupTextProperty());
+    this.productTotalValueLabel.textProperty().bind(this.viewModel.productTotalValueTextProperty());
+  }
+
+  private void setupData() {
+    this.table.setItems(this.viewModel.getSortedList());
+    this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
+    this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 
   @FXML
