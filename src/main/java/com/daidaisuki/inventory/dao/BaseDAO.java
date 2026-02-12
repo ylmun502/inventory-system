@@ -71,7 +71,7 @@ public abstract class BaseDAO<T> {
         if (generatedKeys.next()) {
           return mapper.mapKey(generatedKeys.getInt(1));
         }
-        throw new DataAccessException("Insert succeeded but no ID returned.");
+        throw new DataAccessException("Database insert succeeded but no ID returned.");
       }
     } catch (SQLException e) {
       throw new DataAccessException("Database insert failed.", e);
@@ -81,7 +81,7 @@ public abstract class BaseDAO<T> {
   protected void update(String sql, Object... params) {
     int affectedRows = updateReturningAffectedRows(sql, params);
     if (affectedRows == 0) {
-      throw new DataAccessException("Update failed, no rows affected.");
+      throw new DataAccessException("Database update failed.");
     }
   }
 
