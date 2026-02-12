@@ -112,10 +112,10 @@ public class Product extends BaseModel {
                 return "OUT";
               }
               if (stock <= minStockLevel.get()) {
-                return "Critical";
+                return "CRITICAL";
               }
               if (stock <= reorderingLevel.get()) {
-                return "Low";
+                return "LOW";
               }
               return "OK";
             },
