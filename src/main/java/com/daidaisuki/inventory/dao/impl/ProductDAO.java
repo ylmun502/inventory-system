@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public class ProductDAO extends BaseDAO<Product> implements Archivable, Removable {
   private static final String TABLE_NAME = "products";
-  private static final String SELECT_PRODUCT_BY_DELETION =
+  private static final String BASE_SELECT_PRODUCT =
       """
       SELECT
         id,
@@ -39,9 +39,9 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         updated_at,
         is_deleted
       FROM products
-      WHERE is_deleted = ?
-      ORDER BY name ASC
       """;
+  private static final String WHERE_DELETE_STATUS = " WHERE is_deleted = ?";
+  private static final String ORDER_BY_NAME = " ORDER BY name ASC";
 
   public ProductDAO(Connection connection) {
     super(connection);
@@ -209,15 +209,21 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
   }
 
   public List<Product> findAll() {
-    return findByDeletionStatus(false);
+    String sql = BASE_SELECT_PRODUCT + ORDER_BY_NAME;
+    return this.query(sql, this::mapResultSetToProduct);
+  }
+
+  public List<Product> findAllActive() {
+    return this.findByDeletionStatus(false);
   }
 
   public List<Product> findAllArchived() {
-    return findByDeletionStatus(true);
+    return this.findByDeletionStatus(true);
   }
 
   private List<Product> findByDeletionStatus(Boolean isDeleted) {
-    return this.query(SELECT_PRODUCT_BY_DELETION, this::mapResultSetToProduct, isDeleted ? 1 : 0);
+    String sql = BASE_SELECT_PRODUCT + WHERE_DELETE_STATUS + ORDER_BY_NAME;
+    return this.query(sql, this::mapResultSetToProduct, isDeleted ? 1 : 0);
   }
 
   public boolean updateStockTotal(int productId, int changeAmount) {
