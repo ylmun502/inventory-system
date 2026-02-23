@@ -14,42 +14,34 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
-import javafx.beans.binding.Bindings;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.util.Pair;
 
 public class InventoryViewModel extends BaseListViewModel<Product> {
   private final ProductService productService;
   private final InventoryService inventoryService;
   private final SupplierService supplierService;
+
   private final ObservableList<StockBatch> selectedProductBatches =
       FXCollections.observableArrayList();
   private final ObservableList<InventoryTransaction> selectedProductTransactions =
       FXCollections.observableArrayList();
-  private final StringProperty searchFilter = new SimpleStringProperty();
-  private final FilteredList<Product> filteredList;
-  private final SortedList<Product> sortedList;
 
-  private final StringProperty userText = new SimpleStringProperty(this, "userText", "--");
-  private final StringProperty barcodeText = new SimpleStringProperty(this, "barcodeText", "--");
-  private final StringProperty reorderingLevelText =
-      new SimpleStringProperty(this, "reorderingLevelText", "--");
-  private final StringProperty taxCategoryText =
-      new SimpleStringProperty(this, "taxCategoryText", "--");
-  private final StringProperty weightText = new SimpleStringProperty(this, "weightText", "0");
-  private final StringProperty unitTypeText = new SimpleStringProperty(this, "unitTypeText", "--");
-  private final StringProperty minStockLevelText =
-      new SimpleStringProperty(this, "minStockLevelText", "--");
-  private final StringProperty averageUnitCostText =
-      new SimpleStringProperty(this, "averageUnitCostText", "$0.00");
-  private final StringProperty markupText = new SimpleStringProperty(this, "markupText", "0%");
-  private final StringProperty productTotalValueText =
-      new SimpleStringProperty(this, "productTotalValueText", "$0.00");
+  private final StringProperty barcodeText = new SimpleStringProperty("--");
+  private final StringProperty reorderingLevelText = new SimpleStringProperty("--");
+  private final StringProperty taxCategoryText = new SimpleStringProperty("--");
+  private final StringProperty weightText = new SimpleStringProperty("0");
+  private final StringProperty unitTypeText = new SimpleStringProperty("--");
+  private final StringProperty minStockLevelText = new SimpleStringProperty("--");
+  private final StringProperty averageUnitCostText = new SimpleStringProperty("$0.00");
+  private final StringProperty markupText = new SimpleStringProperty("0%");
+  private final StringProperty totalValueText = new SimpleStringProperty("$0.00");
 
   public InventoryViewModel(
       ProductService productService,
@@ -225,7 +217,7 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
     return this.markupText;
   }
 
-  public StringProperty productTotalValueTextProperty() {
-    return this.productTotalValueText;
+  public StringProperty totalValueTextProperty() {
+    return this.totalValueText;
   }
 }

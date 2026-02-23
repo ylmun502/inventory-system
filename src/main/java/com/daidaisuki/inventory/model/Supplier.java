@@ -43,7 +43,7 @@ public class Supplier extends BaseModel implements Displayable {
     this.name.set(name);
   }
 
-  public StringProperty namProperty() {
+  public StringProperty nameProperty() {
     return this.name;
   }
 

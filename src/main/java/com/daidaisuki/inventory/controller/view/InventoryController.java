@@ -63,7 +63,7 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
   @FXML private Label minStockLevelLabel;
   @FXML private Label averageUnitCostLabel;
   @FXML private Label markupLabel;
-  @FXML private Label productTotalValueLabel;
+  @FXML private Label totalValueLabel;
 
   public InventoryController(ServiceRegistry registry) throws SQLException {
     super(

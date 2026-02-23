@@ -33,8 +33,7 @@ public class MainController {
   public void initialize() {
     this.leftPane.setPrefWidth(150);
     for (var node : this.leftPane.getChildren()) {
-      if (node instanceof Button) {
-        Button button = (Button) node;
+      if (node instanceof Button button) {
         button.setOnAction(this::handleViewSwitch);
         button.setMaxWidth(Double.MAX_VALUE);
       }
@@ -52,17 +51,17 @@ public class MainController {
 
   @FXML
   private void handleViewSwitch(ActionEvent event) {
-    Button btn = (Button) event.getSource();
+    Button button = (Button) event.getSource();
 
-    if (btn == this.activeButton) {
+    if (button == this.activeButton) {
       // Ignore click if already active
       return;
     }
 
-    setActiveButton(btn);
+    setActiveButton(button);
 
     // Switch the view
-    String viewKey = (String) btn.getUserData();
+    String viewKey = (String) button.getUserData();
     try {
       View view = View.valueOf(viewKey);
       switchView(view);
@@ -79,22 +78,22 @@ public class MainController {
   private void switchView(View view) throws IOException {
     Parent newView = ViewLoader.loadParent(view, this.registry);
 
-    FadeTransition ft = new FadeTransition(Duration.millis(200), newView);
-    ft.setFromValue(0.5);
-    ft.setToValue(1.0);
+    FadeTransition fadeTransition = new FadeTransition(Duration.millis(200), newView);
+    fadeTransition.setFromValue(0.5);
+    fadeTransition.setToValue(1.0);
 
     centerPane.getChildren().setAll(newView);
-    ft.play();
+    fadeTransition.play();
   }
 
-  private void setActiveButton(Button btn) {
+  private void setActiveButton(Button button) {
     // Remove 'active' style from previous button
     if (this.activeButton != null) {
       activeButton.getStyleClass().remove("active");
     }
 
     // Add 'active' style to the new button
-    btn.getStyleClass().add("active");
-    this.activeButton = btn;
+    button.getStyleClass().add("active");
+    this.activeButton = button;
   }
 }
