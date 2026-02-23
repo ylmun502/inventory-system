@@ -60,12 +60,12 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
               ValidationUtils.isNumeric(this.price.get(), "Price", errors, true);
               return new ValidationStatus(errors.isEmpty(), errors.toString());
             },
-            sku,
-            name,
-            category,
-            unitType,
-            weight,
-            price);
+            this.sku,
+            this.name,
+            this.category,
+            this.unitType,
+            this.weight,
+            this.price);
   }
 
   @Override
@@ -84,7 +84,8 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
 
   @Override
   public BooleanBinding isInvalidProperty() {
-    return Bindings.createBooleanBinding(() -> !validationStatus.get().isValid(), validationStatus);
+    return Bindings.createBooleanBinding(
+        () -> !this.validationStatus.get().isValid(), this.validationStatus);
   }
 
   @Override

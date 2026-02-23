@@ -4,6 +4,8 @@ import com.daidaisuki.inventory.model.Supplier;
 import com.daidaisuki.inventory.service.SupplierService;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public class SupplierViewModel extends BaseListViewModel<Supplier> {
   private SupplierService supplierService;
