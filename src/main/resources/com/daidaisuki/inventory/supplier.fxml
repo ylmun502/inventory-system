@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
@@ -19,12 +20,23 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label text="Suppliers" styleClass="header-text"/>
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Suppliers" styleClass="page-title"/>
+
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="addButton" text="Add Supplier" onAction="#handleAdd" styleClass="primary"/>
-        <Button fx:id="editButton" text="Edit" onAction="#handleEdit" styleClass="secondary"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#handleDelete" styleClass="danger"/>
+
+        <Label fx:id="userLabel" styleClass="user-label"/>
+    </HBox>
+
+    <HBox styleClass="toolbar">
+        <Button fx:id="addButton" text="Add" styleClass="primary" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit" styleClass="secondary" onAction="#handleEdit"/>
+        <Button fx:id="deleteButton" text="Delete" styleClass="danger" onAction="#handleDelete"/>
+        
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <ToggleButton fx:id="archiveToggle" text="Show Archived" styleClass="toolbar-toggle, archive-toggle"/>
+        <TextField fx:id="searchField" promptText="Search Name or Short Code..." prefWidth="200" styleClass="search-field"/>  
     </HBox>
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">

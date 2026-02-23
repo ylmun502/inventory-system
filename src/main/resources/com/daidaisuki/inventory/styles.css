@@ -133,6 +133,36 @@
 }
 
 /* =========================
+   TOOLBAR BUTTONS (General)
+   ========================= */
+
+.toolbar-toggle {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 5 15;
+    -fx-cursor: hand;
+    -fx-text-fill: #424242;
+}
+
+.toolbar-toggle:hover {
+    -fx-background-color: #eeeeee;
+}
+
+/* =========================
+   SPECIFIC TOGGLES
+   ========================= */
+
+.archive-toggle:selected {
+    -fx-background-color: #37474f;
+    -fx-text-fill: white;
+    -fx-border-color: #263238;
+    -fx-font-weight: bold;
+}
+
+
+/* =========================
    DETAIL SECTION
    ========================= */
 

@@ -12,6 +12,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -52,6 +53,7 @@
 
         <Region HBox.hgrow="ALWAYS"/>
 
+        <ToggleButton fx:id="archiveToggle" text="Show Archived" styleClass="toolbar-toggle, archive-toggle"/>
         <TextField fx:id="searchField" promptText="Search Barcode, SKU, or Name..." prefWidth="200" styleClass="search-field"/>  
     </HBox>
 
@@ -120,7 +122,7 @@
                                     </VBox>
                                     <VBox alignment="CENTER">
                                         <Label text="Total Valuation" styleClass="metric-label"/>
-                                        <Label fx:id="productTotalValueLabel" text="0.00" styleClass="metric-value"/>
+                                        <Label fx:id="totalValueLabel" text="0.00" styleClass="metric-value"/>
                                     </VBox>
                                 </HBox>
                             </VBox>
