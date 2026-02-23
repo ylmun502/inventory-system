@@ -1,35 +1,7 @@
 package com.daidaisuki.inventory.controller.view;
 
-import com.daidaisuki.inventory.App;
-import com.daidaisuki.inventory.base.controller.BaseTableController;
-import com.daidaisuki.inventory.controller.dialog.OrderDialogController;
-import com.daidaisuki.inventory.enums.DialogView;
-import com.daidaisuki.inventory.exception.InsufficientStockException;
-import com.daidaisuki.inventory.model.Order;
-import com.daidaisuki.inventory.service.OrderService;
-import com.daidaisuki.inventory.util.AlertHelper;
-import com.daidaisuki.inventory.util.FxWindowUtils;
-import com.daidaisuki.inventory.util.TableCellUtils;
-import com.daidaisuki.inventory.util.TableColumnUtils;
-import com.daidaisuki.inventory.util.ViewLoader;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class OrdersController extends BaseTableController<Order> {
   @FXML private TableView<Order> orderTable;
@@ -92,7 +64,7 @@ public class OrdersController extends BaseTableController<Order> {
 
   @Override
   protected List<Order> fetchFromDB() throws SQLException {
-    return orderService.getAllOrdersWithDetail();
+    return orderService.listOrdersWithDetails();
   }
 
   @Override
@@ -123,7 +95,7 @@ public class OrdersController extends BaseTableController<Order> {
   @Override
   protected void deleteItem(Order order) throws SQLException {
     try {
-      orderService.deleteOrder(order.getId());
+      orderService.removeOrder(order.getId());
     } catch (InsufficientStockException e) {
       AlertHelper.showErrorAlert(
           getWindow(), "Insufficient Stock", "Cannot complete order", e.getMessage());
@@ -158,3 +130,4 @@ public class OrdersController extends BaseTableController<Order> {
     }
   }
 }
+*/

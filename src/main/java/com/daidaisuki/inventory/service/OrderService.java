@@ -1,130 +1,106 @@
 package com.daidaisuki.inventory.service;
 
-import com.daidaisuki.inventory.dao.OrderDAO;
-import com.daidaisuki.inventory.dao.ProductDAO;
-import com.daidaisuki.inventory.db.DatabaseManager;
-import com.daidaisuki.inventory.exception.InsufficientStockException;
-import com.daidaisuki.inventory.model.*;
+import com.daidaisuki.inventory.dao.impl.OrderDAO;
+import com.daidaisuki.inventory.db.TransactionManager;
+import com.daidaisuki.inventory.enums.FulfillmentStatus;
+import com.daidaisuki.inventory.exception.EntityNotFoundException;
+import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.model.OrderItem;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class OrderService {
-  private Connection connection;
+  private final TransactionManager transactionManager;
   private final OrderDAO orderDAO;
-  private final ProductDAO productDAO;
+  // private final InventoryService inventoryService;
   private final OrderItemService orderItemService;
 
-  public OrderService() {
-    this(getConnectionSafely());
-  }
-
   public OrderService(Connection connection) {
-    this.connection = connection;
+    transactionManager = new TransactionManager(connection);
     this.orderDAO = new OrderDAO(connection);
-    this.productDAO = new ProductDAO(connection);
+    // this.inventoryService = new InventoryService(connection);
     this.orderItemService = new OrderItemService(connection);
   }
 
-  private static Connection getConnectionSafely() {
-    try {
-      return DatabaseManager.getConnection();
-    } catch (SQLException e) {
-      throw new RuntimeException("Failed to initialize OrderService", e);
-    }
-  }
-
-  public List<Order> getAllOrdersWithDetail() throws SQLException {
-    List<Order> orders = orderDAO.getAllOrders();
+  public List<Order> listOrdersWithDetails() {
+    List<Order> orders = orderDAO.findAll();
     for (Order order : orders) {
-      List<OrderItem> items = orderItemService.getItemsByOrder(order);
+      List<OrderItem> items = orderItemService.listByOrderId(order.getId());
       order.setItems(items);
-      order.recalculateTotals();
+      order.updateTotals();
     }
     return orders;
   }
 
-  public void createOrderWithItems(Order order) throws SQLException, InsufficientStockException {
-    executeInTransaction(
+  public Order createOrder(Order uiOrder) {
+    uiOrder.updateTotals();
+    return transactionManager.executeInTransaction(
         () -> {
-          validateStockIfCompleted(order);
-          orderDAO.addOrder(order);
-          for (OrderItem item : order.getItems()) {
-            orderItemService.addOrderItem(order, item);
-          }
+          Order persistentOrder = orderDAO.save(uiOrder);
+          persistentOrder.setCustomer(uiOrder.getCustomer());
+          processOrderItemsInternal(persistentOrder);
+          return persistentOrder;
         });
   }
 
-  public void updateOrder(Order order) throws SQLException, InsufficientStockException {
-    executeInTransaction(
+  public Order updateOrder(Order uiOrder) {
+    return transactionManager.executeInTransaction(
         () -> {
-          validateStockIfCompleted(order);
-          orderDAO.updateOrder(order);
-          List<OrderItem> existingItems = orderItemService.getItemsByOrder(order);
-          Map<Integer, OrderItem> existingMap =
-              existingItems.stream().collect(Collectors.toMap(OrderItem::getId, i -> i));
-          for (OrderItem item : order.getItems()) {
-            if (order.getId() == 0) {
-              orderItemService.addOrderItem(order, item);
-            } else if (existingMap.containsKey(item.getId())) {
-              orderItemService.updateOrderItem(order, item);
-              existingMap.remove(item.getId());
-            } else {
-              throw new SQLException("Order item with id " + item.getId() + " not found in DB");
-            }
+          if (uiOrder.getId() <= 0) {
+            throw new IllegalArgumentException("Order id: " + uiOrder.getId() + "is not valid.");
           }
-          for (OrderItem removedItem : existingMap.values()) {
-            orderItemService.deleteOrderItem(removedItem.getId());
+          if (uiOrder.getFulfillmentStatus() == FulfillmentStatus.COMPLETED) {
+            throw new EntityNotFoundException("Cannot update a completed order.");
           }
+          revertInventoryForOrderInternal(uiOrder.getId());
+          orderItemService.removeAllByOrderIdInternal(uiOrder.getId());
+          processOrderItemsInternal(uiOrder);
+          uiOrder.updateTotals();
+          orderDAO.update(uiOrder);
+          return orderDAO
+              .findById(uiOrder.getId())
+              .orElseThrow(() -> new EntityNotFoundException("Order not found after update."));
         });
   }
 
-  public void deleteOrder(int orderId) throws SQLException, InsufficientStockException {
-    executeInTransaction(
+  public void removeOrder(int orderId) {
+    transactionManager.executeInTransaction(
         () -> {
-          orderItemService.deleteItemsByOrderId(orderId);
-          orderDAO.deleteOrder(orderId);
+          revertInventoryForOrderInternal(orderId);
+          orderItemService.removeAllByOrderIdInternal(orderId);
+          orderDAO.delete(orderId);
         });
   }
 
-  private void validateStockForOrder(Order order) throws SQLException, InsufficientStockException {
-    for (OrderItem item : order.getItems()) {
-      Product product = productDAO.getById(item.getProductId());
-      if (product == null) {
-        throw new SQLException("Product not found: id=" + item.getProductId());
+  public void revertInventoryForOrderInternal(int orderId) {
+    /* Update this later as returnToInventoryInternal is not suitable now
+    List<OrderItem> itemstoRevert = orderItemService.listByOrderId(orderId);
+    for (OrderItem item : itemstoRevert) {
+      inventoryService.returnToInventoryInternal(
+          item.getProductId(), orderId, item.getBatchId(), item.getQuantity());
+    }
+          */
+  }
+
+  private void processOrderItemsInternal(Order uiOrder) {
+    /* Update this later as returnToInventoryInternal is not suitable now
+    List<OrderItem> persistentItems = new ArrayList<>();
+    for (OrderItem uiItem : uiOrder.getItems()) {
+      List<StockAllocation> allocations =
+          inventoryService.deductFromInventoryInternal(uiItem.getProductId(), uiItem.getQuantity());
+
+      for (StockAllocation allocation : allocations) {
+        OrderItem savedItem =
+            orderItemService.createItemInternal(uiItem, uiOrder.getId(), allocation);
+        savedItem.setProduct(uiItem.getProduct());
+        persistentItems.add(savedItem);
       }
-      if (product.getStock() < item.getQuantity()) {
-        throw new InsufficientStockException(
-            "Insufficient stock for product: " + product.getName());
-      }
     }
+    uiOrder.setItems(persistentItems);
+    */
   }
 
-  private void validateStockIfCompleted(Order order)
-      throws SQLException, InsufficientStockException {
-    if (order.getCompleted()) {
-      validateStockForOrder(order);
-    }
-  }
-
-  private void executeInTransaction(TransactionAction action)
-      throws SQLException, InsufficientStockException {
-    try {
-      connection.setAutoCommit(false);
-      action.execute();
-      connection.commit();
-    } catch (SQLException | InsufficientStockException e) {
-      connection.rollback();
-      throw e;
-    } finally {
-      connection.setAutoCommit(true);
-    }
-  }
-
-  @FunctionalInterface
-  private interface TransactionAction {
-    void execute() throws SQLException, InsufficientStockException;
+  public List<Order> getOrdersForCustomer(int customerId) {
+    return orderDAO.findByCustomerId(customerId);
   }
 }

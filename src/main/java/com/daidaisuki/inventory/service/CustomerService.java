@@ -1,63 +1,44 @@
 package com.daidaisuki.inventory.service;
 
-import com.daidaisuki.inventory.dao.CustomerDAO;
-import com.daidaisuki.inventory.dao.OrderDAO;
-import com.daidaisuki.inventory.db.DatabaseManager;
+import com.daidaisuki.inventory.dao.impl.CustomerDAO;
+import com.daidaisuki.inventory.db.TransactionManager;
+import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.model.dto.OrderStats;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class CustomerService {
+  private final TransactionManager transactionManager;
   private final CustomerDAO customerDAO;
-  private final OrderDAO orderDAO;
-
-  public CustomerService() {
-    this(getConnectionSafely());
-  }
 
   public CustomerService(Connection connection) {
+    this.transactionManager = new TransactionManager(connection);
     this.customerDAO = new CustomerDAO(connection);
-    this.orderDAO = new OrderDAO(connection);
   }
 
-  private static Connection getConnectionSafely() {
-    try {
-      return DatabaseManager.getConnection();
-    } catch (SQLException e) {
-      throw new RuntimeException("Failed to initialize CustomerService", e);
-    }
+  public List<Customer> listCustomers() {
+    return customerDAO.findAll();
   }
 
-  public List<Customer> getAllCustomers() throws SQLException {
-    return customerDAO.getAllCustomers();
+  public void createCustomer(Customer customer) {
+    transactionManager.executeInTransaction(() -> customerDAO.save(customer));
   }
 
-  public void addCustomer(Customer customer) throws SQLException {
-    customerDAO.addCustomer(customer);
+  public void updateCustomer(Customer customer) {
+    transactionManager.executeInTransaction(() -> customerDAO.update(customer));
   }
 
-  public void updateCustomer(Customer customer) throws SQLException {
-    customerDAO.updateCustomer(customer);
+  public void removeCustomer(int customerId) {
+    transactionManager.executeInTransaction(() -> customerDAO.delete(customerId));
   }
 
-  public void deleteCustomer(int customerId) throws SQLException {
-    customerDAO.deleteCustomer(customerId);
+  public Customer getCustomer(int customerId) {
+    return customerDAO
+        .findById(customerId)
+        .orElseThrow(() -> new EntityNotFoundException("The customer could not be found."));
   }
 
-  public Customer getById(int customerId) throws SQLException {
-    return customerDAO.getById(customerId);
-  }
-
-  public Customer findByName(String name) throws SQLException {
-    return customerDAO.findByName(name);
-  }
-
-  public void enrichCustomerStats(Customer customer) throws SQLException {
-    OrderStats orderStats = orderDAO.getStatsForCustomer(customer.getId());
-    customer.setTotalOrders(orderStats.getTotalOrders());
-    customer.setTotalSpent(orderStats.getTotalSpent());
-    customer.setTotalDiscount(orderStats.getTotalDiscount());
+  public List<Customer> searchCustomersByName(String name) {
+    return customerDAO.findAllByName(name);
   }
 }

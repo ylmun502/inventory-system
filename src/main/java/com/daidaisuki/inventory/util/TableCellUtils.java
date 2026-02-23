@@ -1,5 +1,8 @@
 package com.daidaisuki.inventory.util;
 
+import com.daidaisuki.inventory.interfaces.Displayable;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.function.Consumer;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -13,22 +16,13 @@ import javafx.util.Callback;
  * javafx.scene.control.TableView} columns.
  *
  * <p>Includes formatting and alignment helpers for common cell types such as {@code String}, {@code
- * Integer}, and {@code Double}, with built-in support for center alignment and currency formatting.
+ * Integer}, and {@code BigDecimal}, with built-in support for center alignment and currency
+ * formatting.
  */
-public class TableCellUtils {
+public final class TableCellUtils {
   private TableCellUtils() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");
-  }
-
-  /**
-   * Formats a numeric price into a currency string with two decimal places.
-   *
-   * @param price The price value to format.
-   * @return A formatted string, e.g., "$12.99"
-   */
-  public static String formatPrice(double price) {
-    return String.format("$%.2f", price);
   }
 
   /**
@@ -47,8 +41,10 @@ public class TableCellUtils {
             super.updateItem(item, empty);
             if (empty || item == null) {
               setText(null);
+              setGraphic(null);
             } else {
               setText(item);
+              setGraphic(null);
               setAlignment(Pos.CENTER);
             }
           }
@@ -57,22 +53,24 @@ public class TableCellUtils {
 
   /**
    * Creates a {@link javafx.util.Callback} for a {@link javafx.scene.control.TableColumn} that
-   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code Integer} values.
+   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code Number} values.
    *
    * @param <T> the type of the objects contained within the TableView rows
-   * @return a cell factory for center-aligned {@code Integer} cells
+   * @return a cell factory for center-aligned {@code Number} cells
    */
   public static <T>
-      Callback<TableColumn<T, Integer>, TableCell<T, Integer>> centerAlignedIntegerCellFactory() {
+      Callback<TableColumn<T, Number>, TableCell<T, Number>> centerAlignedNumberCellFactory() {
     return col ->
         new TableCell<>() {
           @Override
-          protected void updateItem(Integer item, boolean empty) {
+          protected void updateItem(Number item, boolean empty) {
             super.updateItem(item, empty);
             if (empty || item == null) {
               setText(null);
+              setGraphic(null);
             } else {
               setText(item.toString());
+              setGraphic(null);
               setAlignment(Pos.CENTER);
             }
           }
@@ -81,27 +79,120 @@ public class TableCellUtils {
 
   /**
    * Creates a {@link javafx.util.Callback} for a {@link javafx.scene.control.TableColumn} that
-   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code Double} values
+   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code Number} values
    * formatted as currency in a {@link TableColumn}.
    *
    * @param <T> the type of the objects contained within the TableView rows
-   * @return a cell factory for center-aligned currency-formatted {@code Double} cells
+   * @return a cell factory for center-aligned currency-formatted {@code Number} cells
    */
   public static <T>
-      Callback<TableColumn<T, Double>, TableCell<T, Double>> centerAlignedPriceCellFactory() {
+      Callback<TableColumn<T, BigDecimal>, TableCell<T, BigDecimal>>
+          centerAlignedCurrencyCellFactory() {
     return col ->
         new TableCell<>() {
           @Override
-          protected void updateItem(Double item, boolean empty) {
+          protected void updateItem(BigDecimal item, boolean empty) {
             super.updateItem(item, empty);
             if (empty || item == null) {
               setText(null);
+              setGraphic(null);
             } else {
-              setText(formatPrice(item));
+              setText(CurrencyUtil.format(item));
+              setGraphic(null);
               setAlignment(Pos.CENTER);
             }
           }
         };
+  }
+
+  /**
+   * Creates a {@link javafx.util.Callback} for a {@link javafx.scene.control.TableColumn} that
+   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code OffsetDateTime}
+   * values formatted as date in a {@link TableColumn}.
+   *
+   * @param <T> the type of the objects contained within the TableView rows
+   * @return a cell factory for center-aligned date {@code OffsetDateTime} cells
+   */
+  public static <T>
+      Callback<TableColumn<T, OffsetDateTime>, TableCell<T, OffsetDateTime>>
+          centerAlignedDateCellFactory() {
+    return col ->
+        new TableCell<>() {
+          @Override
+          protected void updateItem(OffsetDateTime item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+              setText(null);
+              setGraphic(null);
+            } else {
+              setText(DateUtils.format(item));
+              setGraphic(null);
+              setAlignment(Pos.CENTER);
+            }
+          }
+        };
+  }
+
+  /**
+   * Creates a {@link javafx.util.Callback} for a {@link javafx.scene.control.TableColumn} that
+   * produces center-aligned {@link javafx.scene.control.TableCell}s for {@code Enum} values.
+   *
+   * @param <T> the type of the objects contained within the TableView rows
+   * @return a cell factory for center-aligned {@code Enum} cells
+   */
+  public static <T, E extends Enum<E> & Displayable>
+      Callback<TableColumn<T, E>, TableCell<T, E>> centerAlignedEnumCellFactory() {
+    return col ->
+        new TableCell<>() {
+          @Override
+          protected void updateItem(E item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+              setText(null);
+              setGraphic(null);
+            } else {
+              setText(item.getDisplayName());
+              setGraphic(null);
+              setAlignment(Pos.CENTER);
+            }
+          }
+        };
+  }
+
+  @SafeVarargs
+  public static <T> void setupStringCells(TableColumn<T, String>... cells) {
+    for (TableColumn<T, String> cell : cells) {
+      cell.setCellFactory(centerAlignedStringCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupNumberCells(TableColumn<T, Number>... cells) {
+    for (TableColumn<T, Number> cell : cells) {
+      cell.setCellFactory(centerAlignedNumberCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupCurrencyCells(TableColumn<T, BigDecimal>... cells) {
+    for (TableColumn<T, BigDecimal> cell : cells) {
+      cell.setCellFactory(centerAlignedCurrencyCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T> void setupDateCells(TableColumn<T, OffsetDateTime>... cells) {
+    for (TableColumn<T, OffsetDateTime> cell : cells) {
+      cell.setCellFactory(centerAlignedDateCellFactory());
+    }
+  }
+
+  @SafeVarargs
+  public static <T, E extends Enum<E> & Displayable> void setupEnumCells(
+      TableColumn<T, E>... cells) {
+    for (TableColumn<T, E> cell : cells) {
+      cell.setCellFactory(centerAlignedEnumCellFactory());
+    }
   }
 
   /** Setup the Actions column with Edit and Delete buttons for each row. */

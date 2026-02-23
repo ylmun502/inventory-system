@@ -1,9 +1,19 @@
 package com.daidaisuki.inventory.model;
 
-import javafx.beans.property.DoubleProperty;
+import com.daidaisuki.inventory.model.base.BaseModel;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -13,20 +23,38 @@ import javafx.beans.property.StringProperty;
  * <p>This class uses JavaFX {@code Property} types to support UI data binding, enabling seamless
  * synchronization with UI controls such as TableView columns or form fields.
  */
-public class Product {
-  private final IntegerProperty id = new SimpleIntegerProperty(this, "id", -1);
+public class Product extends BaseModel {
+  private final StringProperty sku = new SimpleStringProperty(this, "sku", "");
+  private final StringProperty barcode = new SimpleStringProperty(this, "barcode", "");
   private final StringProperty name = new SimpleStringProperty(this, "name", "");
   private final StringProperty category = new SimpleStringProperty(this, "category", "");
-  private final IntegerProperty stock = new SimpleIntegerProperty(this, "stock", 0);
-  private final DoubleProperty price = new SimpleDoubleProperty(this, "price", 0.0);
-  private final DoubleProperty cost = new SimpleDoubleProperty(this, "cost", 0.0);
-  private final DoubleProperty shipping = new SimpleDoubleProperty(this, "shipping", 0.0);
+  private final StringProperty unitType = new SimpleStringProperty(this, "unitType", "each");
+  private final StringProperty taxCategory =
+      new SimpleStringProperty(this, "taxCategory", "standard");
+  private final StringProperty description = new SimpleStringProperty(this, "description", "");
+  private final IntegerProperty weight = new SimpleIntegerProperty(this, "weight", 0);
+  private final IntegerProperty currentStock = new SimpleIntegerProperty(this, "currentStock", 0);
+  private final IntegerProperty minStockLevel = new SimpleIntegerProperty(this, "minStockLevel", 0);
+  private final IntegerProperty maxStockLevel = new SimpleIntegerProperty(this, "maxStockLevel", 0);
+  private final IntegerProperty reorderingLevel =
+      new SimpleIntegerProperty(this, "reorderingLevel", 5);
+  private final ObjectProperty<BigDecimal> sellingPrice =
+      new SimpleObjectProperty<>(this, "sellingPrice", BigDecimal.ZERO);
+  private final ObjectProperty<BigDecimal> averageUnitCost =
+      new SimpleObjectProperty<>(this, "averageUnitCost", BigDecimal.ZERO);
+  private final BooleanProperty isActive = new SimpleBooleanProperty(this, "isActive", true);
+  private final ReadOnlyBooleanWrapper inStock = new ReadOnlyBooleanWrapper(this, "inStock", false);
+  private final ReadOnlyStringWrapper stockStatus =
+      new ReadOnlyStringWrapper(this, "stockStatus", "OK");
 
   /**
-   * Creates an empty product with default placeholder values to ensure properties are non-null and
-   * ready for binding.
+   * /** Creates an empty product with default placeholder values to ensure properties are non-null
+   * and ready for binding.
    */
-  public Product() {}
+  public Product() {
+    super(-1, OffsetDateTime.now(), OffsetDateTime.now(), false);
+    this.initializeBindings();
+  }
 
   /**
    * Constructs a product with the given details.
@@ -34,47 +62,92 @@ public class Product {
    * @param id the product ID
    * @param name the product name
    * @param category the product category
-   * @param stock the quantity in stock
-   * @param price the selling price
-   * @param cost the purchase price
-   * @param shipping the shipping cost
+   * @param currentStock the quantity in stock
+   * @param sellingPriceCents the selling price
+   * @param reorderingLevel the reordering level
+   * @param isActive the is active
    */
   public Product(
-      int id, String name, String category, int stock, double price, double cost, double shipping) {
-    this.id.set(id);
+      int id,
+      String sku,
+      String barcode,
+      String name,
+      String category,
+      String unitType,
+      String taxCategory,
+      String description,
+      int weight,
+      int currentStock,
+      int minStockLevel,
+      int maxStockLevel,
+      int reorderingLevel,
+      BigDecimal sellingPrice,
+      BigDecimal averageUnitCost,
+      boolean isActive,
+      OffsetDateTime createdAt,
+      OffsetDateTime updatedAt,
+      boolean deleted) {
+    super(id, createdAt, updatedAt, deleted);
+    this.sku.set(sku);
+    this.barcode.set(barcode);
     this.name.set(name);
     this.category.set(category);
-    this.stock.set(stock);
-    this.price.set(price);
-    this.cost.set(cost);
-    this.shipping.set(shipping);
+    this.description.set(description);
+    this.weight.set(weight);
+    this.currentStock.set(currentStock);
+    this.minStockLevel.set(minStockLevel);
+    this.maxStockLevel.set(maxStockLevel);
+    this.reorderingLevel.set(reorderingLevel);
+    this.sellingPrice.set(sellingPrice);
+    this.averageUnitCost.set(averageUnitCost);
+    this.isActive.set(isActive);
+    this.initializeBindings();
   }
 
-  /**
-   * Returns the product ID.
-   *
-   * @return the product ID
-   */
-  public int getId() {
-    return this.id.get();
+  private void initializeBindings() {
+    this.inStock.bind(currentStock.greaterThan(0));
+    this.stockStatus.bind(
+        Bindings.createStringBinding(
+            () -> {
+              int stock = currentStock.get();
+              if (stock <= 0) {
+                return "OUT";
+              }
+              if (stock <= minStockLevel.get()) {
+                return "CRITICAL";
+              }
+              if (stock <= reorderingLevel.get()) {
+                return "LOW";
+              }
+              return "OK";
+            },
+            currentStock,
+            minStockLevel,
+            reorderingLevel));
   }
 
-  /**
-   * Sets the product ID.
-   *
-   * @param id the new product ID
-   */
-  public void setId(int id) {
-    this.id.set(id);
+  public final String getSku() {
+    return this.sku.get();
   }
 
-  /**
-   * Returns the id property for UI binding.
-   *
-   * @return the id property
-   */
-  public IntegerProperty idProperty() {
-    return this.id;
+  public final void setSku(String sku) {
+    this.sku.set(sku);
+  }
+
+  public final StringProperty skuProperty() {
+    return this.sku;
+  }
+
+  public final String getBarcode() {
+    return this.barcode.get();
+  }
+
+  public final void setBarcode(String barcode) {
+    this.barcode.set(barcode);
+  }
+
+  public final StringProperty barcodeProperty() {
+    return this.barcode;
   }
 
   /**
@@ -82,7 +155,7 @@ public class Product {
    *
    * @return the product name
    */
-  public String getName() {
+  public final String getName() {
     return this.name.get();
   }
 
@@ -91,8 +164,8 @@ public class Product {
    *
    * @param value the new product name
    */
-  public void setName(String value) {
-    this.name.set(value);
+  public final void setName(String name) {
+    this.name.set(name);
   }
 
   /**
@@ -100,7 +173,7 @@ public class Product {
    *
    * @return the name property
    */
-  public StringProperty nameProperty() {
+  public final StringProperty nameProperty() {
     return this.name;
   }
 
@@ -109,7 +182,7 @@ public class Product {
    *
    * @return the category
    */
-  public String getCategory() {
+  public final String getCategory() {
     return this.category.get();
   }
 
@@ -118,8 +191,8 @@ public class Product {
    *
    * @param value the new category
    */
-  public void setCategory(String value) {
-    this.category.set(value);
+  public final void setCategory(String category) {
+    this.category.set(category);
   }
 
   /**
@@ -127,8 +200,56 @@ public class Product {
    *
    * @return the category property
    */
-  public StringProperty categoryProperty() {
+  public final StringProperty categoryProperty() {
     return this.category;
+  }
+
+  public final String getUnitType() {
+    return this.unitType.get();
+  }
+
+  public final void setUnitType(String unitType) {
+    this.unitType.set(unitType);
+  }
+
+  public final StringProperty unitTypeProperty() {
+    return this.unitType;
+  }
+
+  public final String getTaxCategory() {
+    return this.taxCategory.get();
+  }
+
+  public final void setTaxCategory(String taxCategory) {
+    this.taxCategory.set(taxCategory);
+  }
+
+  public final StringProperty taxCategoryProperty() {
+    return this.taxCategory;
+  }
+
+  public final String getDescription() {
+    return this.description.get();
+  }
+
+  public final void setDescription(String description) {
+    this.description.set(description);
+  }
+
+  public final StringProperty descriptionProperty() {
+    return this.description;
+  }
+
+  public final int getWeight() {
+    return this.weight.get();
+  }
+
+  public final void setWeight(int weight) {
+    this.weight.set(weight);
+  }
+
+  public final IntegerProperty weightProperty() {
+    return this.weight;
   }
 
   /**
@@ -136,8 +257,8 @@ public class Product {
    *
    * @return the stock count
    */
-  public int getStock() {
-    return this.stock.get();
+  public final int getCurrentStock() {
+    return this.currentStock.get();
   }
 
   /**
@@ -145,8 +266,8 @@ public class Product {
    *
    * @param value the new stock count
    */
-  public void setStock(int value) {
-    this.stock.set(value);
+  public final void setCurrentStock(int currentStock) {
+    this.currentStock.set(currentStock);
   }
 
   /**
@@ -154,8 +275,59 @@ public class Product {
    *
    * @return the stock property
    */
-  public IntegerProperty stockProperty() {
-    return this.stock;
+  public final IntegerProperty currentStockProperty() {
+    return this.currentStock;
+  }
+
+  public final int getMinStockLevel() {
+    return this.minStockLevel.get();
+  }
+
+  public final void setMinStockLevel(int minStockLevel) {
+    this.minStockLevel.set(minStockLevel);
+  }
+
+  public final IntegerProperty minStockLevelProperty() {
+    return this.minStockLevel;
+  }
+
+  public final int getMaxStockLevel() {
+    return this.maxStockLevel.get();
+  }
+
+  public final void setMaxStockLevel(int maxStockLevel) {
+    this.maxStockLevel.set(maxStockLevel);
+  }
+
+  public final IntegerProperty maxStockLevelProperty() {
+    return this.maxStockLevel;
+  }
+
+  /**
+   * Returns the reordering level.
+   *
+   * @return the reordering level
+   */
+  public final int getReorderingLevel() {
+    return this.reorderingLevel.get();
+  }
+
+  /**
+   * Sets the reordering level.
+   *
+   * @param value the reordering level
+   */
+  public final void setReorderingLevel(int value) {
+    this.reorderingLevel.set(value);
+  }
+
+  /**
+   * Returns the reodering level property for UI binding.
+   *
+   * @return the reordering level property
+   */
+  public final IntegerProperty reorderingLevelProperty() {
+    return this.reorderingLevel;
   }
 
   /**
@@ -163,8 +335,8 @@ public class Product {
    *
    * @return the price
    */
-  public double getPrice() {
-    return this.price.get();
+  public final BigDecimal getSellingPrice() {
+    return this.sellingPrice.get();
   }
 
   /**
@@ -172,8 +344,8 @@ public class Product {
    *
    * @param value the new price
    */
-  public void setPrice(double value) {
-    this.price.set(value);
+  public final void setSellingPrice(BigDecimal sellingPrice) {
+    this.sellingPrice.set(sellingPrice);
   }
 
   /**
@@ -181,71 +353,69 @@ public class Product {
    *
    * @return the price property
    */
-  public DoubleProperty priceProperty() {
-    return this.price;
+  public final ObjectProperty<BigDecimal> sellingPriceProperty() {
+    return this.sellingPrice;
+  }
+
+  public final BigDecimal getAverageUnitCost() {
+    return this.averageUnitCost.get();
+  }
+
+  public final void setAverageUnitCost(BigDecimal averageUnitCost) {
+    this.averageUnitCost.set(averageUnitCost);
+  }
+
+  public final ObjectProperty<BigDecimal> averageUnitCostProperty() {
+    return this.averageUnitCost;
   }
 
   /**
-   * Returns the purchase cost.
+   * Returns the active status of the product.
    *
-   * @return the cost
+   * @return true if the product is active, false otherwise
    */
-  public double getCost() {
-    return this.cost.get();
+  public final boolean isActive() {
+    return this.isActive.get();
   }
 
   /**
-   * Sets the purchase cost.
+   * Sets the active status of the product.
    *
-   * @param value the new cost
+   * @param value the new is active status
    */
-  public void setCost(double value) {
-    this.cost.set(value);
+  public final void setActive(boolean value) {
+    this.isActive.set(value);
   }
 
   /**
-   * Returns the cost property for UI binding.
+   * Returns the is active property for UI binding.
    *
-   * @return the cost property
+   * @return the is active property
    */
-  public DoubleProperty costProperty() {
-    return this.cost;
+  public final BooleanProperty isActiveProperty() {
+    return this.isActive;
   }
 
   /**
-   * Returns the shipping cost.
-   *
-   * @return the shipping cost
-   */
-  public double getShipping() {
-    return this.shipping.get();
-  }
-
-  /**
-   * Sets the shipping cost.
-   *
-   * @param value the new shipping cost
-   */
-  public void setShipping(double value) {
-    this.shipping.set(value);
-  }
-
-  /**
-   * Returns the shipping cost property for UI binding.
-   *
-   * @return the shipping property
-   */
-  public DoubleProperty shippingProperty() {
-    return this.shipping;
-  }
-
-  /**
-   * Returns {@code true} if the product has at least one item in stock.
+   * Returns {@code true} if the product has at least one item in stock. Will update to binding
+   * later.
    *
    * @return {@code true} if stock > 0; otherwise {@code false}
    */
-  public boolean isInStock() {
-    return getStock() > 0;
+  public final boolean isInStock() {
+    return this.inStock.get();
+  }
+
+  public final ReadOnlyBooleanProperty inStockProperty() {
+    return this.inStock.getReadOnlyProperty();
+  }
+
+  public final String getStockStatus() {
+    return this.stockStatus.get();
+  }
+
+  public final ReadOnlyStringProperty stockStatusProperty() {
+    return this.stockStatus.getReadOnlyProperty();
   }
 
   /**
@@ -256,6 +426,6 @@ public class Product {
    */
   @Override
   public String toString() {
-    return getName();
+    return this.getName();
   }
 }

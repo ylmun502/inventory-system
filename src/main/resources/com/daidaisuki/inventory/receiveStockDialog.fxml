@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.daidaisuki.inventory.controller.dialog.ReceiveStockDialogController"
+      spacing="10">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Receive New Stock" styleClass="header-text"/>
+    <Label fx:id="productNameLabel" styleClass="product-subtitle" text=""/>
+
+    <GridPane vgap="10" hgap="10">
+        <Label text="Supplier:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="supplierComboBox" promptText="Select Supplier..." prefWidth="250" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    
+        <Label text="Batch Code" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1">
+            <TextField fx:id="batchCodeTextField" promptText="e.g. Lot-101-A" HBox.hgrow="ALWAYS"/>
+            <Button text="Generate Code" onAction="#handleGenerateBatchCode"/>
+        </HBox>
+
+        <Label text="Quantity" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="quantityTextField" promptText="0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Unit Cost" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="unitCostTextField" promptText="0.00" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Expiry Date" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="expiryDatePicker" prefWidth="250" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Reason" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextArea fx:id="reasonTextArea" prefHeight="80" wrapText="true" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#handleCancel" styleClass="secondary"/>
+        <Button fx:id="confirmButton" text="Confirm"  onAction="#handleConfirm" styleClass="primary"/>
+    </HBox>
+</VBox>

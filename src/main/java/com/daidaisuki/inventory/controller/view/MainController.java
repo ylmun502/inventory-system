@@ -1,11 +1,11 @@
 package com.daidaisuki.inventory.controller.view;
 
 import com.daidaisuki.inventory.enums.View;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
 import com.daidaisuki.inventory.util.ViewLoader;
 import java.io.IOException;
-import java.util.Stack;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,21 +22,28 @@ public class MainController {
 
   @FXML private Button defaultButton;
 
-  private final Stack<View> viewHistory = new Stack<>();
+  private final ServiceRegistry registry;
   private Button activeButton = null;
+
+  public MainController(ServiceRegistry registry) {
+    this.registry = registry;
+  }
 
   @FXML
   public void initialize() {
-    for (var node : leftPane.getChildren()) {
-      if (node instanceof Button) {
-        Button button = (Button) node;
+    this.leftPane.setPrefWidth(150);
+    for (var node : this.leftPane.getChildren()) {
+      if (node instanceof Button button) {
         button.setOnAction(this::handleViewSwitch);
         button.setMaxWidth(Double.MAX_VALUE);
       }
     }
+    if (this.defaultButton != null) {
+      setActiveButton(this.defaultButton);
+    }
+    String viewKey = (String) defaultButton.getUserData();
     try {
-      setActiveButton(defaultButton);
-      switchView(View.INVENTORY); // Load default view
+      switchView(View.valueOf(viewKey)); // Load default view
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -44,65 +51,49 @@ public class MainController {
 
   @FXML
   private void handleViewSwitch(ActionEvent event) {
-    Button btn = (Button) event.getSource();
+    Button button = (Button) event.getSource();
 
-    if (btn == activeButton) {
+    if (button == this.activeButton) {
       // Ignore click if already active
       return;
     }
 
-    setActiveButton(btn);
+    setActiveButton(button);
 
     // Switch the view
-    String viewKey = (String) btn.getUserData();
+    String viewKey = (String) button.getUserData();
     try {
       View view = View.valueOf(viewKey);
       switchView(view);
-    } catch (IllegalArgumentException | IOException e) {
-      System.err.println("Invalid view: " + viewKey);
-      e.printStackTrace();
+    } catch (Exception e) {
       // Use AlertHelper, passing the current window as owner for proper modality
       AlertHelper.showErrorAlert(
           FxWindowUtils.getWindow((Node) event.getSource()),
-          "View Error",
-          "Unable to load view",
-          "Something went wrong while trying to load the view.");
+          "Navigation Error",
+          "Unable to load " + viewKey,
+          e.getMessage());
     }
   }
 
   private void switchView(View view) throws IOException {
-    Parent newView = ViewLoader.loadParent(view);
+    Parent newView = ViewLoader.loadParent(view, this.registry);
 
-    if (!centerPane.getChildren().isEmpty()) {
-      // Save current view enum in history if you want to support goBack properly
-      viewHistory.push(view);
-    }
-
-    FadeTransition ft = new FadeTransition(Duration.millis(300), newView);
-    ft.setFromValue(0.0);
-    ft.setToValue(1.0);
+    FadeTransition fadeTransition = new FadeTransition(Duration.millis(200), newView);
+    fadeTransition.setFromValue(0.5);
+    fadeTransition.setToValue(1.0);
 
     centerPane.getChildren().setAll(newView);
-    ft.play();
+    fadeTransition.play();
   }
 
-  private void setActiveButton(Button btn) {
+  private void setActiveButton(Button button) {
     // Remove 'active' style from previous button
-    if (activeButton != null) {
+    if (this.activeButton != null) {
       activeButton.getStyleClass().remove("active");
-      activeButton.setDisable(false); // enable previous button if you want
     }
 
     // Add 'active' style to the new button
-    btn.getStyleClass().add("active");
-    activeButton = btn;
-  }
-
-  public void goBack() throws IOException {
-    if (!viewHistory.isEmpty()) {
-      View previousView = viewHistory.pop();
-      Parent prevView = ViewLoader.loadParent(previousView);
-      centerPane.getChildren().setAll(prevView);
-    }
+    button.getStyleClass().add("active");
+    this.activeButton = button;
   }
 }

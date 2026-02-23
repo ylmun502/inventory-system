@@ -1,42 +1,7 @@
 package com.daidaisuki.inventory.controller.dialog;
 
-import com.daidaisuki.inventory.App;
-import com.daidaisuki.inventory.base.controller.BaseDialogController;
-import com.daidaisuki.inventory.enums.DialogView;
-import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.model.Order;
-import com.daidaisuki.inventory.model.OrderItem;
-import com.daidaisuki.inventory.model.Product;
-import com.daidaisuki.inventory.service.CustomerService;
-import com.daidaisuki.inventory.service.ProductService;
-import com.daidaisuki.inventory.util.AlertHelper;
-import com.daidaisuki.inventory.util.TableCellUtils;
-import com.daidaisuki.inventory.util.ViewLoader;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+
+/* Comment out during mvvm migration as need to refactor view by view
 
 public class OrderDialogController extends BaseDialogController<Order> {
 
@@ -123,8 +88,8 @@ public class OrderDialogController extends BaseDialogController<Order> {
       if (!Objects.equals(customerComboBox.getValue(), order.getCustomer())) {
         customerComboBox.setValue(order.getCustomer());
       }
-      datePicker.setValue(order.getDate());
-      paymentMethodField.setText(order.getPaymentMethod());
+      datePicker.setValue(order.getCreatedAt().toLocalDate());
+      paymentMethodField.setText(order.getPaymentMethod().name());
       orderItems.setAll(order.getItems());
     } else {
       orderItems.clear();
@@ -225,7 +190,7 @@ public class OrderDialogController extends BaseDialogController<Order> {
 
   private void loadCustomers() {
     try {
-      final List<Customer> customers = customerService.getAllCustomers();
+      final List<Customer> customers = customerService.listCustomers();
       customerComboBox.setItems(FXCollections.observableArrayList(customers));
     } catch (SQLException e) {
       AlertHelper.showDatabaseError(dialogStage, "Failed to load customers.", e);
@@ -235,7 +200,7 @@ public class OrderDialogController extends BaseDialogController<Order> {
 
   private void loadProducts() {
     try {
-      final List<Product> products = productService.getAllProducts();
+      final List<Product> products = productService.listProducts();
       productComboBox.setItems(FXCollections.observableArrayList(products));
       for (Product product : products) {
         productCache.put(product.getId(), product);
@@ -278,10 +243,15 @@ public class OrderDialogController extends BaseDialogController<Order> {
     totalAmountLabel.setText(TableCellUtils.formatPrice(totalAmount));
   }
 
+  */
+
   /**
    * Opens a custom dialog to edit the quantity of the specified OrderItem. Performs validation and
    * updates the quantity if valid.
    */
+
+/* Comment out during mvvm migration as need to refactor view by view
+
   private void showEditQuantityDialog(OrderItem item) {
     try {
       FXMLLoader loader = ViewLoader.loadFxml(DialogView.EDIT_QUANTITY_DIALOG);
@@ -316,3 +286,4 @@ public class OrderDialogController extends BaseDialogController<Order> {
     }
   }
 }
+*/

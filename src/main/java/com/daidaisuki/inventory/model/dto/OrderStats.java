@@ -1,25 +1,6 @@
 package com.daidaisuki.inventory.model.dto;
 
-public class OrderStats {
-  private final int totalOrders;
-  private final double totalSpent;
-  private final double totalDiscount;
+import java.time.OffsetDateTime;
 
-  public OrderStats(int totalOrders, double totalSpent, double totalDiscount) {
-    this.totalOrders = totalOrders;
-    this.totalSpent = totalSpent;
-    this.totalDiscount = totalDiscount;
-  }
-
-  public int getTotalOrders() {
-    return totalOrders;
-  }
-
-  public double getTotalSpent() {
-    return totalSpent;
-  }
-
-  public double getTotalDiscount() {
-    return totalDiscount;
-  }
-}
+public record OrderStats(
+    int totalOrders, long totalSpent, long totalDiscount, OffsetDateTime lastOrderDate) {}

@@ -1,8 +1,12 @@
 package com.daidaisuki.inventory;
 
+import com.daidaisuki.inventory.controller.view.InventoryController;
+import com.daidaisuki.inventory.controller.view.MainController;
 import com.daidaisuki.inventory.db.DatabaseManager;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
 import com.daidaisuki.inventory.util.AlertHelper;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -11,6 +15,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 public class App extends Application {
 
@@ -22,15 +27,36 @@ public class App extends Application {
 
   @Override
   public void start(Stage stage) throws IOException {
+    Connection connection = null;
     try {
       DatabaseManager.initializeDatabase();
+      connection = DatabaseManager.getConnection();
     } catch (SQLException e) {
       e.printStackTrace();
       AlertHelper.showErrorAlert(
           stage, "Database Error", "Failed to initialize database", e.getMessage());
     }
-    FXMLLoader fxmlLoader = loadFXMLLoader("main");
-    Parent root = fxmlLoader.getRoot();
+
+    final Connection finalConnection = connection;
+    ServiceRegistry registry = new ServiceRegistry(finalConnection);
+
+    Callback<Class<?>, Object> controllerFactory =
+        type -> {
+          try {
+            if (type == MainController.class) {
+              return new MainController(registry);
+            } else if (type == InventoryController.class) {
+              return new InventoryController(registry);
+            }
+            return type.getDeclaredConstructor().newInstance();
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        };
+
+    FXMLLoader loader = new FXMLLoader(App.class.getResource("main.fxml"));
+    loader.setControllerFactory(controllerFactory);
+    Parent root = loader.load();
     Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
     double width = Math.max(visualBounds.getWidth() * WIDTH_RATIO, MIN_WIDTH);
     double height = Math.max(visualBounds.getHeight() * HEIGHT_RATIO, MIN_HEIGHT);
@@ -46,12 +72,6 @@ public class App extends Application {
               }
             });
     stage.show();
-  }
-
-  private static FXMLLoader loadFXMLLoader(String fxml) throws IOException {
-    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-    fxmlLoader.load();
-    return fxmlLoader;
   }
 
   private static void resizeStageToDynamicSize(Stage stage) {

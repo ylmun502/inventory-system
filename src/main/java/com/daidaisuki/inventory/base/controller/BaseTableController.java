@@ -1,134 +1,138 @@
 package com.daidaisuki.inventory.base.controller;
 
+import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.user.AppSession;
 import com.daidaisuki.inventory.util.AlertHelper;
-import com.daidaisuki.inventory.util.FxUiUtils;
+import com.daidaisuki.inventory.util.FxWindowUtils;
+import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.sql.SQLException;
-import java.util.List;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Window;
 
-public abstract class BaseTableController<T> {
-  protected TableView<T> table;
-  protected Button addButton, editButton, deleteButton;
+public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
+  @FXML private Label userLabel;
+  @FXML protected TableView<T> table;
+  protected VM viewModel;
+  private EventHandler<KeyEvent> escapeFilter =
+      event -> {
+        if (event.getCode() == KeyCode.ESCAPE && !event.isConsumed()) {
+          Node focusOwner = this.table.getScene().getFocusOwner();
+          if (focusOwner instanceof TextInputControl textInput) {
+            if (!textInput.getText().isEmpty()) {
+              textInput.clear();
+            } else {
+              this.clearSelection();
+              this.table.requestFocus();
+            }
+            event.consume();
+          } else {
+            this.clearSelection();
+            event.consume();
+          }
+        }
+      };
 
-  protected ObservableList<T> dataList = FXCollections.observableArrayList();
+  protected BaseTableController(VM viewModel) {
+    this.viewModel = viewModel;
+  }
 
-  protected abstract List<T> fetchFromDB() throws SQLException;
+  protected void initializeBaseTableController() {
+    this.setupTableDataBinding();
+    this.bindSelectionModel();
+    this.setupDeselectOnEmptySpace(this.table);
+    this.setupSceneKeyFilter();
+    this.bindViewModelProperties();
+    this.initializeBaseUI();
+    this.viewModel.refresh();
+  }
 
-  protected abstract void addItem(T item) throws SQLException;
+  protected void setupTableDataBinding() {
+    if (this.table != null) {
+      this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
+      this.table.setItems(this.viewModel.getSortedList());
+    }
+  }
 
-  protected abstract void updateItem(T item) throws SQLException;
-
-  protected abstract void deleteItem(T item) throws SQLException;
-
-  protected abstract T showDialog(T itemToEdit);
-
-  protected abstract Window getWindow();
-
-  protected void initializeBase(
-      TableView<T> table, Button addButton, Button editButton, Button deleteButton) {
-    this.table = table;
-    this.addButton = addButton;
-    this.editButton = editButton;
-    this.deleteButton = deleteButton;
-
-    table.setItems(dataList);
-
-    table
-        .getSelectionModel()
+  private void bindSelectionModel() {
+    this.viewModel
         .selectedItemProperty()
+        .bind(this.table.getSelectionModel().selectedItemProperty());
+  }
+
+  protected void setupDeselectOnEmptySpace(TableView<?> targetTable) {
+    targetTable.setOnMouseClicked(
+        event -> {
+          Node target = (Node) event.getTarget();
+          while (target != null && target != targetTable) {
+            if (target instanceof TableCell<?, ?> cell) {
+              if (!cell.getTableRow().isEmpty()) {
+                return;
+              }
+            }
+            if (target.getStyleClass().contains("column-header-background")) {
+              return;
+            }
+            target = target.getParent();
+          }
+          targetTable.getSelectionModel().clearSelection();
+        });
+  }
+
+  private void setupSceneKeyFilter() {
+    this.table
+        .sceneProperty()
         .addListener(
-            (obs, oldVal, newVal) -> {
-              boolean selected = newVal != null;
-              editButton.setDisable(!selected);
-              deleteButton.setDisable(!selected);
+            (obs, oldScene, newScene) -> {
+              if (oldScene != null) {
+                oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
+              if (newScene != null) {
+                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+              }
             });
+  }
 
-    editButton.setDisable(true);
-    deleteButton.setDisable(true);
+  protected void bindViewModelProperties() {
+    this.viewModel.setOnError(this::handleError);
+  }
 
-    try {
-      refreshTable();
-    } catch (SQLException e) {
-      AlertHelper.showDatabaseError(getWindow(), "Unable to load data.", e);
+  protected void handleError(Throwable exception) {
+    // Remove sout after testing
+    System.out.println("task wrapped outermost exception: " + exception);
+    Throwable cause = exception.getCause() != null ? exception.getCause() : exception;
+    if (cause.getCause() instanceof SQLException) {
+      AlertHelper.showDatabaseError(
+          this.getWindow(), "A database operation failed", cause.getMessage());
+    } else if (cause instanceof DataAccessException dataAcessException) {
+      AlertHelper.showWarningAlert(
+          getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
+    } else {
+      AlertHelper.showErrorAlert(
+          getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());
     }
   }
 
-  protected void refreshTable() throws SQLException {
-    dataList.setAll(fetchFromDB());
-    table.sort();
-  }
-
-  @FXML
-  protected void handleAdd() {
-    T newItem = showDialog(null);
-    if (newItem != null) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              addItem(newItem);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not add item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
+  protected void initializeBaseUI() {
+    if (this.userLabel != null) {
+      this.userLabel.setText("User: " + AppSession.getInstance().getUserName());
     }
   }
 
-  @FXML
-  protected void handleEdit() {
-    T selected = table.getSelectionModel().getSelectedItem();
-    if (selected == null) {
-      AlertHelper.showSelectionRequiredAlert(getWindow(), "edit");
-      return;
-    }
-    T edited = showDialog(selected);
-    if (edited != null) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              updateItem(edited);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not edit item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
+  protected void clearSelection() {
+    if (this.table != null && this.table.getSelectionModel() != null) {
+      this.table.getSelectionModel().clearSelection();
     }
   }
 
-  @FXML
-  protected void handleDelete() {
-    T selected = table.getSelectionModel().getSelectedItem();
-    if (selected == null) {
-      AlertHelper.showSelectionRequiredAlert(getWindow(), "delete");
-      return;
-    }
-    boolean confirmed =
-        AlertHelper.showConfirmationAlert(
-            getWindow(), "Delete", null, "Are you sure you want to delete this item?");
-    if (confirmed) {
-      FxUiUtils.runWithButtonsDisabled(
-          () -> {
-            try {
-              deleteItem(selected);
-              refreshTable();
-            } catch (SQLException e) {
-              AlertHelper.showDatabaseError(getWindow(), "Could not delete item.", e);
-            }
-          },
-          addButton,
-          editButton,
-          deleteButton);
-    }
+  protected Window getWindow() {
+    return FxWindowUtils.getWindow(this.table);
   }
 }

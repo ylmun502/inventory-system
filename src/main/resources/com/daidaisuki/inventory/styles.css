@@ -1,13 +1,18 @@
+/* =========================
+   ROOT / GLOBAL
+   ========================= */
+
 .root {
     -fx-font-family: "Arial";
-    -fx-font-size: 20px;
 }
 
+/* =========================
+   TYPOGRAPHY
+   ========================= */
+
 .page-title {
-    -fx-font-size: 28px;
+    -fx-font-size: 26px;
     -fx-font-weight: bold;
-    -fx-alignment: center;
-    -fx-max-width: infinity;
 }
 
 .dialog-title {
@@ -15,25 +20,221 @@
     -fx-font-weight: bold;
 }
 
-.button {
-    -fx-background-color: #eee;
-    -fx-border-color: #ccc;
-    -fx-border-width: 1;
-    -fx-border-radius: 3;
-    -fx-background-radius: 3;
-    -fx-padding: 6 12 6 12;
+.section-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #444444;
 }
 
-.button.active {
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+.small-muted {
+    -fx-font-size: 10px;
+    -fx-text-fill: #888888;
+}
+
+.grid-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+}
+
+.user-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.button {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 6 12;
+}
+
+.button.primary {
     -fx-background-color: #3399ff;
     -fx-text-fill: white;
     -fx-border-color: #2a7ae2;
-    -fx-border-width: 1;
+}
+
+.button.secondary {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-border-color: #cfcfcf;
+}
+
+.button.danger {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+    -fx-border-color: #c0392b;
+}
+
+.menu-button {
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #cfcfcf;
     -fx-border-radius: 3;
     -fx-background-radius: 3;
 }
 
-.wrap-text-button {
-  -fx-alignment: center;
-  -fx-text-alignment: center;
+.menu-button .arrow {
+    -fx-background-color: #555555;
+}
+
+.menu-button .label {
+    -fx-text-fill: #555555;
+    -fx-padding: 6 12;
+}
+
+.context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #dcdcdc;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.menu-item:hover {
+    -fx-background-color: #3498db;
+}
+
+.menu-item .label {
+    -fx-text-fill: #555555;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: white;
+}
+
+/* =========================
+   FORMS AND INPUTS
+   ========================= */
+
+.search-field {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-border-radius: 3;
+}
+
+/* =========================
+   TOOLBARS
+   ========================= */
+
+.toolbar {
+    -fx-spacing: 8;
+    -fx-padding: 0 0 10 0;
+}
+
+/* =========================
+   TOOLBAR BUTTONS (General)
+   ========================= */
+
+.toolbar-toggle {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 5 15;
+    -fx-cursor: hand;
+    -fx-text-fill: #424242;
+}
+
+.toolbar-toggle:hover {
+    -fx-background-color: #eeeeee;
+}
+
+/* =========================
+   SPECIFIC TOGGLES
+   ========================= */
+
+.archive-toggle:selected {
+    -fx-background-color: #37474f;
+    -fx-text-fill: white;
+    -fx-border-color: #263238;
+    -fx-font-weight: bold;
+}
+
+
+/* =========================
+   DETAIL SECTION
+   ========================= */
+
+.detail-section {
+    -fx-background-color: #f4f4f4;
+}
+
+.header {
+    -fx-background-color: #eeeeee;
+    -fx-border-color: #dddddd;
+    -fx-border-width: 0 0 1 0;
+}
+
+.hbox {
+    -fx-background-color: #f9f9f9;
+    -fx-padding: 15;
+    -fx-background-radius: 5;
+}
+
+.metric-grid {
+    -fx-background-color: #f8f9fa;
+    -fx-padding: 15;
+    -fx-background-radius: 5;
+}
+
+.metric-divider {
+    -fx-border-color: #dddddd;
+    -fx-border-width: 0 0 0 1;
+    -fx-padding: 0 0 0 30;
+}
+
+.metric-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #888888;
+}
+
+.metric-value {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.markup-positive {
+    -fx-text-fill: #2e7d32;
+}
+
+.markup-negative {
+    -fx-text-fill: #c0392b;
+}
+
+/* =========================
+   TABLES / ROW STYLING
+   ========================= */
+
+.table-row-cell.out-of-stock {
+    -fx-background-color: #ffcdd2;
+}
+
+.table-row-cell.low-stock {
+    -fx-background-color: #fff9c4;
+}
+
+.table-row-cell.low-stock:selected,
+.table-row-cell.out-of-stock:selected {
+    -fx-background-color: -fx-selection-bar;
+}
+
+/* =========================
+   HELPERS
+   ========================= */
+
+.search-field {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-border-radius: 3;
 }

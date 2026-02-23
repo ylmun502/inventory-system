@@ -1,61 +1,65 @@
 package com.daidaisuki.inventory.service;
 
-import com.daidaisuki.inventory.dao.ProductDAO;
-import com.daidaisuki.inventory.db.DatabaseManager;
-import com.daidaisuki.inventory.exception.InsufficientStockException;
+import com.daidaisuki.inventory.dao.impl.ProductDAO;
+import com.daidaisuki.inventory.db.TransactionManager;
+import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class ProductService {
+  private final TransactionManager transactionManager;
   private final ProductDAO productDAO;
 
-  public ProductService() {
-    this(getConnectionSafely());
-  }
-
   public ProductService(Connection connection) {
+    this.transactionManager = new TransactionManager(connection);
     this.productDAO = new ProductDAO(connection);
   }
 
-  private static Connection getConnectionSafely() {
-    try {
-      return DatabaseManager.getConnection();
-    } catch (SQLException e) {
-      throw new RuntimeException("Failed to initialize ProductService", e);
+  public List<Product> listProducts() {
+    return this.productDAO.findAll();
+  }
+
+  public void createProduct(Product product) {
+    if (this.productDAO.existsBySku(product.getSku())) {
+      throw new IllegalArgumentException("A product with this sku already exists.");
+    } else if (this.productDAO.existsByBarcode(product.getBarcode())) {
+      throw new IllegalArgumentException("A product with this barcode already exists.");
     }
-  }
-
-  public List<Product> getAllProducts() throws SQLException {
-    return productDAO.getAllProducts();
-  }
-
-  public void addProduct(Product product) throws SQLException {
-    productDAO.addProduct(product);
-  }
-
-  public void updateProduct(Product product) throws SQLException {
-    productDAO.updateProduct(product);
-  }
-
-  public void deleteProduct(int productId) throws SQLException {
-    productDAO.deleteProduct(productId);
-  }
-
-  public Product getById(int productId) throws SQLException {
-    return productDAO.getById(productId);
-  }
-
-  public void decrementStock(int productId, int amount)
-      throws SQLException, InsufficientStockException {
-    Product product = productDAO.getById(productId);
-    if (product == null) {
-      throw new SQLException("Product not found: id=" + productId);
+    if (product.getBarcode() == null || product.getBarcode().isEmpty()) {
+      product.setBarcode(generateBarcode());
     }
-    if (product.getStock() < amount) {
-      throw new InsufficientStockException(null);
-    }
-    productDAO.decrementStock(productId, amount);
+    transactionManager.executeInTransaction(() -> this.productDAO.save(product));
+  }
+
+  private String generateBarcode() {
+    return UUID.randomUUID().toString().substring(0, 8);
+  }
+
+  public void updateProduct(Product product) {
+    transactionManager.executeInTransaction(() -> this.productDAO.update(product));
+  }
+
+  public void archiveProduct(int productId) {
+    transactionManager.executeInTransaction(() -> this.productDAO.archive(productId));
+  }
+
+  public void restoreProduct(int productId) {
+    transactionManager.executeInTransaction(() -> this.productDAO.restore(productId));
+  }
+
+  public void removeProduct(int productId) {
+    transactionManager.executeInTransaction(() -> this.productDAO.remove(productId));
+  }
+
+  public Product getProduct(int productId) {
+    return this.productDAO
+        .findById(productId)
+        .orElseThrow(() -> new DataAccessException("The product could not be found"));
+  }
+
+  public List<String> listDistinctUnitTypes() {
+    return this.productDAO.findAllDistinctUnitTypes();
   }
 }

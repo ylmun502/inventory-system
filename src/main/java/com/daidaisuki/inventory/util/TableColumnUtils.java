@@ -5,7 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
-public class TableColumnUtils {
+public final class TableColumnUtils {
   private TableColumnUtils() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");

@@ -3,12 +3,13 @@ package com.daidaisuki.inventory.util;
 import javafx.scene.control.Button;
 
 /**
- * Utility class for common JavaFX UI-related operations.
+ * Deprecated as buttons are bound to properties Utility class for common JavaFX UI-related
+ * operations.
  *
  * <p>Provides convenience methods to handle UI interactions such as disabling buttons during
  * execution of a task.
  */
-public class FxUiUtils {
+public final class FxUiUtils {
   private FxUiUtils() {
     // Prevent instantiation
     throw new UnsupportedOperationException("Utility class");
@@ -24,7 +25,10 @@ public class FxUiUtils {
    *
    * @param operation the task to execute
    * @param buttons the buttons to disable during execution
+   * 
+   * @deprecated Use ViewModel busyProperty binding instead (MVVM).
    */
+  @Deprecated
   public static void runWithButtonsDisabled(Runnable operation, Button... buttons) {
     for (Button btn : buttons) {
       btn.setDisable(true);
