@@ -82,6 +82,7 @@ public class Product extends BaseModel {
       int maxStockLevel,
       int reorderingLevel,
       BigDecimal sellingPrice,
+      BigDecimal averageUnitCost,
       boolean isActive,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
@@ -98,6 +99,7 @@ public class Product extends BaseModel {
     this.maxStockLevel.set(maxStockLevel);
     this.reorderingLevel.set(reorderingLevel);
     this.sellingPrice.set(sellingPrice);
+    this.averageUnitCost.set(averageUnitCost);
     this.isActive.set(isActive);
     this.initializeBindings();
   }

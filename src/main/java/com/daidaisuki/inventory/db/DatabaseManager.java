@@ -34,28 +34,29 @@ public class DatabaseManager {
           """
           CREATE TABLE IF NOT EXISTS products (
                   -- Primary Identity
-                  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                  id                          INTEGER PRIMARY KEY AUTOINCREMENT,
 
                   -- Core Data
-                  sku                   TEXT UNIQUE,
-                  barcode               TEXT UNIQUE,
-                  name                  TEXT NOT NULL,
-                  category              TEXT NOT NULL,
-                  unit_type             TEXT DEFAULT 'each',
-                  tax_category          TEXT DEFAULT 'standard',
-                  description           TEXT,
-                  weight                INTEGER NOT NULL,
-                  current_stock         INTEGER DEFAULT 0 NOT NULL CHECK (current_stock >= 0),
-                  min_stock_level       INTEGER DEFAULT 2,
-                  max_stock_level       INTEGER DEFAULT 100,
-                  reordering_level      INTEGER DEFAULT 5,
-                  selling_price_cents   INTEGER NOT NULL,
-                  is_active             INTEGER DEFAULT 1,
+                  sku                         TEXT UNIQUE,
+                  barcode                     TEXT UNIQUE,
+                  name                        TEXT NOT NULL,
+                  category                    TEXT NOT NULL,
+                  unit_type                   TEXT DEFAULT 'each',
+                  tax_category                TEXT DEFAULT 'standard',
+                  description                 TEXT,
+                  weight                      INTEGER NOT NULL,
+                  current_stock               INTEGER DEFAULT 0 NOT NULL CHECK (current_stock >= 0),
+                  min_stock_level             INTEGER DEFAULT 2,
+                  max_stock_level             INTEGER DEFAULT 100,
+                  reordering_level            INTEGER DEFAULT 5,
+                  selling_price_cents         INTEGER NOT NULL,
+                  average_unit_cost_cents     INTEGER NOT NULL,
+                  is_active                   INTEGER DEFAULT 1,
 
                   -- Audit Metadata
-                  created_at          DATETIME NOT NULL,
-                  updated_at          DATETIME NOT NULL,
-                  is_deleted          INTEGER NOT NULL
+                  created_at                  DATETIME NOT NULL,
+                  updated_at                  DATETIME NOT NULL,
+                  is_deleted                  INTEGER NOT NULL
                   );
           """;
       stmt.execute(createProductTable);

@@ -84,18 +84,22 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
     this.unitTypeText.set(product.getUnitType());
     this.minStockLevelText.set(String.valueOf(product.getMinStockLevel()));
     this.averageUnitCostText.set(CurrencyUtil.format(product.getAverageUnitCost()));
-    BigDecimal cost = product.getAverageUnitCost();
+    BigDecimal averageUnitCost =
+        Optional.ofNullable(product.getAverageUnitCost()).orElse(BigDecimal.ZERO);
     BigDecimal price = product.getSellingPrice();
-    if (cost == null || price == null || cost.compareTo(BigDecimal.ZERO) == 0) {
+    if (price == null || averageUnitCost.signum() == 0) {
       this.markupText.set("0%");
     } else {
       BigDecimal markup =
           price
-              .subtract(cost)
-              .divide(cost, 4, RoundingMode.HALF_UP)
+              .subtract(averageUnitCost)
+              .divide(averageUnitCost, 4, RoundingMode.HALF_UP)
               .multiply(BigDecimal.valueOf(100));
       this.markupText.set(NumberUtils.percentage(markup));
     }
+    BigDecimal totalValue = averageUnitCost.multiply(BigDecimal.valueOf(product.getCurrentStock()));
+    this.totalValueText.set(CurrencyUtil.format(totalValue));
+  }
 
   private void refreshDetail(int productId) {
     this.executeLoadingTask(

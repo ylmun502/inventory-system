@@ -34,6 +34,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         max_stock_level,
         reordering_level,
         selling_price_cents,
+        average_unit_cost_cents,
         is_active,
         created_at,
         updated_at,
@@ -68,12 +69,13 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           max_stock_level,
           reordering_level,
           selling_price_cents,
+          average_unit_cost_cents,
           is_active,
           created_at,
           updated_at,
           is_deleted)
         VALUES(
-          ?, ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -96,6 +98,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
                 product.getMaxStockLevel(),
                 product.getReorderingLevel(),
                 product.getSellingPrice(),
+                product.getAverageUnitCost(),
                 true,
                 now,
                 now,
@@ -113,6 +116,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         product.getMaxStockLevel(),
         product.getReorderingLevel(),
         CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
+        CurrencyUtil.bigDecimalToLong(product.getAverageUnitCost()),
         1,
         nowString,
         nowString,
@@ -141,6 +145,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           max_stock_level = ?,
           reordering_level = ?,
           selling_price_cents = ?,
+          average_unit_cost_cents = ?,
           is_active = ?,
           updated_at = ?
         WHERE id = ?
@@ -160,6 +165,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         product.getMaxStockLevel(),
         product.getReorderingLevel(),
         CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
+        CurrencyUtil.bigDecimalToLong(product.getAverageUnitCost()),
         product.isActive() ? 1 : 0,
         OffsetDateTime.now(ZoneOffset.UTC),
         product.getId());
@@ -198,6 +204,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           max_stock_level,
           reordering_level,
           selling_price_cents,
+          average_unit_cost_cents,
           is_active,
           created_at,
           updated_at,
@@ -283,6 +290,8 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
       int maxStockLevel = rs.getInt("max_stock_level");
       int reorderingLevel = rs.getInt("reordering_level");
       BigDecimal sellingPrice = CurrencyUtil.longToBigDecimal(rs.getLong("selling_price_cents"));
+      BigDecimal averageUnitCost =
+          CurrencyUtil.longToBigDecimal(rs.getLong("average_unit_cost_cents"));
       boolean isActive = rs.getInt("is_active") == 1;
       String createdAtString = rs.getString("created_at");
       String updatedAtString = rs.getString("updated_at");
@@ -304,6 +313,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           maxStockLevel,
           reorderingLevel,
           sellingPrice,
+          averageUnitCost,
           isActive,
           createdAt,
           updatedAt,
