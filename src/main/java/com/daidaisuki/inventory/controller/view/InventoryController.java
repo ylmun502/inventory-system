@@ -121,7 +121,7 @@ public class InventoryController extends BaseTableController<Product> {
       ProductDialogController controller = loader.getController();
       controller.setDialogStage(dialogStage);
       controller.setModel(productToEdit);
-
+      controller.setProductService(this.productService);
       dialogStage.showAndWait();
 
       return controller.isSaveClicked() ? controller.getModel() : null;

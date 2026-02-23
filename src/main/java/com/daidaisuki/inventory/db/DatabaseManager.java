@@ -61,6 +61,7 @@ public class DatabaseManager {
               + "total_amount REAL NOT NULL,"
               + "discount_amount REAL NOT NULL,"
               + "payment_method TEXT,"
+              + "completed INTEGER DEFAULT 0,"
               + "FOREIGN KEY(customer_id) REFERENCES customers(id)"
               + ");";
       stmt.execute(createOrderTable);
