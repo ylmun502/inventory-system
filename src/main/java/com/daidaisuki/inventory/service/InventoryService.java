@@ -9,6 +9,7 @@ import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.model.InventoryTransaction;
+import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.model.StockBatch;
 import com.daidaisuki.inventory.model.dto.StockAdjustRequest;
 import com.daidaisuki.inventory.model.dto.StockAllocation;
@@ -16,6 +17,7 @@ import com.daidaisuki.inventory.model.dto.StockDeductRequest;
 import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
 import com.daidaisuki.inventory.model.dto.StockReturnRequest;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,16 +43,21 @@ public class InventoryService {
     transactionManager.executeInTransaction(
         () -> {
           if (adjustRequest.changeAmount() > 0) {
-            StockReceiveRequest receiveRequest =
-                new StockReceiveRequest(
-                    adjustRequest.productId(),
-                    SYSTEM_SUPPLIER_ID,
-                    null,
-                    adjustRequest.changeAmount(),
-                    BigDecimal.ZERO,
-                    null,
-                    adjustRequest.reason());
-            this.receiveNewStockInternal(receiveRequest, userId);
+            if (adjustRequest.unitCost() == null
+                || adjustRequest.unitCost().compareTo(BigDecimal.ZERO) == 0) {
+              this.applyStockChange(adjustRequest.productId(), adjustRequest.changeAmount());
+            } else {
+              StockReceiveRequest receiveRequest =
+                  new StockReceiveRequest(
+                      adjustRequest.productId(),
+                      SYSTEM_SUPPLIER_ID,
+                      null,
+                      adjustRequest.changeAmount(),
+                      BigDecimal.ZERO,
+                      null,
+                      adjustRequest.reason());
+              this.receiveNewStockInternal(receiveRequest, userId);
+            }
           } else if (adjustRequest.changeAmount() < 0) {
             StockDeductRequest deductRequest =
                 new StockDeductRequest(
@@ -75,7 +82,29 @@ public class InventoryService {
   }
 
   private void receiveNewStockInternal(StockReceiveRequest request, int userId) {
-    this.applyStockChange(request.productId(), request.quantity());
+    Product product =
+        this.productDAO
+            .findById(request.productId())
+            .orElseThrow(() -> new EntityNotFoundException("The product could not be found."));
+    int currentStock = product.getCurrentStock();
+    BigDecimal currentAverageUnitCost = product.getAverageUnitCost();
+    int incomingQuantity = request.quantity();
+    BigDecimal incomingUnitCost = request.unitCost();
+    BigDecimal totalValue =
+        currentAverageUnitCost
+            .multiply(BigDecimal.valueOf(currentStock))
+            .add(incomingUnitCost.multiply(BigDecimal.valueOf(incomingQuantity)));
+    int totalQuantity = currentStock + incomingQuantity;
+    BigDecimal newAverageUnitCost =
+        totalQuantity > 0
+            ? totalValue.divide(BigDecimal.valueOf(totalQuantity), 4, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+    boolean success =
+        this.productDAO.updateStockTotalAndCost(
+            request.productId(), incomingQuantity, newAverageUnitCost);
+    if (!success) {
+      throw new DataAccessException("Stock update failed.");
+    }
     StockBatch newBatch =
         StockBatch.createNew(
             request.productId(),
@@ -86,6 +115,7 @@ public class InventoryService {
             request.unitCost());
 
     StockBatch savedBatch = this.stockBatchDAO.save(newBatch);
+
     this.logTransaction(
         request.productId(),
         savedBatch.getId(),

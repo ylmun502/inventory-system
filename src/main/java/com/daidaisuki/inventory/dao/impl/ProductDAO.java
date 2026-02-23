@@ -245,6 +245,25 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         > 0;
   }
 
+  public boolean updateStockTotalAndCost(
+      int productId, int changeAmount, BigDecimal newAverageUnitCost) {
+    long newAverageUnitCostCents = CurrencyUtil.bigDecimalToLong(newAverageUnitCost);
+    String sql =
+        """
+        UPDATE products
+        SET current_stock = current_stock + ?, average_unit_cost_cents = ?, updated_at = ?
+        WHERE id = ? AND is_deleted = 0 AND current_stock + ? >= 0
+        """;
+    return this.updateReturningAffectedRows(
+            sql,
+            changeAmount,
+            newAverageUnitCostCents,
+            OffsetDateTime.now(ZoneOffset.UTC),
+            productId,
+            changeAmount)
+        > 0;
+  }
+
   public List<String> findAllDistinctUnitTypes() {
     String sql = "SELECT DISTINCT unit_type FROM products";
     return this.query(sql, this::mapResultSetToUnitType);
