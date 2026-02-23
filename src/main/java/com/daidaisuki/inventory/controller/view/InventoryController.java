@@ -1,6 +1,6 @@
 package com.daidaisuki.inventory.controller.view;
 
-import com.daidaisuki.inventory.base.controller.BaseTableController;
+import com.daidaisuki.inventory.base.controller.BaseCrudController;
 import com.daidaisuki.inventory.controller.dialog.ProductDialogController;
 import com.daidaisuki.inventory.controller.dialog.ReceiveStockDialogController;
 import com.daidaisuki.inventory.enums.DialogView;
@@ -28,17 +28,16 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 
-public class InventoryController extends BaseTableController<Product, InventoryViewModel> {
+public class InventoryController extends BaseCrudController<Product, InventoryViewModel> {
   @FXML private TableColumn<Product, String> skuCol;
   @FXML private TableColumn<Product, String> nameCol;
   @FXML private TableColumn<Product, String> categoryCol;
   @FXML private TableColumn<Product, Number> currentStockCol;
   @FXML private TableColumn<Product, BigDecimal> sellingPriceCol;
   @FXML private TableColumn<Product, String> statusCol;
-  @FXML private TextField searchField;
+
   @FXML private Button receiveStockButton;
 
   @FXML private TableView<StockBatch> batchesTable;
@@ -56,7 +55,6 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   @FXML private TableColumn<InventoryTransaction, Number> transactionAmountCol;
   @FXML private TableColumn<InventoryTransaction, String> transactionReasonCol;
 
-  @FXML private Label userLabel;
   @FXML private Label barcodeLabel;
   @FXML private Label reorderingLevelLabel;
   @FXML private Label taxCategoryLabel;
@@ -88,11 +86,10 @@ public class InventoryController extends BaseTableController<Product, InventoryV
 
     // Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading
     // rows)
-    this.setupData();
+    this.initializeBaseCrudController();
   }
 
   private void setupStaticUI() {
-    this.userLabel.setText("User: " + AppSession.getInstance().getUserName());
     this.setupMainTableColumns();
     this.setupDetailTablesColumns();
     this.setupRowFactory();
@@ -180,7 +177,6 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   }
 
   private void setupEventShortcuts() {
-    this.initializeBase(); // Set up selection and table shortcuts
     this.receiveStockButton
         .disableProperty()
         .bind(this.viewModel.selectedItemProperty().isNull().or(this.viewModel.isBusyProperty()));
@@ -189,8 +185,6 @@ public class InventoryController extends BaseTableController<Product, InventoryV
   }
 
   private void setupBinding() {
-    this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
-    this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
     this.bindLabels();
   }
 
@@ -203,46 +197,31 @@ public class InventoryController extends BaseTableController<Product, InventoryV
     this.minStockLevelLabel.textProperty().bind(this.viewModel.minStockLevelTextProperty());
     this.averageUnitCostLabel.textProperty().bind(this.viewModel.averageUnitCostTextProperty());
     this.markupLabel.textProperty().bind(this.viewModel.markupTextProperty());
-    this.productTotalValueLabel.textProperty().bind(this.viewModel.productTotalValueTextProperty());
+    this.totalValueLabel.textProperty().bind(this.viewModel.totalValueTextProperty());
+  }
+
+  @Override
+  protected void setupTableDataBinding() {
+    super.setupTableDataBinding();
+    this.setupData();
   }
 
   private void setupData() {
-    this.table.setItems(this.viewModel.getSortedList());
     this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
     this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 
-  @FXML
-  private void handleAdd() {
+  @Override
+  protected Product showEntityDialog(Product product) {
     ProductDialogViewModel dialogViewModel =
-        new ProductDialogViewModel(this.viewModel.getProductService(), null);
-    Product product =
-        this.getDialogService()
-            .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
-    if (product != null) {
-      this.viewModel.add(product);
-    }
-  }
-
-  @FXML
-  private void handleEdit() {
-    Product selected = this.viewModel.selectedItemProperty().get();
-    if (selected != null) {
-      ProductDialogViewModel dialogViewModel =
-          new ProductDialogViewModel(this.viewModel.getProductService(), selected);
-      Product updated =
-          this.getDialogService()
-              .showDialog(
-                  ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
-      if (updated != null) {
-        this.viewModel.update(updated);
-      }
-    }
+        new ProductDialogViewModel(this.viewModel.getProductService(), product);
+    return this.getDialogService()
+        .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
   }
 
   @Override
-  protected String getDeleteConfirmationMessage(Product item) {
-    return "Are you sure you want to delete " + item.getName() + "?";
+  protected String getDeleteConfirmationMessage(Product product) {
+    return "Are you sure you want to delete " + product.getName() + "?";
   }
 
   @FXML

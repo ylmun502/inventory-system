@@ -1,6 +1,6 @@
 package com.daidaisuki.inventory.controller.view;
 
-import com.daidaisuki.inventory.base.controller.BaseTableController;
+import com.daidaisuki.inventory.base.controller.BaseCrudController;
 import com.daidaisuki.inventory.controller.dialog.SupplierDialogController;
 import com.daidaisuki.inventory.enums.DialogView;
 import com.daidaisuki.inventory.model.Supplier;
@@ -10,7 +10,7 @@ import com.daidaisuki.inventory.viewmodel.view.SupplierViewModel;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 
-public class SupplierController extends BaseTableController<Supplier, SupplierViewModel> {
+public class SupplierController extends BaseCrudController<Supplier, SupplierViewModel> {
   @FXML private TableColumn<Supplier, String> nameCol;
   @FXML private TableColumn<Supplier, String> shortCodeCol;
   @FXML private TableColumn<Supplier, String> emailCol;
@@ -22,45 +22,30 @@ public class SupplierController extends BaseTableController<Supplier, SupplierVi
 
   @FXML
   public void initialize() {
-    nameCol.setCellValueFactory(celldata -> celldata.getValue().namProperty());
+    this.setupStaticUI();
+    this.initializeBaseCrudController();
+  }
+
+  private void setupStaticUI() {
+    this.setupMainTableColumns();
+  }
+
+  private void setupMainTableColumns() {
+    nameCol.setCellValueFactory(celldata -> celldata.getValue().nameProperty());
     shortCodeCol.setCellValueFactory(celldata -> celldata.getValue().shortCodeProperty());
     emailCol.setCellValueFactory(celldata -> celldata.getValue().emailProperty());
     phoneCol.setCellValueFactory(celldata -> celldata.getValue().phoneProperty());
-    this.initializeBase();
   }
 
-  @FXML
-  protected void handleAdd() {
-    SupplierDialogViewModel dialogViewModel = new SupplierDialogViewModel(null);
-    Supplier supplier =
-        this.getDialogService()
-            .showDialog(
-                SupplierDialogController.class, DialogView.SUPPLIER_DIALOG, dialogViewModel);
-    if (supplier != null) {
-      this.viewModel.add(supplier);
-    }
+  @Override
+  protected Supplier showEntityDialog(Supplier supplier) {
+    SupplierDialogViewModel dialogViewModel = new SupplierDialogViewModel(supplier);
+    return this.getDialogService()
+        .showDialog(SupplierDialogController.class, DialogView.SUPPLIER_DIALOG, dialogViewModel);
   }
 
-  @FXML
-  protected void handleEdit() {
-    Supplier selected = this.viewModel.selectedItemProperty().get();
-    if (selected != null) {
-      SupplierDialogViewModel dialogViewModel = new SupplierDialogViewModel(selected);
-      Supplier updated =
-          this.getDialogService()
-              .showDialog(
-                  SupplierDialogController.class, DialogView.SUPPLIER_DIALOG, dialogViewModel);
-      if (updated != null) {
-        this.viewModel.update(updated);
-      }
-    }
-  }
-
-  @FXML
-  protected void handleDelete() {
-    Supplier selected = this.viewModel.selectedItemProperty().get();
-    if (selected != null) {
-      this.viewModel.delete(selected);
-    }
+  @Override
+  protected String getDeleteConfirmationMessage(Supplier supplier) {
+    return "Are you sure you want to delete " + supplier.getName() + "?";
   }
 }

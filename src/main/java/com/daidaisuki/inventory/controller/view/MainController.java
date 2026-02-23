@@ -39,9 +39,12 @@ public class MainController {
         button.setMaxWidth(Double.MAX_VALUE);
       }
     }
-    try {
+    if (this.defaultButton != null) {
       setActiveButton(this.defaultButton);
-      switchView(View.INVENTORY); // Load default view
+    }
+    String viewKey = (String) defaultButton.getUserData();
+    try {
+      switchView(View.valueOf(viewKey)); // Load default view
     } catch (IOException e) {
       e.printStackTrace();
     }
