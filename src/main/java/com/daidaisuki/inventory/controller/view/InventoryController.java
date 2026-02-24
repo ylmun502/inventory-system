@@ -38,8 +38,6 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
   @FXML private TableColumn<Product, BigDecimal> sellingPriceCol;
   @FXML private TableColumn<Product, String> statusCol;
 
-  @FXML private Button receiveStockButton;
-
   @FXML private TableView<StockBatch> batchesTable;
   @FXML private TableColumn<StockBatch, Number> batchIdCol;
   @FXML private TableColumn<StockBatch, String> batchCodeCol;
@@ -54,6 +52,8 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
   @FXML private TableColumn<InventoryTransaction, String> transactionTypeCol;
   @FXML private TableColumn<InventoryTransaction, Number> transactionAmountCol;
   @FXML private TableColumn<InventoryTransaction, String> transactionReasonCol;
+
+  @FXML private Button receiveStockButton;
 
   @FXML private Label barcodeLabel;
   @FXML private Label reorderingLevelLabel;
@@ -73,6 +73,12 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
             registry.getSupplierService()));
   }
 
+  /*
+   * ======================================
+   * JavaFX Lifecycle
+   * ======================================
+   */
+
   @FXML
   public void initialize() {
     // Static UI Setup
@@ -81,13 +87,45 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     // Event / Shortcut Setup
     this.setupEventShortcuts();
 
-    // Property Bindings
-    this.setupBinding();
-
-    // Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading
-    // rows)
+    /* Data Assignment (Keep these last to ensure columns and shortcuts are ready before loading rows) */
     this.initializeBaseCrudController();
   }
+
+  /*
+   * ======================================
+   * Framework Overrides (Template Hooks)
+   * ======================================
+   */
+
+  @Override
+  protected void bindViewModelProperties() {
+    this.bindLabels();
+  }
+
+  @Override
+  protected void setupTableDataBinding() {
+    super.setupTableDataBinding();
+    this.setupData();
+  }
+
+  @Override
+  protected Product showEntityDialog(Product product) {
+    ProductDialogViewModel dialogViewModel =
+        new ProductDialogViewModel(this.viewModel.getProductService(), product);
+    return this.getDialogService()
+        .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
+  }
+
+  @Override
+  protected String getDeleteConfirmationMessage(Product product) {
+    return "Are you sure you want to delete " + product.getName() + "?";
+  }
+
+  /*
+   * ======================================
+   * UI Setup
+   * ======================================
+   */
 
   private void setupStaticUI() {
     this.setupMainTableColumns();
@@ -176,6 +214,12 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
             });
   }
 
+  /*
+   * ======================================
+   * Event & Shortcut Setup
+   * ======================================
+   */
+
   private void setupEventShortcuts() {
     this.receiveStockButton
         .disableProperty()
@@ -184,9 +228,11 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     this.setupDeselectOnEmptySpace(transactionTable);
   }
 
-  private void setupBinding() {
-    this.bindLabels();
-  }
+  /*
+   * ======================================
+   * View <-> ViewModel Binding
+   * ======================================
+   */
 
   private void bindLabels() {
     this.barcodeLabel.textProperty().bind(this.viewModel.barcodeTextProperty());
@@ -200,29 +246,24 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     this.totalValueLabel.textProperty().bind(this.viewModel.totalValueTextProperty());
   }
 
-  @Override
-  protected void setupTableDataBinding() {
-    super.setupTableDataBinding();
-    this.setupData();
   }
+
+  /*
+   * ======================================
+   * Data Wiring
+   * ======================================
+   */
 
   private void setupData() {
     this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
     this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 
-  @Override
-  protected Product showEntityDialog(Product product) {
-    ProductDialogViewModel dialogViewModel =
-        new ProductDialogViewModel(this.viewModel.getProductService(), product);
-    return this.getDialogService()
-        .showDialog(ProductDialogController.class, DialogView.PRODUCT_DIALOG, dialogViewModel);
-  }
-
-  @Override
-  protected String getDeleteConfirmationMessage(Product product) {
-    return "Are you sure you want to delete " + product.getName() + "?";
-  }
+  /*
+   * ======================================
+   * Event Handlers
+   * ======================================
+   */
 
   @FXML
   private void handleReceiveStock() {
