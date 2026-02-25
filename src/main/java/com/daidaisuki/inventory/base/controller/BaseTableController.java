@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.user.AppSession;
 import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.util.FxWindowUtils;
@@ -108,12 +109,17 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
     // Remove sout after testing
     System.out.println("task wrapped outermost exception: " + exception);
     Throwable cause = exception.getCause() != null ? exception.getCause() : exception;
-    if (cause.getCause() instanceof SQLException) {
-      AlertHelper.showDatabaseError(
-          this.getWindow(), "A database operation failed", cause.getMessage());
-    } else if (cause instanceof DataAccessException dataAcessException) {
+    if (cause instanceof InsufficientStockException insufficientStockException) {
       AlertHelper.showWarningAlert(
-          getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
+          getWindow(), "Inventory issue", "Action failed", insufficientStockException.getMessage());
+    } else if (cause instanceof DataAccessException dataAcessException) {
+      if (dataAcessException.getCause() instanceof SQLException) {
+        AlertHelper.showDatabaseError(
+            this.getWindow(), "A database operation failed", cause.getMessage());
+      } else {
+        AlertHelper.showWarningAlert(
+            getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
+      }
     } else {
       AlertHelper.showErrorAlert(
           getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());

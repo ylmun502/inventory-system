@@ -1,7 +1,6 @@
 package com.daidaisuki.inventory.db;
 
 import com.daidaisuki.inventory.exception.DataAccessException;
-import com.daidaisuki.inventory.exception.InsufficientStockException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -14,15 +13,15 @@ public class TransactionManager {
 
   @FunctionalInterface
   public interface TransactionAction {
-    void execute() throws InsufficientStockException;
+    void execute();
   }
 
   @FunctionalInterface
   public interface TransactionCallable<T> {
-    T execute() throws InsufficientStockException;
+    T execute();
   }
 
-  public void executeInTransaction(TransactionAction action) throws InsufficientStockException {
+  public void executeInTransaction(TransactionAction action) {
     executeInTransaction(
         () -> {
           action.execute();
@@ -30,8 +29,7 @@ public class TransactionManager {
         });
   }
 
-  public <T> T executeInTransaction(TransactionCallable<T> action)
-      throws InsufficientStockException {
+  public <T> T executeInTransaction(TransactionCallable<T> action) {
     boolean alreadyInTransaction = false;
     try {
       alreadyInTransaction = !connection.getAutoCommit();
@@ -46,9 +44,6 @@ public class TransactionManager {
       T result = action.execute();
       this.safeCommit();
       return result;
-    } catch (InsufficientStockException e) {
-      this.safeRollback();
-      throw e;
     } catch (RuntimeException e) {
       this.safeRollback();
       throw e;
