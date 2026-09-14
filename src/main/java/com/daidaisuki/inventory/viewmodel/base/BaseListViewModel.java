@@ -70,6 +70,10 @@ public abstract class BaseListViewModel<T> {
 
   public abstract void update(T item);
 
+  public abstract void archive(T item);
+
+  public abstract void restore(T item);
+
   public abstract void delete(T item);
 
   public void refresh() {

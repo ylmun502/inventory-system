@@ -3,12 +3,14 @@ package com.daidaisuki.inventory.service;
 import com.daidaisuki.inventory.dao.impl.ProductDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.interfaces.Archivable;
+import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.util.List;
 import java.util.UUID;
 
-public class ProductService {
+public class ProductService implements Archivable, Removable {
   private final TransactionManager transactionManager;
   private final ProductDAO productDAO;
 
@@ -41,15 +43,18 @@ public class ProductService {
     transactionManager.executeInTransaction(() -> this.productDAO.update(product));
   }
 
-  public void archiveProduct(int productId) {
+  @Override
+  public void archive(int productId) {
     transactionManager.executeInTransaction(() -> this.productDAO.archive(productId));
   }
 
-  public void restoreProduct(int productId) {
+  @Override
+  public void restore(int productId) {
     transactionManager.executeInTransaction(() -> this.productDAO.restore(productId));
   }
 
-  public void removeProduct(int productId) {
+  @Override
+  public void remove(int productId) {
     transactionManager.executeInTransaction(() -> this.productDAO.remove(productId));
   }
 

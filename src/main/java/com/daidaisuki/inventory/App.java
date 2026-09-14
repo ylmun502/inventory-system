@@ -16,8 +16,12 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class App extends Application {
+
+  private static final Logger log = LoggerFactory.getLogger(App.class);
 
   private static Scene scene;
   public static final double WIDTH_RATIO = 1.0;
@@ -27,6 +31,17 @@ public class App extends Application {
 
   @Override
   public void start(Stage stage) throws IOException {
+    Thread.setDefaultUncaughtExceptionHandler(
+        (thread, throwable) -> {
+          log.error("UNHANDLED SYSTEM ERROR on thread: " + thread.getName(), throwable);
+        });
+
+    Thread.currentThread()
+        .setUncaughtExceptionHandler(
+            (thread, throwable) -> {
+              log.error("UNHANDLED UI LOOP ERROR on the JavaFX Main Thread!", throwable);
+            });
+
     Connection connection = null;
     try {
       DatabaseManager.initializeDatabase();

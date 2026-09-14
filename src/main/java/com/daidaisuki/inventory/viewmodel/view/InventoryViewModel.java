@@ -150,8 +150,18 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   @Override
+  public void archive(Product item) {
+    this.runInventoryTask(() -> this.productService.archive(item.getId()));
+  }
+
+  @Override
+  public void restore(Product item) {
+    this.runInventoryTask(() -> this.productService.restore(item.getId()));
+  }
+
+  @Override
   public void delete(Product item) {
-    this.runInventoryTask(() -> this.productService.removeProduct(item.getId()));
+    this.runInventoryTask(() -> this.productService.remove(item.getId()));
   }
 
   public void receiveStock(StockReceiveRequest receiveRequest, int userId) {
@@ -162,7 +172,6 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
     this.runAsync(
         action,
         () -> {
-          this.refresh();
           if (this.selectedItem.get() != null) {
             this.refreshDetail(this.selectedItem.get().getId());
           }
@@ -170,11 +179,11 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   public ProductService getProductService() {
-    return productService;
+    return this.productService;
   }
 
   public SupplierService getSupplierService() {
-    return supplierService;
+    return this.supplierService;
   }
 
   public final ObservableList<StockBatch> getSelectedProductBatches() {

@@ -45,7 +45,17 @@ public class SupplierController extends BaseCrudController<Supplier, SupplierVie
   }
 
   @Override
-  protected String getDeleteConfirmationMessage(Supplier supplier) {
-    return "Are you sure you want to delete " + supplier.getName() + "?";
+  protected String getArchiveConfirmationMessage(Supplier supplier) {
+    return "Are you sure you want to archive " + supplier.getName() + "?";
+  }
+
+  @Override
+  protected String getRestoreConfirmationMessage(Supplier supplier) {
+    return "Are you sure you want to restore " + supplier.getName() + "?";
+  }
+
+  @Override
+  protected String getPurgeConfirmationMessage(Supplier supplier) {
+    return "Are you sure you want to permanently delete " + supplier.getName() + "?";
   }
 }

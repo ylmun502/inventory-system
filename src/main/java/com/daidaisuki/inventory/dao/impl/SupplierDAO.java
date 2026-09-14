@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class SupplierDAO extends BaseDAO<Supplier> {
+  private static final String TABLE_NAME = "suppliers";
+
   public SupplierDAO(Connection connection) {
     super(connection);
   }
@@ -81,13 +83,12 @@ public class SupplierDAO extends BaseDAO<Supplier> {
         """
           UPDATE suppliers
           SET
-            name,
-            email,
-            phone,
-            address,
-            updated_at
+            name = ?,
+            email = ?,
+            phone = ?,
+            address = ?,
+            updated_at = ?
           WHERE id = ?
-        )
         """;
 
     update(
@@ -100,10 +101,16 @@ public class SupplierDAO extends BaseDAO<Supplier> {
         supplier.getId());
   }
 
-  public void delete(int supplierId) {
-    String sql =
-        "UPDATE suppliers SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
-    update(sql, OffsetDateTime.now(ZoneOffset.UTC), supplierId);
+  public void archive(int supplierId) {
+    this.setDeletionStatus(TABLE_NAME, supplierId, true);
+  }
+
+  public void restore(int supplierId) {
+    this.setDeletionStatus(TABLE_NAME, supplierId, false);
+  }
+
+  public void remove(int supplierId) {
+    this.deleteById(TABLE_NAME, supplierId);
   }
 
   public Optional<Supplier> findById(int id) {

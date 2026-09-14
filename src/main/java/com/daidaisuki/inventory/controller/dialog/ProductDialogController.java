@@ -43,14 +43,14 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Create Product")
                 .otherwise("Edit Product"));
-    if (confirmButton != null) {
-      confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
+    if (this.confirmButton != null) {
+      this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
     }
   }
 
   @Override
   public Product getResult() {
-    return confirmed ? this.viewModel.createResult() : null;
+    return this.confirmed ? this.viewModel.createResult() : null;
   }
 
   private void setupBinding() {
@@ -70,7 +70,6 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
     if (!this.viewModel.isInvalidProperty().get()) {
       this.confirmed = true;
       this.dialogStage.close();
-    } else {
     }
   }
 }

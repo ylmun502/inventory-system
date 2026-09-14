@@ -15,8 +15,12 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainController {
+  private static final Logger log = LoggerFactory.getLogger(MainController.class);
+
   @FXML private VBox leftPane;
   @FXML private StackPane centerPane;
 
@@ -31,7 +35,6 @@ public class MainController {
 
   @FXML
   public void initialize() {
-    this.leftPane.setPrefWidth(150);
     for (var node : this.leftPane.getChildren()) {
       if (node instanceof Button button) {
         button.setOnAction(this::handleViewSwitch);
@@ -66,6 +69,7 @@ public class MainController {
       View view = View.valueOf(viewKey);
       switchView(view);
     } catch (Exception e) {
+      log.error("Navigation error routing to " + viewKey, e);
       // Use AlertHelper, passing the current window as owner for proper modality
       AlertHelper.showErrorAlert(
           FxWindowUtils.getWindow((Node) event.getSource()),

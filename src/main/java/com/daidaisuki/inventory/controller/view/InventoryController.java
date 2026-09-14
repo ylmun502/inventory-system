@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -38,7 +39,7 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
   @FXML private TableColumn<Product, BigDecimal> sellingPriceCol;
   @FXML private TableColumn<Product, String> statusCol;
 
-  @FXML private TableView<StockBatch> batchesTable;
+  @FXML private TableView<StockBatch> batchTable;
   @FXML private TableColumn<StockBatch, Number> batchIdCol;
   @FXML private TableColumn<StockBatch, String> batchCodeCol;
   @FXML private TableColumn<StockBatch, OffsetDateTime> batchDateCol;
@@ -99,6 +100,8 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
 
   @Override
   protected void bindViewModelProperties() {
+    super.bindViewModelProperties();
+    this.bindButtons();
     this.bindLabels();
   }
 
@@ -117,8 +120,18 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
   }
 
   @Override
-  protected String getDeleteConfirmationMessage(Product product) {
-    return "Are you sure you want to delete " + product.getName() + "?";
+  protected String getArchiveConfirmationMessage(Product product) {
+    return "Are you sure you want to archive " + product.getName() + "?";
+  }
+
+  @Override
+  protected String getRestoreConfirmationMessage(Product product) {
+    return "Are you sure you want to restore " + product.getName() + "?";
+  }
+
+  @Override
+  protected String getPurgeConfirmationMessage(Product product) {
+    return "Are you sure you want to permanently delete " + product.getName() + "?";
   }
 
   /*
@@ -170,7 +183,7 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     TableCellUtils.setupDateCells(this.batchDateCol, this.batchExpiryCol);
 
     TableColumnUtils.bindColumnWidthsByRatio(
-        this.batchesTable, List.of(0.1, 0.1, 0.15, 0.15, 0.2, 0.15, 0.15));
+        this.batchTable, List.of(0.1, 0.1, 0.15, 0.15, 0.2, 0.15, 0.15));
   }
 
   private void setupTransactionsTable() {
@@ -224,7 +237,7 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     this.receiveStockButton
         .disableProperty()
         .bind(this.viewModel.selectedItemProperty().isNull().or(this.viewModel.isBusyProperty()));
-    this.setupDeselectOnEmptySpace(batchesTable);
+    this.setupDeselectOnEmptySpace(batchTable);
     this.setupDeselectOnEmptySpace(transactionTable);
   }
 
@@ -246,6 +259,16 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
     this.totalValueLabel.textProperty().bind(this.viewModel.totalValueTextProperty());
   }
 
+  private void bindButtons() {
+    this.receiveStockButton.visibleProperty().bind(this.viewModel.showArchivedProperty().not());
+    this.receiveStockButton.managedProperty().bind(this.receiveStockButton.visibleProperty());
+
+    this.archiveButton
+        .textProperty()
+        .bind(
+            Bindings.when(this.viewModel.showArchivedProperty())
+                .then("Purge")
+                .otherwise("Archive"));
   }
 
   /*
@@ -255,7 +278,7 @@ public class InventoryController extends BaseCrudController<Product, InventoryVi
    */
 
   private void setupData() {
-    this.batchesTable.setItems(this.viewModel.getSelectedProductBatches());
+    this.batchTable.setItems(this.viewModel.getSelectedProductBatches());
     this.transactionTable.setItems(this.viewModel.getSelectedProductTransactions());
   }
 

@@ -58,6 +58,12 @@
     -fx-border-radius: 3;
     -fx-background-radius: 3;
     -fx-padding: 6 12;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #b5b5b5;
 }
 
 .button.primary {
@@ -66,10 +72,18 @@
     -fx-border-color: #2a7ae2;
 }
 
+.button.primary:hover {
+    -fx-background-color: #1e87f0;
+}
+
 .button.secondary {
     -fx-background-color: #e0e0e0;
     -fx-text-fill: #333333;
     -fx-border-color: #cfcfcf;
+}
+
+.button.secondary:hover {
+    -fx-background-color: #d4d4d4;
 }
 
 .button.danger {
@@ -78,11 +92,20 @@
     -fx-border-color: #c0392b;
 }
 
+.button.danger:hover {
+    -fx-background-color: #c0392b;
+}
+
 .menu-button {
     -fx-background-color: #e0e0e0;
     -fx-border-color: #cfcfcf;
     -fx-border-radius: 3;
     -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-background-color: #d4d4d4;
 }
 
 .menu-button .arrow {
@@ -103,6 +126,7 @@
 
 .menu-item:hover {
     -fx-background-color: #3498db;
+    -fx-cursor: hand;
 }
 
 .menu-item .label {
@@ -121,6 +145,27 @@
     -fx-font-size: 14px;
     -fx-padding: 5px;
     -fx-border-radius: 3;
+}
+
+/* =========================
+   SIDEBAR
+   ========================= */
+.navigation-sidebar {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: transparent #dcdcdc transparent transparent;
+    -fx-border-width: 1px;
+}
+
+.navigation-sidebar .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333333;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+}
+
+.navigation-sidebar .button:hover {
+    -fx-background-color: #e9ecef;
+    -fx-cursor: hand;
 }
 
 /* =========================

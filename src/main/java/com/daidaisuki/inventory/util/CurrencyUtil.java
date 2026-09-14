@@ -23,13 +23,20 @@ public final class CurrencyUtil {
         : CURRENCY_FORMATTER.format(amount);
   }
 
-  public static BigDecimal longToBigDecimal(long value) {
-    return BigDecimal.valueOf(value).movePointLeft(2);
+  public static BigDecimal longToBigDecimal(long amount) {
+    return BigDecimal.valueOf(amount).movePointLeft(2);
   }
 
-  public static long bigDecimalToLong(BigDecimal value) {
-    return value == null
+  public static long bigDecimalToLong(BigDecimal amount) {
+    return amount == null
         ? 0L
-        : value.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+        : amount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+  }
+
+  public static String formatForInput(BigDecimal amount) {
+    if (amount == null) {
+      return "0.00";
+    }
+    return String.format(Locale.US, "%.2f", amount);
   }
 }

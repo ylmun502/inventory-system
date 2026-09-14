@@ -219,7 +219,7 @@ public class OrderDAO extends BaseDAO<Order> {
         customerId);
   }
 
-  public List<Order> findByCustomerId(int customerId) {
+  public List<Order> findAllByCustomerId(int customerId) {
     String sql =
         """
         o.id AS o_id,
@@ -243,6 +243,7 @@ public class OrderDAO extends BaseDAO<Order> {
           c.total_orders,
           c.total_spent_cents,
           c.last_order_date
+        FROM order o
         LEFT JOIN customer_summary c ON o.customer_id = c.id
         WHERE customer_id = ? AND is_deleted = 0
         ORDER BY created_at DESC

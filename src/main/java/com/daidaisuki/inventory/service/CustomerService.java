@@ -3,11 +3,13 @@ package com.daidaisuki.inventory.service;
 import com.daidaisuki.inventory.dao.impl.CustomerDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
+import com.daidaisuki.inventory.interfaces.Archivable;
+import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Customer;
 import java.sql.Connection;
 import java.util.List;
 
-public class CustomerService {
+public class CustomerService implements Archivable, Removable {
   private final TransactionManager transactionManager;
   private final CustomerDAO customerDAO;
 
@@ -16,7 +18,7 @@ public class CustomerService {
     this.customerDAO = new CustomerDAO(connection);
   }
 
-  public List<Customer> listCustomers() {
+  public List<Customer> listAll() {
     return customerDAO.findAll();
   }
 
@@ -28,7 +30,15 @@ public class CustomerService {
     transactionManager.executeInTransaction(() -> customerDAO.update(customer));
   }
 
-  public void removeCustomer(int customerId) {
+  public void archive(int customerId) {
+    transactionManager.executeInTransaction(() -> customerDAO.archive(customerId));
+  }
+
+  public void restore(int customerId) {
+    transactionManager.executeInTransaction(() -> customerDAO.restore(customerId));
+  }
+
+  public void remove(int customerId) {
     transactionManager.executeInTransaction(() -> customerDAO.delete(customerId));
   }
 
@@ -36,9 +46,5 @@ public class CustomerService {
     return customerDAO
         .findById(customerId)
         .orElseThrow(() -> new EntityNotFoundException("The customer could not be found."));
-  }
-
-  public List<Customer> searchCustomersByName(String name) {
-    return customerDAO.findAllByName(name);
   }
 }

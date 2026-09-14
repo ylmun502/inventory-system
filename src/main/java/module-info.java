@@ -5,6 +5,7 @@ module com.daidaisuki.inventory {
   requires javafx.base;
   requires transitive java.sql;
   requires org.xerial.sqlitejdbc;
+  requires org.slf4j;
 
   opens com.daidaisuki.inventory.controller.dialog to
       javafx.fxml;

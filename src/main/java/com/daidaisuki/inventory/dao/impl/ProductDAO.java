@@ -2,8 +2,6 @@ package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.exception.DataAccessException;
-import com.daidaisuki.inventory.interfaces.Archivable;
-import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import java.math.BigDecimal;
@@ -15,7 +13,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-public class ProductDAO extends BaseDAO<Product> implements Archivable, Removable {
+public class ProductDAO extends BaseDAO<Product> {
   private static final String TABLE_NAME = "products";
   private static final String BASE_SELECT_PRODUCT =
       """
@@ -41,7 +39,6 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         is_deleted
       FROM products
       """;
-  private static final String WHERE_DELETE_STATUS = " WHERE is_deleted = ?";
   private static final String ORDER_BY_NAME = " ORDER BY name ASC";
 
   public ProductDAO(Connection connection) {
@@ -171,66 +168,26 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         product.getId());
   }
 
-  @Override
   public void archive(int productId) {
     this.setDeletionStatus(TABLE_NAME, productId, true);
   }
 
-  @Override
   public void restore(int productId) {
     this.setDeletionStatus(TABLE_NAME, productId, false);
   }
 
-  @Override
   public void remove(int productId) {
     this.deleteById(TABLE_NAME, productId);
   }
 
   public Optional<Product> findById(int id) {
-    String sql =
-        """
-        SELECT
-          id,
-          sku,
-          barcode,
-          name,
-          category,
-          unit_type,
-          tax_category,
-          description,
-          weight,
-          current_stock,
-          min_stock_level,
-          max_stock_level,
-          reordering_level,
-          selling_price_cents,
-          average_unit_cost_cents,
-          is_active,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM products
-        WHERE id = ?
-        """;
+    String sql = BASE_SELECT_PRODUCT + " WHERE id = ?";
     return this.queryForObject(sql, this::mapResultSetToProduct, id);
   }
 
   public List<Product> findAll() {
     String sql = BASE_SELECT_PRODUCT + ORDER_BY_NAME;
     return this.query(sql, this::mapResultSetToProduct);
-  }
-
-  public List<Product> findAllActive() {
-    return this.findByDeletionStatus(false);
-  }
-
-  public List<Product> findAllArchived() {
-    return this.findByDeletionStatus(true);
-  }
-
-  private List<Product> findByDeletionStatus(Boolean isDeleted) {
-    String sql = BASE_SELECT_PRODUCT + WHERE_DELETE_STATUS + ORDER_BY_NAME;
-    return this.query(sql, this::mapResultSetToProduct, isDeleted ? 1 : 0);
   }
 
   public boolean updateStockTotal(int productId, int changeAmount) {

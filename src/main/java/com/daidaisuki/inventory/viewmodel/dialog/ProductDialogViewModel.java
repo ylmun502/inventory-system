@@ -4,6 +4,7 @@ import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.ui.validation.ValidationStatus;
+import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.StringCleaner;
 import com.daidaisuki.inventory.util.ValidationUtils;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
@@ -106,13 +107,13 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.category.set(model.getCategory());
     this.description.set(model.getDescription());
     this.weight.set(Integer.toString(model.getWeight()));
-    this.price.set(model.getSellingPrice().toPlainString());
+    this.price.set(CurrencyUtil.formatForInput(model.getSellingPrice()));
     this.unitType.set(model.getUnitType());
     this.isActive.set(model.isActive());
   }
 
   public BooleanBinding isNewProperty() {
-    return Bindings.createBooleanBinding(() -> product == null);
+    return Bindings.createBooleanBinding(() -> this.product == null);
   }
 
   public Product getProduct() {

@@ -101,6 +101,6 @@ public class OrderService {
   }
 
   public List<Order> getOrdersForCustomer(int customerId) {
-    return orderDAO.findByCustomerId(customerId);
+    return orderDAO.findAllByCustomerId(customerId);
   }
 }

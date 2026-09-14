@@ -1,9 +1,27 @@
 package com.daidaisuki.inventory.controller.view;
 
+import com.daidaisuki.inventory.base.controller.BaseCrudController;
+import com.daidaisuki.inventory.controller.dialog.CustomerDialogController;
+import com.daidaisuki.inventory.enums.DialogView;
+import com.daidaisuki.inventory.enums.FulfillmentStatus;
+import com.daidaisuki.inventory.model.Customer;
+import com.daidaisuki.inventory.model.Order;
+import com.daidaisuki.inventory.serviceregistry.ServiceRegistry;
+import com.daidaisuki.inventory.util.TableCellUtils;
+import com.daidaisuki.inventory.util.TableColumnUtils;
+import com.daidaisuki.inventory.viewmodel.dialog.CustomerDialogViewModel;
+import com.daidaisuki.inventory.viewmodel.view.CustomersViewModel;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.List;
+import javafx.beans.binding.Bindings;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 
-/* Comment out during mvvm migration as need to refactor view by view
-
-public class CustomersController extends BaseTableController<Customer, CustomersViewModel> {
+public class CustomersController extends BaseCrudController<Customer, CustomersViewModel> {
   @FXML private TableColumn<Customer, String> fullNameCol;
   @FXML private TableColumn<Customer, BigDecimal> totalSpentCol;
   @FXML private TableColumn<Customer, String> acquisitionSourceCol;
@@ -27,45 +45,98 @@ public class CustomersController extends BaseTableController<Customer, Customers
   @FXML private TableColumn<Order, FulfillmentStatus> orderStatusCol;
   @FXML private TableColumn<Order, BigDecimal> orderTotalCol;
 
-  public CustomersController(CustomersViewModel viewModel) {
-    super(viewModel);
+  public CustomersController(ServiceRegistry registry) throws SQLException {
+    super(new CustomersViewModel(registry.getCustomerService(), registry.getOrderService()));
   }
 
   @FXML
   public void initialize() {
-    setupColumns();
-    setupOrderColumn();
-    initializeBase(this.table, this.addButton, this.editButton, this.deleteButton);
-    this.fullNameCol.setSortType(TableColumn.SortType.ASCENDING);
-    this.table.getSortOrder().add(this.fullNameCol);
-    this.table.sort();
-    this.orderDateCol.setSortType(TableColumn.SortType.DESCENDING);
-    this.orderTable.getSortOrder().add(this.orderDateCol);
-    this.table
-        .getSelectionModel()
-        .selectedItemProperty()
-        .addListener(
-            (obs, oldVal, newVal) -> {
-              updateDetailPane(newVal);
-            });
+    this.setupStaticUI();
+    this.setupEventShortcuts();
+    // setupOrderColumn();
+    this.initializeBaseCrudController();
   }
 
-  private void setupColumns() {
-    List<Double> ratios = new ArrayList<>(Collections.nCopies(7, 0.2));
-    TableColumnUtils.bindColumnWidthsByRatio(this.table, ratios);
+  @Override
+  protected void bindViewModelProperties() {
+    super.bindViewModelProperties();
+    this.bindButtons();
+    this.bindLabels();
+  }
+
+  @Override
+  protected void setupTableDataBinding() {
+    super.setupTableDataBinding();
+    this.orderTable.setItems(this.viewModel.getSelectedCustomerOrders());
+  }
+
+  @Override
+  protected Customer showEntityDialog(Customer customer) {
+    CustomerDialogViewModel dialogViewModel = new CustomerDialogViewModel(customer);
+    return this.getDialogService()
+        .showDialog(CustomerDialogController.class, DialogView.CUSTOMER_DIALOG, dialogViewModel);
+  }
+
+  @Override
+  protected String getArchiveConfirmationMessage(Customer customer) {
+    return "Are you sure you want to archive " + customer.getFullName() + "?";
+  }
+
+  @Override
+  protected String getRestoreConfirmationMessage(Customer customer) {
+    return "Are you sure you want to restore " + customer.getFullName() + "?";
+  }
+
+  @Override
+  protected String getPurgeConfirmationMessage(Customer customer) {
+    return "Are you sure you want to permanently delete " + customer.getFullName() + "?";
+  }
+
+  private void setupStaticUI() {
+    this.setupMainTableColumns();
+  }
+
+  private void setupEventShortcuts() {
+    this.setupDeselectOnEmptySpace(orderTable);
+  }
+
+  private void bindLabels() {
+    this.fullNameLabel.textProperty().bind(this.viewModel.fullNameTextProperty());
+    this.emailLabel.textProperty().bind(this.viewModel.emailTextProperty());
+    this.phoneNumberLabel.textProperty().bind(this.viewModel.phoneNumberTextProperty());
+    this.addressLabel.textProperty().bind(this.viewModel.addressTextProperty());
+    this.totalOrdersLabel.textProperty().bind(this.viewModel.totalOrderTextProperty());
+    this.totalSpentLabel.textProperty().bind(this.viewModel.totalSpentTextProperty());
+    this.totalDiscountLabel.textProperty().bind(this.viewModel.totalDiscountTextProperty());
+    this.averageOrderValueLabel.textProperty().bind(this.viewModel.averageOrderValueTextProperty());
+    this.acquisitionSourceLabel.textProperty().bind(this.viewModel.acquisitionSourceTextProperty());
+    this.createdAtLabel.textProperty().bind(this.viewModel.createdAtTextProperty());
+    this.updatedAtLabel.textProperty().bind(this.viewModel.updatedAtTextProperty());
+  }
+
+  private void bindButtons() {
+    this.archiveButton
+        .textProperty()
+        .bind(
+            Bindings.when(this.viewModel.showArchivedProperty())
+                .then("Purge")
+                .otherwise("Archive"));
+  }
+
+  private void setupMainTableColumns() {
     this.fullNameCol.setCellValueFactory(cellData -> cellData.getValue().fullNameProperty());
+    this.totalSpentCol.setCellValueFactory(cellData -> cellData.getValue().totalSpentProperty());
     this.acquisitionSourceCol.setCellValueFactory(
         cellData -> cellData.getValue().acquisitionSourceProperty());
-    this.totalSpentCol.setCellValueFactory(cellData -> cellData.getValue().totalSpentProperty());
     this.lastOrderDateCol.setCellValueFactory(
         cellData -> cellData.getValue().lastOrderDateProperty());
-
-    this.fullNameCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
-    this.acquisitionSourceCol.setCellFactory(TableCellUtils.centerAlignedStringCellFactory());
-    this.totalSpentCol.setCellFactory(TableCellUtils.centerAlignedCurrencyCellFactory());
-    this.lastOrderDateCol.setCellFactory(TableCellUtils.centerAlignedDateCellFactory());
+    TableCellUtils.setupStringCells(this.fullNameCol, this.acquisitionSourceCol);
+    TableCellUtils.setupCurrencyCells(this.totalSpentCol);
+    TableCellUtils.setupDateCells(this.lastOrderDateCol);
+    TableColumnUtils.bindColumnWidthsByRatio(this.table, List.of(0.3, 0.2, 0.3, 0.2));
   }
 
+  /*
   private void setupOrderColumn() {
     this.orderIdCol.setCellValueFactory(celldata -> celldata.getValue().idProperty());
     this.orderDateCol.setCellValueFactory(celldata -> celldata.getValue().createdAtProperty());
@@ -78,120 +149,5 @@ public class CustomersController extends BaseTableController<Customer, Customers
     this.orderStatusCol.setCellFactory(TableCellUtils.centerAlignedEnumCellFactory());
     this.orderTotalCol.setCellFactory(TableCellUtils.centerAlignedCurrencyCellFactory());
   }
-
-  private void updateDetailPane(Customer customer) {
-    unBindLabels();
-    if (customer == null) {
-      clearLabels();
-      this.orderTable.setItems(FXCollections.emptyObservableList());
-      return;
-    }
-    bindLabels(customer);
-  }
-
-  private void bindLabels(Customer customer) {
-    this.fullNameLabel.textProperty().bind(customer.fullNameProperty());
-    this.acquisitionSourceLabel.textProperty().bind(customer.acquisitionSourceProperty());
-    this.emailLabel.textProperty().bind(customer.emailProperty());
-    this.phoneNumberLabel.textProperty().bind(customer.phoneNumberProperty());
-    this.addressLabel.textProperty().bind(customer.addressProperty());
-    this.totalOrdersLabel.textProperty().bind(customer.totalOrdersProperty().asString());
-    this.totalSpentLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> CurrencyUtil.format(customer.getTotalSpent()),
-                customer.totalSpentProperty()));
-    this.totalDiscountLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> CurrencyUtil.format(customer.getTotalDiscount()),
-                customer.totalDiscountProperty()));
-    this.averageOrderValueLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> CurrencyUtil.format(customer.getAverageOrderValue()),
-                customer.averageOrderValueProperty()));
-    this.createdAtLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> DateUtils.format(customer.getCreatedAt()), customer.createdAtProperty()));
-    this.updatedAtLabel
-        .textProperty()
-        .bind(
-            Bindings.createStringBinding(
-                () -> DateUtils.format(customer.getUpdatedAt()), customer.updatedAtProperty()));
-    this.orderTable.setItems(this.viewModel.getOrdersForCustomer(customer.getId()));
-  }
-
-  private void unBindLabels() {
-    fullNameLabel.textProperty().unbind();
-    acquisitionSourceLabel.textProperty().unbind();
-    emailLabel.textProperty().unbind();
-    phoneNumberLabel.textProperty().unbind();
-    addressLabel.textProperty().unbind();
-    totalOrdersLabel.textProperty().unbind();
-    totalSpentLabel.textProperty().unbind();
-    totalDiscountLabel.textProperty().unbind();
-    averageOrderValueLabel.textProperty().unbind();
-    createdAtLabel.textProperty().unbind();
-    updatedAtLabel.textProperty().unbind();
-  }
-
-  private void clearLabels() {
-    fullNameLabel.setText("Select a Customer");
-    acquisitionSourceLabel.setText("Source: --");
-    emailLabel.setText("Email: --");
-    phoneNumberLabel.setText("Phone: --");
-    addressLabel.setText("Address: --");
-    totalOrdersLabel.setText("0");
-    totalSpentLabel.setText("$0.00");
-    totalDiscountLabel.setText("$0.00");
-    averageOrderValueLabel.setText("$0.00");
-    createdAtLabel.setText("Created: --");
-    updatedAtLabel.setText("Updated: --");
-  }
-
-  @FXML
-  private void handleAdd() throws Exception {
-    Customer customer =
-        this.showGenericDialog(
-            CustomerDialogController.class,
-            DialogView.CUSTOMER_DIALOG,
-            new CustomerDialogViewModel(this.viewModel.getCustomerService()),
-            null);
-    if (customer != null) {
-      this.viewModel.add(customer);
-    }
-  }
-
-  @FXML
-  private void handleEdit() throws Exception {
-    Customer selectedCustomer = this.viewModel.selectedItemProperty().get();
-    if (selectedCustomer != null) {
-      CustomerDialogViewModel dialogViewModel =
-          new CustomerDialogViewModel(this.viewModel.getCustomerService());
-      Customer updatedCustomer =
-          showGenericDialog(
-              CustomerDialogController.class,
-              DialogView.CUSTOMER_DIALOG,
-              dialogViewModel,
-              selectedCustomer);
-      if (updatedCustomer != null) {
-        this.viewModel.update(updatedCustomer);
-      }
-    }
-  }
-
-  @FXML
-  private void handleDelete() throws Exception {
-    Customer selectedCustomer = this.viewModel.selectedItemProperty().get();
-    if (selectedCustomer != null) {
-      this.viewModel.delete(selectedCustomer);
-    }
-  }
+  */
 }
-*/
