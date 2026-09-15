@@ -36,7 +36,12 @@
     </GridPane>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
+<<<<<<< HEAD
         <Button text="Cancel" onAction="#handleCancel"/>
         <Button fx:id="saveButton" text="Save" onAction="#handleSave"/>
+=======
+        <Button text="Cancel" onAction="#handleCancel" styleClass="secondary"/>
+        <Button fx:id="confirmButton" text="Confirm" onAction="#handleConfirm" styleClass="primary"/>
+>>>>>>> origin/new
     </HBox>
 </VBox>

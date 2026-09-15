@@ -1,7 +1,6 @@
 package com.daidaisuki.inventory.util;
 
 import com.daidaisuki.inventory.App;
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -51,6 +50,17 @@ public final class AlertHelper {
    */
   public static void showErrorAlert(Window owner, String title, String header, String content) {
     showAlert(Alert.AlertType.ERROR, owner, title, header, content);
+  }
+
+  /**
+   * Displays a styled error alert dialog related to a database operation.
+   *
+   * @param owner the owner window of the alert
+   * @param context a description of the context in which the database error occurred
+   * @param content the alert content text; defaults to an empty string if {@code null} or empty
+   */
+  public static void showDatabaseError(Window owner, String context, String content) {
+    showErrorAlert(owner, "Database Error", context, content);
   }
 
   /**
@@ -192,18 +202,6 @@ public final class AlertHelper {
    * @param action the action requiring a selection (e.g., "edit", "delete")
    */
   public static void showSelectionRequiredAlert(Window owner, String action) {
-    showWarningAlert(owner, "Warning", null, "Please select a product to " + action + ".");
-  }
-
-  /**
-   * Displays a styled error alert dialog related to a database operation.
-   *
-   * @param owner the owner window of the alert
-   * @param context a description of the context in which the database error occurred
-   * @param e the {@link SQLException} containing error details
-   */
-  public static void showDatabaseError(Window owner, String context, SQLException e) {
-    e.printStackTrace();
-    showErrorAlert(owner, "Database Error", context, e.getMessage());
+    showWarningAlert(owner, "Warning", null, "Please select an option to " + action + ".");
   }
 }

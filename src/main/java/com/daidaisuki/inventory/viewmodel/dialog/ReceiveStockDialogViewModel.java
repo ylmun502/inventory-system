@@ -3,14 +3,26 @@ package com.daidaisuki.inventory.viewmodel.dialog;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.model.Supplier;
 import com.daidaisuki.inventory.model.dto.StockReceiveRequest;
+<<<<<<< HEAD
+=======
+import com.daidaisuki.inventory.ui.validation.ValidationStatus;
+import com.daidaisuki.inventory.util.ValidationUtils;
+>>>>>>> origin/new
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+<<<<<<< HEAD
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+=======
+import java.util.Objects;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
+>>>>>>> origin/new
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,6 +33,10 @@ import javafx.collections.ObservableList;
 public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiveRequest> {
   private final Product product;
   private final ObservableList<Supplier> suppliers = FXCollections.observableArrayList();
+<<<<<<< HEAD
+=======
+  private final ObjectBinding<ValidationStatus> validationStatus;
+>>>>>>> origin/new
 
   private final ObjectProperty<Supplier> selectedSupplier = new SimpleObjectProperty<>();
   private final StringProperty batchCode = new SimpleStringProperty("");
@@ -29,6 +45,7 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
   private final ObjectProperty<LocalDate> expiryDate = new SimpleObjectProperty<>();
   private final StringProperty reason = new SimpleStringProperty("");
 
+<<<<<<< HEAD
   public ReceiveStockDialogViewModel(Product product, List<Supplier> supplierList) {
     this.product = product;
     if (this.product == null) {
@@ -36,6 +53,11 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
     } else {
       resetProperties();
     }
+=======
+  public ReceiveStockDialogViewModel(Product selectedProduct, List<Supplier> supplierList) {
+    this.product = Objects.requireNonNull(selectedProduct, "Product is required");
+    this.resetProperties();
+>>>>>>> origin/new
     if (supplierList == null) {
       this.suppliers.add(
           new Supplier(0, "Please add a supplier first", "None", "", "", "", null, null, false));
@@ -45,6 +67,20 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
     if (!suppliers.isEmpty()) {
       selectedSupplier.set(suppliers.get(0));
     }
+<<<<<<< HEAD
+=======
+
+    this.validationStatus =
+        Bindings.createObjectBinding(
+            () -> {
+              StringBuilder errors = new StringBuilder();
+              ValidationUtils.isNumeric(this.quantity.get(), "Quantity", errors, false);
+              ValidationUtils.isNumeric(this.unitCost.get(), "Unit Cost", errors, true);
+              return new ValidationStatus(errors.isEmpty(), errors.toString());
+            },
+            this.quantity,
+            this.unitCost);
+>>>>>>> origin/new
   }
 
   public void generateBatchCode() {
@@ -71,6 +107,7 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
 
   @Override
   public BooleanBinding isInvalidProperty() {
+<<<<<<< HEAD
     BooleanBinding invalidSupplier =
         this.selectedSupplier
             .isNull()
@@ -83,6 +120,22 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
         .or(this.batchCode.isEmpty())
         .or(this.quantity.isEmpty())
         .or(this.unitCost.isEmpty());
+=======
+    return supplierOrBatchInvalidBinding()
+        .or(
+            Bindings.createBooleanBinding(
+                () -> !this.validationStatus.get().isValid(), this.validationStatus));
+  }
+
+  private BooleanBinding supplierOrBatchInvalidBinding() {
+    return selectedSupplier
+        .isNull()
+        .or(
+            Bindings.createBooleanBinding(
+                () -> selectedSupplier.get() != null && selectedSupplier.get().getId() == 0,
+                selectedSupplier))
+        .or(batchCode.isEmpty());
+>>>>>>> origin/new
   }
 
   @Override
@@ -91,6 +144,12 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
   }
 
   @Override
+<<<<<<< HEAD
+=======
+  public void mapModelToProperties(StockReceiveRequest model) {}
+
+  @Override
+>>>>>>> origin/new
   public void resetProperties() {
     this.batchCode.set("");
     this.quantity.set("");

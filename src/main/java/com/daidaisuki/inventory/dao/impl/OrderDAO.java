@@ -4,6 +4,10 @@ import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.enums.FulfillmentStatus;
 import com.daidaisuki.inventory.enums.FulfillmentType;
 import com.daidaisuki.inventory.enums.PaymentMethod;
+<<<<<<< HEAD
+=======
+import com.daidaisuki.inventory.exception.DataAccessException;
+>>>>>>> origin/new
 import com.daidaisuki.inventory.model.Customer;
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.dto.OrderStats;
@@ -22,7 +26,11 @@ public class OrderDAO extends BaseDAO<Order> {
     super(connection);
   }
 
+<<<<<<< HEAD
   public List<Order> findAll() throws SQLException {
+=======
+  public List<Order> findAll() {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -53,7 +61,11 @@ public class OrderDAO extends BaseDAO<Order> {
     return query(sql, this::mapResultSetToOrder);
   }
 
+<<<<<<< HEAD
   public Order save(Order order) throws SQLException {
+=======
+  public Order save(Order order) {
+>>>>>>> origin/new
     String sql =
         """
         INSERT INTO orders(
@@ -77,6 +89,10 @@ public class OrderDAO extends BaseDAO<Order> {
           ?, ?, ?, ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+<<<<<<< HEAD
+=======
+    String nowString = now.toString();
+>>>>>>> origin/new
     return insert(
         sql,
         (newId) ->
@@ -109,12 +125,21 @@ public class OrderDAO extends BaseDAO<Order> {
         order.getFinalAmountCents(),
         order.getPaymentMethod().name(),
         order.getTrackingNumber(),
+<<<<<<< HEAD
         now,
         now,
         0);
   }
 
   public void update(Order order) throws SQLException {
+=======
+        nowString,
+        nowString,
+        0);
+  }
+
+  public void update(Order order) {
+>>>>>>> origin/new
     String sql =
         """
         UPDATE orders
@@ -134,6 +159,7 @@ public class OrderDAO extends BaseDAO<Order> {
           updated_at = ?
         WHERE id = ?
         """;
+<<<<<<< HEAD
     int affectedRows =
         update(
             sql,
@@ -157,6 +183,28 @@ public class OrderDAO extends BaseDAO<Order> {
   }
 
   public Optional<Order> findById(int id) throws SQLException {
+=======
+
+    update(
+        sql,
+        order.getCustomerId(),
+        order.getFulfillmentType().name(),
+        order.getFulfillmentStatus().name(),
+        order.getTotalItems(),
+        order.getSubtotalCents(),
+        order.getDiscountAmountCents(),
+        order.getTaxAmountCents(),
+        order.getShippingCostCents(),
+        order.getShippingCostActualCents(),
+        order.getFinalAmountCents(),
+        order.getPaymentMethod().name(),
+        order.getTrackingNumber(),
+        OffsetDateTime.now(ZoneOffset.UTC),
+        order.getId());
+  }
+
+  public Optional<Order> findById(int id) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -188,17 +236,29 @@ public class OrderDAO extends BaseDAO<Order> {
     return queryForObject(sql, this::mapResultSetToOrder, id);
   }
 
+<<<<<<< HEAD
   public void delete(int orderId) throws SQLException {
+=======
+  public void delete(int orderId) {
+>>>>>>> origin/new
     String sql = "UPDATE orders SET is_deleted = 1, updated_at = ? WHERE id = ?";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderId);
   }
 
+<<<<<<< HEAD
   public void restore(int orderId) throws SQLException {
+=======
+  public void restore(int orderId) {
+>>>>>>> origin/new
     String sql = "UPDATE orders SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderId);
   }
 
+<<<<<<< HEAD
   public Optional<OrderStats> getStatsForCustomer(int customerId) throws SQLException {
+=======
+  public Optional<OrderStats> getStatsForCustomer(int customerId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -220,7 +280,11 @@ public class OrderDAO extends BaseDAO<Order> {
         customerId);
   }
 
+<<<<<<< HEAD
   public List<Order> findByCustomerId(int customerId) throws SQLException {
+=======
+  public List<Order> findAllByCustomerId(int customerId) {
+>>>>>>> origin/new
     String sql =
         """
         o.id AS o_id,
@@ -244,6 +308,10 @@ public class OrderDAO extends BaseDAO<Order> {
           c.total_orders,
           c.total_spent_cents,
           c.last_order_date
+<<<<<<< HEAD
+=======
+        FROM order o
+>>>>>>> origin/new
         LEFT JOIN customer_summary c ON o.customer_id = c.id
         WHERE customer_id = ? AND is_deleted = 0
         ORDER BY created_at DESC
@@ -251,9 +319,15 @@ public class OrderDAO extends BaseDAO<Order> {
     return query(sql, this::mapResultSetToOrder, customerId);
   }
 
+<<<<<<< HEAD
   private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
     int id = rs.getInt("o_id");
     try {
+=======
+  private Order mapResultSetToOrder(ResultSet rs) {
+    try {
+      int id = rs.getInt("o_id");
+>>>>>>> origin/new
       int customerId = rs.getInt("customer_id");
       FulfillmentType fulfillmentType =
           FulfillmentType.fromString(rs.getString("fulfillment_type"));
@@ -292,6 +366,7 @@ public class OrderDAO extends BaseDAO<Order> {
               orderIsDeleted);
       order.setCustomer(customer);
       return order;
+<<<<<<< HEAD
     } catch (Exception e) {
       throw new SQLException("Mapping failed for Order ID: " + id, e);
     }
@@ -318,5 +393,37 @@ public class OrderDAO extends BaseDAO<Order> {
         null,
         null,
         false);
+=======
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
+    }
+  }
+
+  private Customer mapResultSetToCustmer(ResultSet rs) {
+    try {
+      int customerId = rs.getInt("customer_id");
+      String fullName = rs.getString("c_full_name");
+      int totalOrder = rs.getInt("total_orders");
+      BigDecimal totalSpent = CurrencyUtil.longToBigDecimal(rs.getLong("total_spent_cents"));
+      OffsetDateTime lastOrderDate = rs.getObject("last_order_date", OffsetDateTime.class);
+      return new Customer(
+          customerId,
+          fullName,
+          "",
+          "",
+          "",
+          "",
+          totalOrder,
+          totalSpent,
+          BigDecimal.ZERO,
+          BigDecimal.ZERO,
+          lastOrderDate,
+          null,
+          null,
+          false);
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
+    }
+>>>>>>> origin/new
   }
 }

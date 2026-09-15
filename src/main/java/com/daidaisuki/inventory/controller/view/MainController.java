@@ -15,8 +15,12 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainController {
+  private static final Logger log = LoggerFactory.getLogger(MainController.class);
+
   @FXML private VBox leftPane;
   @FXML private StackPane centerPane;
 
@@ -31,16 +35,18 @@ public class MainController {
 
   @FXML
   public void initialize() {
-    for (var node : leftPane.getChildren()) {
-      if (node instanceof Button) {
-        Button button = (Button) node;
+    for (var node : this.leftPane.getChildren()) {
+      if (node instanceof Button button) {
         button.setOnAction(this::handleViewSwitch);
         button.setMaxWidth(Double.MAX_VALUE);
       }
     }
+    if (this.defaultButton != null) {
+      setActiveButton(this.defaultButton);
+    }
+    String viewKey = (String) defaultButton.getUserData();
     try {
-      setActiveButton(defaultButton);
-      switchView(View.INVENTORY); // Load default view
+      switchView(View.valueOf(viewKey)); // Load default view
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -48,21 +54,22 @@ public class MainController {
 
   @FXML
   private void handleViewSwitch(ActionEvent event) {
-    Button btn = (Button) event.getSource();
+    Button button = (Button) event.getSource();
 
-    if (btn == activeButton) {
+    if (button == this.activeButton) {
       // Ignore click if already active
       return;
     }
 
-    setActiveButton(btn);
+    setActiveButton(button);
 
     // Switch the view
-    String viewKey = (String) btn.getUserData();
+    String viewKey = (String) button.getUserData();
     try {
       View view = View.valueOf(viewKey);
       switchView(view);
     } catch (Exception e) {
+      log.error("Navigation error routing to " + viewKey, e);
       // Use AlertHelper, passing the current window as owner for proper modality
       AlertHelper.showErrorAlert(
           FxWindowUtils.getWindow((Node) event.getSource()),
@@ -75,22 +82,22 @@ public class MainController {
   private void switchView(View view) throws IOException {
     Parent newView = ViewLoader.loadParent(view, this.registry);
 
-    FadeTransition ft = new FadeTransition(Duration.millis(200), newView);
-    ft.setFromValue(0.5);
-    ft.setToValue(1.0);
+    FadeTransition fadeTransition = new FadeTransition(Duration.millis(200), newView);
+    fadeTransition.setFromValue(0.5);
+    fadeTransition.setToValue(1.0);
 
     centerPane.getChildren().setAll(newView);
-    ft.play();
+    fadeTransition.play();
   }
 
-  private void setActiveButton(Button btn) {
+  private void setActiveButton(Button button) {
     // Remove 'active' style from previous button
-    if (activeButton != null) {
+    if (this.activeButton != null) {
       activeButton.getStyleClass().remove("active");
     }
 
     // Add 'active' style to the new button
-    btn.getStyleClass().add("active");
-    activeButton = btn;
+    button.getStyleClass().add("active");
+    this.activeButton = button;
   }
 }

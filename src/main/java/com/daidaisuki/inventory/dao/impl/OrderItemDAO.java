@@ -1,6 +1,10 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+<<<<<<< HEAD
+=======
+import com.daidaisuki.inventory.exception.DataAccessException;
+>>>>>>> origin/new
 import com.daidaisuki.inventory.model.OrderItem;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -14,7 +18,11 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     super(connection);
   }
 
+<<<<<<< HEAD
   public OrderItem save(OrderItem item) throws SQLException {
+=======
+  public OrderItem save(OrderItem item) {
+>>>>>>> origin/new
     String sql =
         """
         INSERT INTO order_items(
@@ -32,6 +40,10 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
           ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+<<<<<<< HEAD
+=======
+    String nowString = now.toString();
+>>>>>>> origin/new
     return insert(
         sql,
         (newId) ->
@@ -52,12 +64,21 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
         item.getQuantity(),
         item.getUnitPriceAtSaleCents(),
         item.getUnitCostAtSaleCents(),
+<<<<<<< HEAD
         now,
         now,
         0);
   }
 
   public void update(OrderItem item) throws SQLException {
+=======
+        nowString,
+        nowString,
+        0);
+  }
+
+  public void update(OrderItem item) {
+>>>>>>> origin/new
     String sql =
         """
         UPDATE order_items
@@ -77,6 +98,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
         item.getId());
   }
 
+<<<<<<< HEAD
   public void delete(int orderItemId) throws SQLException {
     String sql =
         "UPDATE order_items SET is_deleted = 1, updated_at = ? WHERE id = ? AND is_deleted = 0";
@@ -87,6 +109,15 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
   }
 
   public List<OrderItem> findAllByOrderId(int orderId) throws SQLException {
+=======
+  public void delete(int orderItemId) {
+    String sql =
+        "UPDATE order_items SET is_deleted = 1, updated_at = ? WHERE id = ? AND is_deleted = 0";
+    update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderItemId);
+  }
+
+  public List<OrderItem> findAllByOrderId(int orderId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -107,7 +138,11 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     return query(sql, this::mapResultSetToOrderItem, orderId);
   }
 
+<<<<<<< HEAD
   public void deleteAllByOrderId(int orderId) throws SQLException {
+=======
+  public void deleteAllByOrderId(int orderId) {
+>>>>>>> origin/new
     String sql =
         """
         UPDATE order_items
@@ -118,9 +153,15 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
     update(sql, OffsetDateTime.now(ZoneOffset.UTC), orderId);
   }
 
+<<<<<<< HEAD
   private OrderItem mapResultSetToOrderItem(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
     try {
+=======
+  private OrderItem mapResultSetToOrderItem(ResultSet rs) {
+    try {
+      int id = rs.getInt("id");
+>>>>>>> origin/new
       int orderId = rs.getInt("order_id");
       int productId = rs.getInt("product_id");
       int batchId = rs.getInt("batch_id");
@@ -141,8 +182,13 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
           createdAt,
           updatedAt,
           isDeleted);
+<<<<<<< HEAD
     } catch (Exception e) {
       throw new SQLException("Mapping failed for OrderItem ID: " + id, e);
+=======
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
+>>>>>>> origin/new
     }
   }
 }

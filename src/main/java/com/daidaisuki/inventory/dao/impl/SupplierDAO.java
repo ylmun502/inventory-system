@@ -1,6 +1,10 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+<<<<<<< HEAD
+=======
+import com.daidaisuki.inventory.exception.DataAccessException;
+>>>>>>> origin/new
 import com.daidaisuki.inventory.model.Supplier;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -11,11 +15,20 @@ import java.util.List;
 import java.util.Optional;
 
 public class SupplierDAO extends BaseDAO<Supplier> {
+<<<<<<< HEAD
+=======
+  private static final String TABLE_NAME = "suppliers";
+
+>>>>>>> origin/new
   public SupplierDAO(Connection connection) {
     super(connection);
   }
 
+<<<<<<< HEAD
   public List<Supplier> findAll() throws SQLException {
+=======
+  public List<Supplier> findAll() {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -35,7 +48,11 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     return query(sql, this::mapResultSetToSupplier);
   }
 
+<<<<<<< HEAD
   public Supplier save(Supplier supplier) throws SQLException {
+=======
+  public Supplier save(Supplier supplier) {
+>>>>>>> origin/new
     String sql =
         """
         INSERT INTO suppliers(
@@ -51,6 +68,10 @@ public class SupplierDAO extends BaseDAO<Supplier> {
                ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+<<<<<<< HEAD
+=======
+    String nowString = now.toString();
+>>>>>>> origin/new
     return insert(
         sql,
         (newId) ->
@@ -69,16 +90,26 @@ public class SupplierDAO extends BaseDAO<Supplier> {
         supplier.getEmail(),
         supplier.getPhone(),
         supplier.getAddress(),
+<<<<<<< HEAD
         now,
         now,
         0);
   }
 
   public void update(Supplier supplier) throws SQLException {
+=======
+        nowString,
+        nowString,
+        0);
+  }
+
+  public void update(Supplier supplier) {
+>>>>>>> origin/new
     String sql =
         """
           UPDATE suppliers
           SET
+<<<<<<< HEAD
             name,
             email,
             phone,
@@ -108,6 +139,39 @@ public class SupplierDAO extends BaseDAO<Supplier> {
   }
 
   public Optional<Supplier> findById(int id) throws SQLException {
+=======
+            name = ?,
+            email = ?,
+            phone = ?,
+            address = ?,
+            updated_at = ?
+          WHERE id = ?
+        """;
+
+    update(
+        sql,
+        supplier.getName(),
+        supplier.getEmail(),
+        supplier.getPhone(),
+        supplier.getAddress(),
+        OffsetDateTime.now(ZoneOffset.UTC),
+        supplier.getId());
+  }
+
+  public void archive(int supplierId) {
+    this.setDeletionStatus(TABLE_NAME, supplierId, true);
+  }
+
+  public void restore(int supplierId) {
+    this.setDeletionStatus(TABLE_NAME, supplierId, false);
+  }
+
+  public void remove(int supplierId) {
+    this.deleteById(TABLE_NAME, supplierId);
+  }
+
+  public Optional<Supplier> findById(int id) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -126,14 +190,24 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     return queryForObject(sql, this::mapResultSetToSupplier, id);
   }
 
+<<<<<<< HEAD
   public boolean existsByShortCode(String shortCode) throws SQLException {
+=======
+  public boolean existsByShortCode(String shortCode) {
+>>>>>>> origin/new
     String sql = "SELECT COUNT(*) FROM suppliers WHERE short_code = ? AND is_deleted = 0";
     return queryForObject(sql, rs -> rs.getInt(1) > 0, shortCode).orElse(false);
   }
 
+<<<<<<< HEAD
   private Supplier mapResultSetToSupplier(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
     try {
+=======
+  private Supplier mapResultSetToSupplier(ResultSet rs) {
+    try {
+      int id = rs.getInt("id");
+>>>>>>> origin/new
       String name = rs.getString("name");
       String shortCode = rs.getString("short_code");
       String email = rs.getString("email");
@@ -146,8 +220,13 @@ public class SupplierDAO extends BaseDAO<Supplier> {
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Supplier(
           id, name, shortCode, email, phone, address, createdAt, updatedAt, isDeleted);
+<<<<<<< HEAD
     } catch (Exception e) {
       throw new SQLException("Mapping failed for Supplier ID: " + id, e);
+=======
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed.", e);
+>>>>>>> origin/new
     }
   }
 }

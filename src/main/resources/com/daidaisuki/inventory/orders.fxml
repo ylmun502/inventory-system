@@ -23,8 +23,8 @@
         </columns>
     </TableView>
     <HBox spacing="8">
-        <Button fx:id="addButton" text="Add Order" onAction="#handleAdd"/>
-        <Button fx:id="editButton" text="Edit Order" onAction="#handleEdit"/>
-        <Button fx:id="deleteButton" text="Delete Order" onAction="#handleDelete"/>
+        <Button fx:id="addButton" text="Add" onAction="#handleAdd"/>
+        <Button fx:id="editButton" text="Edit" onAction="#handleEdit"/>
+        <Button fx:id="archiveButton" text="Archive" onAction="#handleArchive"/>
     </HBox>
 </VBox>

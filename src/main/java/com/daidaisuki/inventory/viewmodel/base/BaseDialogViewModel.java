@@ -13,7 +13,11 @@ public abstract class BaseDialogViewModel<R> {
 
   public abstract BooleanBinding isNewProperty();
 
+<<<<<<< HEAD
   // protected abstract void mapModelToProperties(R model);
+=======
+  protected abstract void mapModelToProperties(R model);
+>>>>>>> origin/new
 
   protected abstract void resetProperties();
 

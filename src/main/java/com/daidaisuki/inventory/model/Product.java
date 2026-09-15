@@ -82,6 +82,10 @@ public class Product extends BaseModel {
       int maxStockLevel,
       int reorderingLevel,
       BigDecimal sellingPrice,
+<<<<<<< HEAD
+=======
+      BigDecimal averageUnitCost,
+>>>>>>> origin/new
       boolean isActive,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
@@ -98,6 +102,10 @@ public class Product extends BaseModel {
     this.maxStockLevel.set(maxStockLevel);
     this.reorderingLevel.set(reorderingLevel);
     this.sellingPrice.set(sellingPrice);
+<<<<<<< HEAD
+=======
+    this.averageUnitCost.set(averageUnitCost);
+>>>>>>> origin/new
     this.isActive.set(isActive);
     this.initializeBindings();
   }
@@ -112,10 +120,17 @@ public class Product extends BaseModel {
                 return "OUT";
               }
               if (stock <= minStockLevel.get()) {
+<<<<<<< HEAD
                 return "Critical";
               }
               if (stock <= reorderingLevel.get()) {
                 return "Low";
+=======
+                return "CRITICAL";
+              }
+              if (stock <= reorderingLevel.get()) {
+                return "LOW";
+>>>>>>> origin/new
               }
               return "OK";
             },

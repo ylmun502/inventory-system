@@ -13,10 +13,10 @@
       fx:controller="com.daidaisuki.inventory.controller.view.MainController">
 
     <children>
-        <VBox fx:id="leftPane" style="-fx-background-color: #f0f0f0;">
+        <VBox fx:id="leftPane" prefWidth="150" minWidth="150" styleClass="navigation-sidebar">
             <children>
                 <Button fx:id="defaultButton" text="Inventory" userData="INVENTORY" onAction="#handleViewSwitch"/>
-                <Button text="Currency Converter" userData="CURRENCY_CONVERTER" onAction="#handleViewSwitch" wrapText="true" styleClass="wrap-text-button"/>
+                <Button text="Currency Converter" userData="CURRENCY_CONVERTER" onAction="#handleViewSwitch"/>
                 <Button text="Orders" userData="ORDERS" onAction="#handleViewSwitch"/>
                 <Button text="Customers" userData="CUSTOMERS" onAction="#handleViewSwitch"/>
                 <Button text="Supplier" userData="SUPPLIER" onAction="#handleViewSwitch"/>

@@ -1,7 +1,13 @@
 package com.daidaisuki.inventory.controller.dialog;
 
-
-/* Comment out during mvvm migration as need to refactor view by view
+import com.daidaisuki.inventory.base.controller.BaseDialogController;
+import com.daidaisuki.inventory.model.Customer;
+import com.daidaisuki.inventory.viewmodel.dialog.CustomerDialogViewModel;
+import javafx.beans.binding.Bindings;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 
 public class CustomerDialogController
     extends BaseDialogController<Customer, CustomerDialogViewModel> {
@@ -18,36 +24,29 @@ public class CustomerDialogController
     super(viewModel);
   }
 
-  // Comment out during mvvm migration as need to refactor view by view
-
-  @Override
-  public Customer getModel() {
-    return this.viewModel.getModel();
-  }
-
-  @Override
-  public void setModel(Customer customer) {
-    this.viewModel.setModel(customer);
+  @FXML
+  public void initialize() {
     setupBinding();
-    setupBaseBinding();
     this.dialogTitle
         .textProperty()
         .bind(
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Create Customer")
                 .otherwise("Edit Customer"));
-    this.dialogStage
-        .titleProperty()
-        .bind(
-            Bindings.when(this.viewModel.isNewProperty())
-                .then("Add Customer")
-                .otherwise("Edit Customer"));
+    if (this.confirmButton != null) {
+      this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
+    }
+  }
+
+  @Override
+  public Customer getResult() {
+    return this.confirmed ? this.viewModel.createResult() : null;
   }
 
   private void setupBinding() {
     this.phoneNumberField.setTextFormatter(
         new TextFormatter<>(
-            change -> change.getControlNewText().matches("\\+?[0-9]{0-15}") ? change : null));
+            change -> change.getControlNewText().matches("\\+?[0-9]{0,15}") ? change : null));
     this.fullNameField.textProperty().bindBidirectional(this.viewModel.fullName);
     this.phoneNumberField.textProperty().bindBidirectional(this.viewModel.phoneNumber);
     this.emailField.textProperty().bindBidirectional(this.viewModel.email);
@@ -57,15 +56,10 @@ public class CustomerDialogController
 
   @FXML
   @Override
-  protected void handleSave() {
-    try {
-      this.viewModel.save();
-      this.saveClicked = true;
-      closeDialog();
-    } catch (Exception e) {
-      showError("Failed to save customer: \n" + e.getMessage());
+  protected void handleConfirm() {
+    if (!this.viewModel.isInvalidProperty().get()) {
+      this.confirmed = true;
+      this.dialogStage.close();
     }
   }
-  //
 }
-*/

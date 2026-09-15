@@ -1,13 +1,16 @@
 # Inventory Management System
 
-> 🚧 **Active Refactor in Progress**
+> **Active Refactor in Progress**
 >
-> This project is currently undergoing a major architectural migration from **MVC** to **MVVM** as part of a
-> deliberate refactoring effort.
+> This project is under **active development** and currently undergoing an **intentional architectural**   
+> **migration from MVC to MVVM**.
 >  
-> During this phase, the application may be unstable or not fully runnable.
-> The repository serves as a case study in real-world architectural migration by demonstrating the 
-> architectural trade-offs and iterative improvement involved in decoupling a legacy system.
+> The original MVC implementation includes initial functionality (product, customer, and order modules).
+> Midway through development, architectural limitations were identified — particularly around UI state 
+> management and tight coupling caused by horizontal feature development.
+>
+> As a result, development shifted to a **vertical slice migration strategy** to refactor the application
+> incrementally and establish clearer boundaries between UI, business logic, and data layers.
 
 ## Overview
 
@@ -44,11 +47,21 @@ This refactor is being performed incrementally to preserve existing functionalit
 
 ## Current Status
 
-- Architecture Migration: Currently refactoring from **MVC** to **MVVM**.
-- All views are temporarily non-functional.
-- Active development is ongoing on a migration branch.
+- The Main, Inventory, and Supplier views are accessible and stable.
+- Some features are still in progress as part of the ongoing migration.
+- The application is designed to remain stable during refactoring and does not crash during normal navigation.
+- Development is currently focused on completing the Inventory module as a reference implementation before migrating remaining features.
 
-The current goal is to stabilize individual views incrementally before completing the full migration.
+---
+
+## Why This Project Matters
+
+This project reflects a realistic software engineering scenario where early design decisions must be revisited as system complexity grows. The refactor emphasizes:
+- Improving separation of concerns using MVVM.
+- Transitioning from horizontal feature development to vertical slicing.
+- Enhancing long-term maintainability and testability.
+- Practicing incremental migration instead of a full rewrite.
+- The project prioritizes architectural correctness and long-term maintainability over short-term feature completeness.
 
 ---
 

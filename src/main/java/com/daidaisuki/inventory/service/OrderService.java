@@ -4,11 +4,13 @@ import com.daidaisuki.inventory.dao.impl.OrderDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.enums.FulfillmentStatus;
 import com.daidaisuki.inventory.exception.EntityNotFoundException;
+<<<<<<< HEAD
 import com.daidaisuki.inventory.exception.InsufficientStockException;
+=======
+>>>>>>> origin/new
 import com.daidaisuki.inventory.model.Order;
 import com.daidaisuki.inventory.model.OrderItem;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public class OrderService {
@@ -24,7 +26,11 @@ public class OrderService {
     this.orderItemService = new OrderItemService(connection);
   }
 
+<<<<<<< HEAD
   public List<Order> listOrdersWithDetails() throws SQLException {
+=======
+  public List<Order> listOrdersWithDetails() {
+>>>>>>> origin/new
     List<Order> orders = orderDAO.findAll();
     for (Order order : orders) {
       List<OrderItem> items = orderItemService.listByOrderId(order.getId());
@@ -34,7 +40,11 @@ public class OrderService {
     return orders;
   }
 
+<<<<<<< HEAD
   public Order createOrder(Order uiOrder) throws SQLException, InsufficientStockException {
+=======
+  public Order createOrder(Order uiOrder) {
+>>>>>>> origin/new
     uiOrder.updateTotals();
     return transactionManager.executeInTransaction(
         () -> {
@@ -45,8 +55,12 @@ public class OrderService {
         });
   }
 
+<<<<<<< HEAD
   public Order updateOrder(Order uiOrder)
       throws SQLException, EntityNotFoundException, InsufficientStockException {
+=======
+  public Order updateOrder(Order uiOrder) {
+>>>>>>> origin/new
     return transactionManager.executeInTransaction(
         () -> {
           if (uiOrder.getId() <= 0) {
@@ -66,7 +80,11 @@ public class OrderService {
         });
   }
 
+<<<<<<< HEAD
   public void removeOrder(int orderId) throws SQLException, InsufficientStockException {
+=======
+  public void removeOrder(int orderId) {
+>>>>>>> origin/new
     transactionManager.executeInTransaction(
         () -> {
           revertInventoryForOrderInternal(orderId);
@@ -75,7 +93,11 @@ public class OrderService {
         });
   }
 
+<<<<<<< HEAD
   public void revertInventoryForOrderInternal(int orderId) throws SQLException {
+=======
+  public void revertInventoryForOrderInternal(int orderId) {
+>>>>>>> origin/new
     /* Update this later as returnToInventoryInternal is not suitable now
     List<OrderItem> itemstoRevert = orderItemService.listByOrderId(orderId);
     for (OrderItem item : itemstoRevert) {
@@ -85,7 +107,11 @@ public class OrderService {
           */
   }
 
+<<<<<<< HEAD
   private void processOrderItemsInternal(Order uiOrder) throws SQLException {
+=======
+  private void processOrderItemsInternal(Order uiOrder) {
+>>>>>>> origin/new
     /* Update this later as returnToInventoryInternal is not suitable now
     List<OrderItem> persistentItems = new ArrayList<>();
     for (OrderItem uiItem : uiOrder.getItems()) {
@@ -103,7 +129,12 @@ public class OrderService {
     */
   }
 
+<<<<<<< HEAD
   public List<Order> getOrdersForCustomer(int customerId) throws SQLException {
     return orderDAO.findByCustomerId(customerId);
+=======
+  public List<Order> getOrdersForCustomer(int customerId) {
+    return orderDAO.findAllByCustomerId(customerId);
+>>>>>>> origin/new
   }
 }

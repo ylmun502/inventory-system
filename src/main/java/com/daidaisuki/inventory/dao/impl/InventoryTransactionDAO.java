@@ -2,7 +2,13 @@ package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.enums.TransactionType;
+<<<<<<< HEAD
 import com.daidaisuki.inventory.model.InventoryTransaction;
+=======
+import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.model.InventoryTransaction;
+import com.daidaisuki.inventory.util.DatabaseUtils;
+>>>>>>> origin/new
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +21,11 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     super(connection);
   }
 
+<<<<<<< HEAD
   public List<InventoryTransaction> findAll() throws SQLException {
+=======
+  public List<InventoryTransaction> findAll() {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -36,7 +46,11 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction);
   }
 
+<<<<<<< HEAD
   public InventoryTransaction save(InventoryTransaction transaction) throws SQLException {
+=======
+  public InventoryTransaction save(InventoryTransaction transaction) {
+>>>>>>> origin/new
     String sql =
         """
         INSERT INTO inventory_transactions(
@@ -55,6 +69,10 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
           ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+<<<<<<< HEAD
+=======
+    String nowString = now.toString();
+>>>>>>> origin/new
     return insert(
         sql,
         (newId) ->
@@ -77,12 +95,21 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
         transaction.getChangeAmount(),
         transaction.getTransactionType().name(),
         transaction.getReasonCode(),
+<<<<<<< HEAD
         now,
         now,
         0);
   }
 
   public List<InventoryTransaction> findAllByProductId(int productId) throws SQLException {
+=======
+        nowString,
+        nowString,
+        0);
+  }
+
+  public List<InventoryTransaction> findAllByProductId(int productId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -104,7 +131,11 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, productId);
   }
 
+<<<<<<< HEAD
   public List<InventoryTransaction> findAllByBatchId(int batchId) throws SQLException {
+=======
+  public List<InventoryTransaction> findAllByBatchId(int batchId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -125,8 +156,12 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, batchId);
   }
 
+<<<<<<< HEAD
   public List<InventoryTransaction> findAllByDateRange(OffsetDateTime start, OffsetDateTime end)
       throws SQLException {
+=======
+  public List<InventoryTransaction> findAllByDateRange(OffsetDateTime start, OffsetDateTime end) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -148,9 +183,15 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
     return query(sql, this::mapResultSetToTransaction, start, end);
   }
 
+<<<<<<< HEAD
   private InventoryTransaction mapResultSetToTransaction(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
     try {
+=======
+  private InventoryTransaction mapResultSetToTransaction(ResultSet rs) {
+    try {
+      int id = rs.getInt("id");
+>>>>>>> origin/new
       int productId = rs.getInt("product_id");
       int batchId = rs.getInt("batch_id");
       int userId = rs.getInt("user_id");
@@ -158,8 +199,15 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
       int changeAmount = rs.getInt("change_amount");
       TransactionType transactionType = TransactionType.valueOf(rs.getString("transaction_type"));
       String reasonCode = rs.getString("reason_code");
+<<<<<<< HEAD
       OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
       OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
+=======
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "InventoryTrabsaction ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "InventoryTrabsaction ID: " + id);
+>>>>>>> origin/new
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new InventoryTransaction(
           id,
@@ -173,8 +221,13 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
           createdAt,
           updatedAt,
           isDeleted);
+<<<<<<< HEAD
     } catch (Exception e) {
       throw new SQLException("Mapping failed for InventoryTransaction ID: " + id, e);
+=======
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
+>>>>>>> origin/new
     }
   }
 }

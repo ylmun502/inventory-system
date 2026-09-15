@@ -1,8 +1,15 @@
 package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
+<<<<<<< HEAD
 import com.daidaisuki.inventory.model.StockBatch;
 import com.daidaisuki.inventory.util.CurrencyUtil;
+=======
+import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.model.StockBatch;
+import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.DatabaseUtils;
+>>>>>>> origin/new
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -17,7 +24,11 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     super(connection);
   }
 
+<<<<<<< HEAD
   public StockBatch save(StockBatch batch) throws SQLException {
+=======
+  public StockBatch save(StockBatch batch) {
+>>>>>>> origin/new
     String sql =
         """
         INSERT INTO stock_batches(
@@ -37,10 +48,18 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
         ?, ?, ?, ?, ?, ?)
         """;
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+<<<<<<< HEAD
     return insert(
         sql,
         (newId) ->
             new StockBatch(
+=======
+    String nowString = now.toString();
+    return insert(
+        sql,
+        (newId) ->
+            StockBatch.forDatabase(
+>>>>>>> origin/new
                 newId,
                 batch.getProductId(),
                 batch.getSupplierId(),
@@ -61,6 +80,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
         batch.getQuantityRemaining(),
         CurrencyUtil.bigDecimalToLong(batch.getUnitCost()),
         CurrencyUtil.bigDecimalToLong(batch.getLandedCost()),
+<<<<<<< HEAD
         now,
         now,
         0);
@@ -75,6 +95,19 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
   }
 
   public List<StockBatch> findAllByProductId(int productId) throws SQLException {
+=======
+        nowString,
+        nowString,
+        0);
+  }
+
+  public void updateRemainingStock(int batchId, int newQuantity) {
+    String sql = "UPDATE stock_batches SET quantity_remaining = ?, updated_at = ? WHERE id = ?";
+    update(sql, newQuantity, OffsetDateTime.now(ZoneOffset.UTC), batchId);
+  }
+
+  public List<StockBatch> findAllByProductId(int productId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -96,7 +129,11 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return query(sql, this::mapResultSetToStockBatch, productId);
   }
 
+<<<<<<< HEAD
   public List<StockBatch> findAllAvailableByProductId(int productId) throws SQLException {
+=======
+  public List<StockBatch> findAllAvailableByProductId(int productId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -119,17 +156,30 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return query(sql, this::mapResultSetToStockBatch, productId);
   }
 
+<<<<<<< HEAD
   public boolean updateStockTotal(int batchId, int changeAmount) throws SQLException {
+=======
+  public boolean updateStockTotal(int batchId, int changeAmount) {
+>>>>>>> origin/new
     String sql =
         """
         UPDATE stock_batches
         SET quantity_remaining = quantity_remaining + ?, updated_at = ?
         WHERE id = ? AND quantity_remaining + ? >= 0
         """;
+<<<<<<< HEAD
     return update(sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), batchId, changeAmount) > 0;
   }
 
   public Optional<StockBatch> findOldestAvailableBatch(int productId) throws SQLException {
+=======
+    return updateReturningAffectedRows(
+            sql, changeAmount, OffsetDateTime.now(ZoneOffset.UTC), batchId, changeAmount)
+        > 0;
+  }
+
+  public Optional<StockBatch> findOldestAvailableBatch(int productId) {
+>>>>>>> origin/new
     String sql =
         """
         SELECT
@@ -153,6 +203,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
     return queryForObject(sql, this::mapResultSetToStockBatch, productId);
   }
 
+<<<<<<< HEAD
   private StockBatch mapResultSetToStockBatch(ResultSet rs) throws SQLException {
     int id = rs.getInt("id");
     try {
@@ -168,6 +219,28 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
       OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new StockBatch(
+=======
+  private StockBatch mapResultSetToStockBatch(ResultSet rs) {
+    try {
+      int id = rs.getInt("id");
+      int productId = rs.getInt("product_id");
+      int supplierId = rs.getInt("supplier_id");
+      String batchCode = rs.getString("batch_code");
+      OffsetDateTime expiryDate =
+          DatabaseUtils.getOffsetDateTime(rs, "expiry_date", "StockBatch ID: " + id);
+      int quantityReceived = rs.getInt("quantity_received");
+      int quantityRemaining = rs.getInt("quantity_remaining");
+      BigDecimal unitCost =
+          DatabaseUtils.getBigDecimalFromCents(rs, "unit_cost_cents", "StockBatch ID: " + id);
+      BigDecimal landedCost =
+          DatabaseUtils.getBigDecimalFromCents(rs, "landed_cost_cents", "StockBatch ID: " + id);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "StockBatch ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "StockBatch ID: " + id);
+      boolean isDeleted = rs.getInt("is_deleted") == 1;
+      return StockBatch.forDatabase(
+>>>>>>> origin/new
           id,
           productId,
           supplierId,
@@ -180,8 +253,13 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
           createdAt,
           updatedAt,
           isDeleted);
+<<<<<<< HEAD
     } catch (Exception e) {
       throw new SQLException("Mapping failed for StockBatch ID: " + id, e);
+=======
+    } catch (SQLException e) {
+      throw new DataAccessException("Mapping failed", e);
+>>>>>>> origin/new
     }
   }
 }

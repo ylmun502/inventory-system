@@ -58,6 +58,15 @@
     -fx-border-radius: 3;
     -fx-background-radius: 3;
     -fx-padding: 6 12;
+<<<<<<< HEAD
+=======
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #b5b5b5;
+>>>>>>> origin/new
 }
 
 .button.primary {
@@ -66,16 +75,81 @@
     -fx-border-color: #2a7ae2;
 }
 
+<<<<<<< HEAD
 .button.secondary {
     -fx-font-size: 11px;
 }
 
+=======
+.button.primary:hover {
+    -fx-background-color: #1e87f0;
+}
+
+.button.secondary {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-border-color: #cfcfcf;
+}
+
+.button.secondary:hover {
+    -fx-background-color: #d4d4d4;
+}
+
+>>>>>>> origin/new
 .button.danger {
     -fx-background-color: #e74c3c;
     -fx-text-fill: white;
     -fx-border-color: #c0392b;
 }
 
+<<<<<<< HEAD
+=======
+.button.danger:hover {
+    -fx-background-color: #c0392b;
+}
+
+.menu-button {
+    -fx-background-color: #e0e0e0;
+    -fx-border-color: #cfcfcf;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-background-color: #d4d4d4;
+}
+
+.menu-button .arrow {
+    -fx-background-color: #555555;
+}
+
+.menu-button .label {
+    -fx-text-fill: #555555;
+    -fx-padding: 6 12;
+}
+
+.context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #dcdcdc;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.menu-item:hover {
+    -fx-background-color: #3498db;
+    -fx-cursor: hand;
+}
+
+.menu-item .label {
+    -fx-text-fill: #555555;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: white;
+}
+
+>>>>>>> origin/new
 /* =========================
    FORMS AND INPUTS
    ========================= */
@@ -87,6 +161,30 @@
 }
 
 /* =========================
+<<<<<<< HEAD
+=======
+   SIDEBAR
+   ========================= */
+.navigation-sidebar {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: transparent #dcdcdc transparent transparent;
+    -fx-border-width: 1px;
+}
+
+.navigation-sidebar .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333333;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+}
+
+.navigation-sidebar .button:hover {
+    -fx-background-color: #e9ecef;
+    -fx-cursor: hand;
+}
+
+/* =========================
+>>>>>>> origin/new
    TOOLBARS
    ========================= */
 
@@ -96,6 +194,39 @@
 }
 
 /* =========================
+<<<<<<< HEAD
+=======
+   TOOLBAR BUTTONS (General)
+   ========================= */
+
+.toolbar-toggle {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 5 15;
+    -fx-cursor: hand;
+    -fx-text-fill: #424242;
+}
+
+.toolbar-toggle:hover {
+    -fx-background-color: #eeeeee;
+}
+
+/* =========================
+   SPECIFIC TOGGLES
+   ========================= */
+
+.archive-toggle:selected {
+    -fx-background-color: #37474f;
+    -fx-text-fill: white;
+    -fx-border-color: #263238;
+    -fx-font-weight: bold;
+}
+
+
+/* =========================
+>>>>>>> origin/new
    DETAIL SECTION
    ========================= */
 
@@ -146,6 +277,7 @@
 }
 
 /* =========================
+<<<<<<< HEAD
    HELPERS
    ========================= */
 
@@ -153,6 +285,28 @@
     -fx-text-alignment: center;
 }
 
+=======
+   TABLES / ROW STYLING
+   ========================= */
+
+.table-row-cell.out-of-stock {
+    -fx-background-color: #ffcdd2;
+}
+
+.table-row-cell.low-stock {
+    -fx-background-color: #fff9c4;
+}
+
+.table-row-cell.low-stock:selected,
+.table-row-cell.out-of-stock:selected {
+    -fx-background-color: -fx-selection-bar;
+}
+
+/* =========================
+   HELPERS
+   ========================= */
+
+>>>>>>> origin/new
 .search-field {
     -fx-font-size: 14px;
     -fx-padding: 5px;
