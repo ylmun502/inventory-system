@@ -161,9 +161,9 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
       TransactionType transactionType = TransactionType.valueOf(rs.getString("transaction_type"));
       String reasonCode = rs.getString("reason_code");
       OffsetDateTime createdAt =
-          DatabaseUtils.getOffsetDateTime(rs, "created_at", "InventoryTrabsaction ID: " + id);
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "InventoryTransaction ID: " + id);
       OffsetDateTime updatedAt =
-          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "InventoryTrabsaction ID: " + id);
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "InventoryTransaction ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new InventoryTransaction(
           id,
