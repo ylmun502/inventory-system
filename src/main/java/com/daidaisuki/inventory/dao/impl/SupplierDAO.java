@@ -3,6 +3,7 @@ package com.daidaisuki.inventory.dao.impl;
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Supplier;
+import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -151,10 +152,10 @@ public class SupplierDAO extends BaseDAO<Supplier> {
       String email = rs.getString("email");
       String phone = rs.getString("phone");
       String address = rs.getString("address");
-      String createdAtString = rs.getString("created_at");
-      String updatedAtString = rs.getString("updated_at");
-      OffsetDateTime createdAt = OffsetDateTime.parse(createdAtString);
-      OffsetDateTime updatedAt = OffsetDateTime.parse(updatedAtString);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "Supplier ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "Supplier ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Supplier(
           id, name, shortCode, email, phone, address, createdAt, updatedAt, isDeleted);
