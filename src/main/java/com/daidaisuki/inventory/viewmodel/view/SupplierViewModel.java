@@ -34,17 +34,27 @@ public class SupplierViewModel extends BaseListViewModel<Supplier> {
 
   @Override
   public void add(Supplier supplier) {
-    runAsync(() -> this.supplierService.createSupplier(supplier), this::refresh);
+    this.runAsync(() -> this.supplierService.createSupplier(supplier), null);
   }
 
   @Override
   public void update(Supplier supplier) {
-    runAsync(() -> this.supplierService.updateSupplier(supplier), this::refresh);
+    this.runAsync(() -> this.supplierService.update(supplier), null);
+  }
+
+  @Override
+  public void archive(Supplier supplier) {
+    this.runAsync(() -> this.supplierService.archive(supplier.getId()), null);
+  }
+
+  @Override
+  public void restore(Supplier supplier) {
+    this.runAsync(() -> this.supplierService.restore(supplier.getId()), null);
   }
 
   @Override
   public void delete(Supplier supplier) {
-    runAsync(() -> this.supplierService.removeSupplier(supplier.getId()), this::refresh);
+    this.runAsync(() -> this.supplierService.remove(supplier.getId()), null);
   }
 
   public SupplierService getSupplierService() {

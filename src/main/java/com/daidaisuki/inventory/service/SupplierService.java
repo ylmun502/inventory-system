@@ -2,11 +2,13 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.impl.SupplierDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
+import com.daidaisuki.inventory.interfaces.Archivable;
+import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Supplier;
 import java.sql.Connection;
 import java.util.List;
 
-public class SupplierService {
+public class SupplierService implements Archivable, Removable {
   private final TransactionManager transactionManager;
   private final SupplierDAO supplierDAO;
 
@@ -26,11 +28,22 @@ public class SupplierService {
     transactionManager.executeInTransaction(() -> supplierDAO.save(supplier));
   }
 
-  public void updateSupplier(Supplier supplier) {
+  public void update(Supplier supplier) {
+    if (this.supplierDAO.existsByShortCodeExcludingId(supplier.getShortCode(), supplier.getId())) {
+      throw new IllegalArgumentException("A supplier with this short code already exists.");
+    }
     transactionManager.executeInTransaction(() -> supplierDAO.update(supplier));
   }
 
-  public void removeSupplier(int supplierId) {
-    transactionManager.executeInTransaction(() -> supplierDAO.delete(supplierId));
+  public void archive(int supplierId) {
+    transactionManager.executeInTransaction(() -> supplierDAO.archive(supplierId));
+  }
+
+  public void restore(int supplierId) {
+    transactionManager.executeInTransaction(() -> supplierDAO.restore(supplierId));
+  }
+
+  public void remove(int supplierId) {
+    transactionManager.executeInTransaction(() -> supplierDAO.remove(supplierId));
   }
 }
