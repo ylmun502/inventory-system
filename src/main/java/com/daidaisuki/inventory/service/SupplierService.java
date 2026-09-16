@@ -35,14 +35,17 @@ public class SupplierService implements Archivable, Removable {
     transactionManager.executeInTransaction(() -> supplierDAO.update(supplier));
   }
 
+  @Override
   public void archive(int supplierId) {
     transactionManager.executeInTransaction(() -> supplierDAO.archive(supplierId));
   }
 
+  @Override
   public void restore(int supplierId) {
     transactionManager.executeInTransaction(() -> supplierDAO.restore(supplierId));
   }
 
+  @Override
   public void remove(int supplierId) {
     transactionManager.executeInTransaction(() -> supplierDAO.remove(supplierId));
   }
