@@ -3,7 +3,7 @@ package com.daidaisuki.inventory.dao.impl;
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Customer;
-import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -15,14 +15,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class CustomerDAO extends BaseDAO<Customer> {
-  public CustomerDAO(Connection connection) {
-    super(connection);
-  }
-
-  public List<Customer> findAll() {
-    String sql =
-        """
-        SELECT
+  private static final String TABLE_NAME = "customers";
+  private static final String BASE_SELECT_CUSTOMER_SUMMARY =
+      """
+      SELECT
           id,
           full_name,
           phone_number,
@@ -36,11 +32,12 @@ public class CustomerDAO extends BaseDAO<Customer> {
           created_at,
           updated_at,
           is_deleted
-        FROM customer_summary
-        WHERE is_deleted = 0
-        ORDER BY full_name ASC
-        """;
-    return query(sql, this::mapResultSetToCustomer);
+      FROM customer_summary
+      """;
+  private static final String ORDER_BY_NAME = " ORDER BY full_name ASC";
+
+  public CustomerDAO(Connection connection) {
+    super(connection);
   }
 
   public Customer save(Customer customer) {
@@ -114,84 +111,25 @@ public class CustomerDAO extends BaseDAO<Customer> {
         customer.getId());
   }
 
-  public void delete(int customerId) {
-    String sql = "UPDATE customers SET is_deleted = 1, updated_at = ? WHERE id = ?";
-    update(sql, OffsetDateTime.now(ZoneOffset.UTC), customerId);
+  public void archive(int customerId) {
+    this.setDeletionStatus(TABLE_NAME, customerId, true);
   }
 
   public void restore(int customerId) {
-    String sql =
-        "UPDATE customers SET is_deleted = 0, updated_at = ? WHERE id = ? AND is_deleted = 1";
-    update(sql, OffsetDateTime.now(ZoneOffset.UTC), customerId);
+    this.setDeletionStatus(TABLE_NAME, customerId, false);
+  }
+
+  public void remove(int customerId) {
+    this.deleteById(TABLE_NAME, customerId);
   }
 
   public Optional<Customer> findById(int id) {
-    String sql =
-        """
-        SELECT
-          id,
-          full_name,
-          phone_number,
-          email,
-          address,
-          acquisition_source,
-          total_orders,
-          total_spent_cents,
-          total_discount_cents,
-          last_order_date,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM customer_summary
-        WHERE id = ?
-        """;
+    String sql = BASE_SELECT_CUSTOMER_SUMMARY + " WHERE id = ?";
     return queryForObject(sql, this::mapResultSetToCustomer, id);
   }
 
-  public List<Customer> findAllByName(String fullName) {
-    String sql =
-        """
-        SELECT
-          id,
-          full_name,
-          phone_number,
-          email,
-          address,
-          acquisition_source,
-          total_orders,
-          total_spent_cents,
-          total_discount_cents,
-          last_order_date,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM customer_summary
-        WHERE full_name = ? AND is_deleted = 0
-        """;
-    return query(sql, this::mapResultSetToCustomer, fullName);
-  }
-
-  public List<Customer> findAllDeleted() {
-    String sql =
-        """
-        SELECT
-          id,
-          full_name,
-          phone_number,
-          email,
-          address,
-          acquisition_source,
-          total_orders,
-          total_spent_cents,
-          total_discount_cents,
-          last_order_date,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM customer_summary
-        WHERE is_deleted = 1
-        ORDER BY updated_at DESC
-        """;
+  public List<Customer> findAll() {
+    String sql = BASE_SELECT_CUSTOMER_SUMMARY + ORDER_BY_NAME;
     return query(sql, this::mapResultSetToCustomer);
   }
 
@@ -204,15 +142,20 @@ public class CustomerDAO extends BaseDAO<Customer> {
       String address = rs.getString("address");
       String acquisitionSource = rs.getString("acquisition_source");
       int totalOrders = rs.getInt("total_orders");
-      BigDecimal totalSpent = CurrencyUtil.longToBigDecimal(rs.getLong("total_spent_cents"));
-      BigDecimal totalDiscount = CurrencyUtil.longToBigDecimal(rs.getLong("total_discount_cents"));
+      BigDecimal totalSpent =
+          DatabaseUtils.getBigDecimalFromCents(rs, "total_spent_cents", "Customer ID: " + id);
+      BigDecimal totalDiscount =
+          DatabaseUtils.getBigDecimalFromCents(rs, "total_discount_cents", "Customer ID: " + id);
       BigDecimal averageOrderValue =
           totalOrders > 0
               ? totalSpent.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
               : BigDecimal.ZERO;
-      OffsetDateTime lastOrderDate = rs.getObject("last_order_date", OffsetDateTime.class);
-      OffsetDateTime createdAt = rs.getObject("created_at", OffsetDateTime.class);
-      OffsetDateTime updatedAt = rs.getObject("updated_at", OffsetDateTime.class);
+      OffsetDateTime lastOrderDate =
+          DatabaseUtils.getOffsetDateTime(rs, "last_order_date", "Customer ID: " + id);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "Customer ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "Customer ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Customer(
           id,
