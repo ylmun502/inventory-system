@@ -46,13 +46,25 @@ public class SupplierDialogViewModel extends BaseDialogViewModel<Supplier> {
 
   @Override
   public Supplier createResult() {
-    Supplier result = this.supplier == null ? new Supplier() : this.supplier;
-    result.setName(this.name.get());
-    result.setShortCode(this.shortCode.get());
-    result.setEmail(this.email.get());
-    result.setPhone(this.phone.get());
-    result.setAddress(this.address.get());
-    return result;
+    if (this.supplier == null) {
+      Supplier result = new Supplier();
+      result.setName(this.name.get());
+      result.setShortCode(this.shortCode.get());
+      result.setEmail(this.email.get());
+      result.setPhone(this.phone.get());
+      result.setAddress(this.address.get());
+      return result;
+    }
+    return new Supplier(
+        this.supplier.getId(),
+        this.name.get(),
+        this.shortCode.get(),
+        this.email.get(),
+        this.phone.get(),
+        this.address.get(),
+        this.supplier.getCreatedAt(),
+        this.supplier.getUpdatedAt(),
+        this.supplier.isDeleted());
   }
 
   @Override
