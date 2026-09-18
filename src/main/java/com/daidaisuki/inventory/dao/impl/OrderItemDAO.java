@@ -141,7 +141,7 @@ public class OrderItemDAO extends BaseDAO<OrderItem> {
           updatedAt,
           isDeleted);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed", e);
+      throw new DataAccessException("Failed to map OrderItem", e);
     }
   }
 }

@@ -178,7 +178,7 @@ public class InventoryTransactionDAO extends BaseDAO<InventoryTransaction> {
           updatedAt,
           isDeleted);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed", e);
+      throw new DataAccessException("Failed to map InventoryTransaction", e);
     }
   }
 }

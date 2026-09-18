@@ -160,7 +160,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
       return new Supplier(
           id, name, shortCode, email, phone, address, createdAt, updatedAt, isDeleted);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed.", e);
+      throw new DataAccessException("Failed to map Supplier.", e);
     }
   }
 }

@@ -188,7 +188,7 @@ public class StockBatchDAO extends BaseDAO<StockBatch> {
           updatedAt,
           isDeleted);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed", e);
+      throw new DataAccessException("Failed to map StockBatch", e);
     }
   }
 }

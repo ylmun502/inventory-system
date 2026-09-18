@@ -289,7 +289,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
     try {
       return rs.getString("unit_type");
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed.", e);
+      throw new DataAccessException("Failed to map product unit type.", e);
     }
   }
 
@@ -338,7 +338,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           updatedAt,
           isDeleted);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed.", e);
+      throw new DataAccessException("Failed to map Product.", e);
     }
   }
 }

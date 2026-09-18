@@ -319,7 +319,7 @@ public class OrderDAO extends BaseDAO<Order> {
           null,
           false);
     } catch (SQLException e) {
-      throw new DataAccessException("Mapping failed", e);
+      throw new DataAccessException("Failed to map Order", e);
     }
   }
 }
