@@ -3,7 +3,6 @@ package com.daidaisuki.inventory.controller.dialog;
 import com.daidaisuki.inventory.base.controller.BaseDialogController;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.viewmodel.dialog.ProductDialogViewModel;
-import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -33,24 +32,21 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
   @FXML
   public void initialize() {
     // Setting items first then followed by binding
-    List<String> existingUnitTypes = this.viewModel.getAvailableUnitTypes();
-    this.unitTypeComboBox.setEditable(true);
-    this.unitTypeComboBox.setItems(FXCollections.observableArrayList(existingUnitTypes));
-    setupBinding();
+    this.setupUnitTypes();
+    this.setupBinding();
     this.dialogTitle
         .textProperty()
         .bind(
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Create Product")
                 .otherwise("Edit Product"));
-    if (confirmButton != null) {
-      confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
-    }
+    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
   }
 
-  @Override
-  public Product getResult() {
-    return confirmed ? this.viewModel.createResult() : null;
+  private void setupUnitTypes() {
+    this.unitTypeComboBox.setEditable(true);
+    this.unitTypeComboBox.setItems(
+        FXCollections.observableArrayList(this.viewModel.getAvailableUnitTypes()));
   }
 
   private void setupBinding() {
@@ -62,15 +58,5 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
     this.priceField.textProperty().bindBidirectional(this.viewModel.price);
     this.unitTypeComboBox.valueProperty().bindBidirectional(this.viewModel.unitType);
     this.activeCheckBox.selectedProperty().bindBidirectional(this.viewModel.isActive);
-  }
-
-  @FXML
-  @Override
-  protected void handleConfirm() {
-    if (!this.viewModel.isInvalidProperty().get()) {
-      this.confirmed = true;
-      this.dialogStage.close();
-    } else {
-    }
   }
 }

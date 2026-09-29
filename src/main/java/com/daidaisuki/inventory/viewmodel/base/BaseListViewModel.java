@@ -47,13 +47,13 @@ public abstract class BaseListViewModel<T> {
                   String filterText =
                       Optional.ofNullable(searchFilter.get()).orElse("").trim().toLowerCase();
                   return (T item) -> {
-                    if (isArchived(item) != showingArchived) {
+                    if (this.isArchived(item) != showingArchived) {
                       return false;
                     }
                     if (filterText.isEmpty()) {
                       return true;
                     }
-                    return matchesSearch(item, filterText);
+                    return this.matchesSearch(item, filterText);
                   };
                 },
                 this.showArchived,
@@ -77,15 +77,26 @@ public abstract class BaseListViewModel<T> {
   public abstract void delete(T item);
 
   public void refresh() {
-    executeLoadingTask(this::fetchItems, this.dataList::setAll);
+    this.refresh(null);
+  }
+
+  private void refresh(Runnable onRefreshed) {
+    this.executeLoadingTask(
+        this::fetchItems,
+        items -> {
+          this.dataList.setAll(items);
+          if (onRefreshed != null) {
+            onRefreshed.run();
+          }
+        });
   }
 
   protected <V> void executeLoadingTask(Callable<V> worker, Consumer<V> onSuccess) {
-    internalExecute(worker, onSuccess, this.isLoading);
+    this.internalExecute(worker, onSuccess, this.isLoading);
   }
 
   protected <V> void executeTask(Callable<V> worker, Consumer<V> onSuccess) {
-    internalExecute(worker, onSuccess, this.isBusy);
+    this.internalExecute(worker, onSuccess, this.isBusy);
   }
 
   private <V> void internalExecute(
@@ -102,14 +113,14 @@ public abstract class BaseListViewModel<T> {
           }
         };
     task.setOnSucceeded(
-        e -> {
+        event -> {
           state.set(false);
           if (onSuccess != null) {
             onSuccess.accept(task.getValue());
           }
         });
     task.setOnFailed(
-        e -> {
+        event -> {
           state.set(false);
           this.handleError(task.getException());
         });
@@ -118,18 +129,13 @@ public abstract class BaseListViewModel<T> {
     thread.start();
   }
 
-  protected void runAsync(TaskAction action, Runnable onSucceeded) {
-    executeTask(
+  protected void runAsync(TaskAction action, Runnable afterRefresh) {
+    this.executeTask(
         () -> {
           action.run();
           return null;
         },
-        result -> {
-          if (onSucceeded != null) {
-            onSucceeded.run();
-          }
-          this.refresh();
-        });
+        result -> this.refresh(afterRefresh));
   }
 
   @FunctionalInterface

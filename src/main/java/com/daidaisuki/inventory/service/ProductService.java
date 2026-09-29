@@ -3,12 +3,14 @@ package com.daidaisuki.inventory.service;
 import com.daidaisuki.inventory.dao.impl.ProductDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
 import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.interfaces.Archivable;
+import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
 import java.sql.Connection;
 import java.util.List;
 import java.util.UUID;
 
-public class ProductService {
+public class ProductService implements Archivable, Removable {
   private final TransactionManager transactionManager;
   private final ProductDAO productDAO;
 
@@ -22,35 +24,76 @@ public class ProductService {
   }
 
   public void createProduct(Product product) {
-    if (this.productDAO.existsBySku(product.getSku())) {
-      throw new IllegalArgumentException("A product with this sku already exists.");
-    } else if (this.productDAO.existsByBarcode(product.getBarcode())) {
-      throw new IllegalArgumentException("A product with this barcode already exists.");
-    }
-    if (product.getBarcode() == null || product.getBarcode().isEmpty()) {
-      product.setBarcode(generateBarcode());
-    }
-    transactionManager.executeInTransaction(() -> this.productDAO.save(product));
-  }
-
-  private String generateBarcode() {
-    return UUID.randomUUID().toString().substring(0, 8);
+    this.transactionManager.executeInTransaction(
+        () -> {
+          this.validateSkuForCreate(product);
+          if (product.getBarcode() == null || product.getBarcode().isBlank()) {
+            product.setBarcode(this.generateUniqueBarcode());
+          } else {
+            this.validateBarcodeForCreate(product);
+          }
+          this.productDAO.save(product);
+        });
   }
 
   public void updateProduct(Product product) {
-    transactionManager.executeInTransaction(() -> this.productDAO.update(product));
+    this.transactionManager.executeInTransaction(
+        () -> {
+          this.validateSkuForUdate(product);
+          this.validateBarcodeForUpdate(product);
+          this.productDAO.update(product);
+        });
   }
 
-  public void archiveProduct(int productId) {
-    transactionManager.executeInTransaction(() -> this.productDAO.archive(productId));
+  private void validateSkuForCreate(Product product) {
+    if (this.productDAO.existsBySku(product.getSku())) {
+      throw new IllegalArgumentException("A product with this SKU already exists.");
+    }
   }
 
-  public void restoreProduct(int productId) {
-    transactionManager.executeInTransaction(() -> this.productDAO.restore(productId));
+  private void validateBarcodeForCreate(Product product) {
+    if (this.productDAO.existsByBarcode(product.getBarcode())) {
+      throw new IllegalArgumentException("A product with this barcode already exists.");
+    }
   }
 
-  public void removeProduct(int productId) {
-    transactionManager.executeInTransaction(() -> this.productDAO.remove(productId));
+  private void validateSkuForUdate(Product product) {
+    if (this.productDAO.existsBySkuExcludingId(product.getSku(), product.getId())) {
+      throw new IllegalArgumentException("A product with this SKU already exists.");
+    }
+  }
+
+  private void validateBarcodeForUpdate(Product product) {
+    if (this.productDAO.existByBarcodeExcludingId(product.getBarcode(), product.getId())) {
+      throw new IllegalArgumentException("A product with this barcode already exists.");
+    }
+  }
+
+  private String generateUniqueBarcode() {
+    String barcode;
+    do {
+      barcode = generateBarcode();
+    } while (this.productDAO.existsByBarcode(barcode));
+    return barcode;
+  }
+
+  private String generateBarcode() {
+    return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+  }
+
+  @Override
+  public void archive(int productId) {
+    this.transactionManager.executeInTransaction(() -> this.productDAO.archive(productId));
+  }
+
+  @Override
+  public void restore(int productId) {
+    this.transactionManager.executeInTransaction(() -> this.productDAO.restore(productId));
+  }
+
+  @Override
+  public void remove(int productId) {
+    this.transactionManager.executeInTransaction(() -> this.productDAO.remove(productId));
   }
 
   public Product getProduct(int productId) {

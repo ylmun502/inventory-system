@@ -33,7 +33,7 @@
         <Label text="Description:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
         <TextField fx:id="descriptionField" promptText="Description" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-        <Label text="Unit Type" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <Label text="Unit Type:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
         <ComboBox fx:id="unitTypeComboBox" editable="true" promptText="Select or type unit..." GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
         <Label text="Weight:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
@@ -42,7 +42,7 @@
         <Label text="Price:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
         <TextField fx:id="priceField" promptText="Price" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-        <Label text="Active" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <Label text="Active:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
         <CheckBox fx:id="activeCheckBox" text="Active" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
     </GridPane>
 

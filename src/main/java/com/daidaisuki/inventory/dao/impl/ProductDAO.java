@@ -2,10 +2,9 @@ package com.daidaisuki.inventory.dao.impl;
 
 import com.daidaisuki.inventory.dao.BaseDAO;
 import com.daidaisuki.inventory.exception.DataAccessException;
-import com.daidaisuki.inventory.interfaces.Archivable;
-import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.CurrencyUtil;
+import com.daidaisuki.inventory.util.DatabaseUtils;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -15,7 +14,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-public class ProductDAO extends BaseDAO<Product> implements Archivable, Removable {
+public class ProductDAO extends BaseDAO<Product> {
   private static final String TABLE_NAME = "products";
   private static final String BASE_SELECT_PRODUCT =
       """
@@ -41,7 +40,6 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         is_deleted
       FROM products
       """;
-  private static final String WHERE_DELETE_STATUS = " WHERE is_deleted = ?";
   private static final String ORDER_BY_NAME = " ORDER BY name ASC";
 
   public ProductDAO(Connection connection) {
@@ -99,7 +97,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
                 product.getReorderingLevel(),
                 product.getSellingPrice(),
                 product.getAverageUnitCost(),
-                true,
+                product.isActive(),
                 now,
                 now,
                 false),
@@ -117,7 +115,7 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         product.getReorderingLevel(),
         CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
         CurrencyUtil.bigDecimalToLong(product.getAverageUnitCost()),
-        1,
+        product.isActive() ? 1 : 0,
         nowString,
         nowString,
         0);
@@ -140,12 +138,10 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
           tax_category = ?,
           description = ?,
           weight = ?,
-          current_stock = ?,
           min_stock_level = ?,
           max_stock_level = ?,
           reordering_level = ?,
           selling_price_cents = ?,
-          average_unit_cost_cents = ?,
           is_active = ?,
           updated_at = ?
         WHERE id = ?
@@ -160,77 +156,35 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
         product.getTaxCategory(),
         product.getDescription(),
         product.getWeight(),
-        product.getCurrentStock(),
         product.getMinStockLevel(),
         product.getMaxStockLevel(),
         product.getReorderingLevel(),
         CurrencyUtil.bigDecimalToLong(product.getSellingPrice()),
-        CurrencyUtil.bigDecimalToLong(product.getAverageUnitCost()),
         product.isActive() ? 1 : 0,
         OffsetDateTime.now(ZoneOffset.UTC),
         product.getId());
   }
 
-  @Override
   public void archive(int productId) {
     this.setDeletionStatus(TABLE_NAME, productId, true);
   }
 
-  @Override
   public void restore(int productId) {
     this.setDeletionStatus(TABLE_NAME, productId, false);
   }
 
-  @Override
   public void remove(int productId) {
     this.deleteById(TABLE_NAME, productId);
   }
 
   public Optional<Product> findById(int id) {
-    String sql =
-        """
-        SELECT
-          id,
-          sku,
-          barcode,
-          name,
-          category,
-          unit_type,
-          tax_category,
-          description,
-          weight,
-          current_stock,
-          min_stock_level,
-          max_stock_level,
-          reordering_level,
-          selling_price_cents,
-          average_unit_cost_cents,
-          is_active,
-          created_at,
-          updated_at,
-          is_deleted
-        FROM products
-        WHERE id = ?
-        """;
+    String sql = BASE_SELECT_PRODUCT + " WHERE id = ?";
     return this.queryForObject(sql, this::mapResultSetToProduct, id);
   }
 
   public List<Product> findAll() {
     String sql = BASE_SELECT_PRODUCT + ORDER_BY_NAME;
     return this.query(sql, this::mapResultSetToProduct);
-  }
-
-  public List<Product> findAllActive() {
-    return this.findByDeletionStatus(false);
-  }
-
-  public List<Product> findAllArchived() {
-    return this.findByDeletionStatus(true);
-  }
-
-  private List<Product> findByDeletionStatus(Boolean isDeleted) {
-    String sql = BASE_SELECT_PRODUCT + WHERE_DELETE_STATUS + ORDER_BY_NAME;
-    return this.query(sql, this::mapResultSetToProduct, isDeleted ? 1 : 0);
   }
 
   public boolean updateStockTotal(int productId, int changeAmount) {
@@ -265,7 +219,13 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
   }
 
   public List<String> findAllDistinctUnitTypes() {
-    String sql = "SELECT DISTINCT unit_type FROM products";
+    String sql =
+        """
+        SELECT DISTINCT unit_type
+        FROM products
+        WHERE unit_type IS NOT NULL AND TRIM(unit_type) <> ''
+        ORDER BY unit_type
+        """;
     return this.query(sql, this::mapResultSetToUnitType);
   }
 
@@ -276,13 +236,29 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
   }
 
   public boolean existsBySku(String sku) {
-    String sql = "SELECT COUNT(*) FROM products WHERE sku = ? AND is_deleted = 0";
+    String sql = "SELECT COUNT(*) FROM products WHERE sku = ?";
     return this.queryForObject(sql, rs -> rs.getInt(1) > 0, sku).orElse(false);
   }
 
+  public boolean existsBySkuExcludingId(String sku, int productId) {
+    String sql = "SELECT COUNT(*) FROM products WHERE sku = ? AND id <> ?";
+    return this.queryForObject(sql, rs -> rs.getInt(1) > 0, sku, productId).orElse(false);
+  }
+
   public boolean existsByBarcode(String barcode) {
-    String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND is_deleted = 0";
+    if (barcode == null || barcode.isBlank()) {
+      return false;
+    }
+    String sql = "SELECT COUNT(*) FROM products WHERE barcode = ?";
     return this.queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
+  }
+
+  public boolean existByBarcodeExcludingId(String barcode, int productId) {
+    if (barcode == null || barcode.isBlank()) {
+      return false;
+    }
+    String sql = "SELECT COUNT(*) FROM products WHERE barcode = ? AND id <> ?";
+    return this.queryForObject(sql, rs -> rs.getInt(1) > 0, barcode, productId).orElse(false);
   }
 
   private String mapResultSetToUnitType(ResultSet rs) {
@@ -308,14 +284,15 @@ public class ProductDAO extends BaseDAO<Product> implements Archivable, Removabl
       int minStockLevel = rs.getInt("min_stock_level");
       int maxStockLevel = rs.getInt("max_stock_level");
       int reorderingLevel = rs.getInt("reordering_level");
-      BigDecimal sellingPrice = CurrencyUtil.longToBigDecimal(rs.getLong("selling_price_cents"));
+      BigDecimal sellingPrice =
+          DatabaseUtils.getBigDecimalFromCents(rs, "selling_price_cents", "Product ID: " + id);
       BigDecimal averageUnitCost =
-          CurrencyUtil.longToBigDecimal(rs.getLong("average_unit_cost_cents"));
+          DatabaseUtils.getBigDecimalFromCents(rs, "average_unit_cost_cents", "Product ID: " + id);
       boolean isActive = rs.getInt("is_active") == 1;
-      String createdAtString = rs.getString("created_at");
-      String updatedAtString = rs.getString("updated_at");
-      OffsetDateTime createdAt = OffsetDateTime.parse(createdAtString);
-      OffsetDateTime updatedAt = OffsetDateTime.parse(updatedAtString);
+      OffsetDateTime createdAt =
+          DatabaseUtils.getOffsetDateTime(rs, "created_at", "Product ID: " + id);
+      OffsetDateTime updatedAt =
+          DatabaseUtils.getOffsetDateTime(rs, "Updated_at", "Product ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Product(
           id,
