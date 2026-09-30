@@ -33,14 +33,14 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
   public void initialize() {
     // Setting items first then followed by binding
     this.setupUnitTypes();
-    this.setupBinding();
+    this.setupBindings();
+    this.InitializeBaseDialogController();
     this.dialogTitle
         .textProperty()
         .bind(
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Create Product")
                 .otherwise("Edit Product"));
-    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
   }
 
   private void setupUnitTypes() {
@@ -49,7 +49,7 @@ public class ProductDialogController extends BaseDialogController<Product, Produ
         FXCollections.observableArrayList(this.viewModel.getAvailableUnitTypes()));
   }
 
-  private void setupBinding() {
+  private void setupBindings() {
     this.skuField.textProperty().bindBidirectional(this.viewModel.sku);
     this.nameField.textProperty().bindBidirectional(this.viewModel.name);
     this.categoryField.textProperty().bindBidirectional(this.viewModel.category);

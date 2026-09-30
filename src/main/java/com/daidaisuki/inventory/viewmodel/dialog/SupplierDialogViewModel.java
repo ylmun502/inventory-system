@@ -29,39 +29,42 @@ public class SupplierDialogViewModel extends BaseDialogViewModel<Supplier> {
       this.resetProperties();
     }
 
-    this.validationStatus =
-        Bindings.createObjectBinding(
-            () -> {
-              StringBuilder errors = new StringBuilder();
-              String cleanName = StringCleaner.cleanOrNull(this.name.get());
-              String cleanShortCode = StringCleaner.cleanOrNull(this.shortCode.get());
+    this.validationStatus = Bindings.createObjectBinding(this::validate, this.name, this.shortCode);
+  }
 
-              ValidationUtils.isFieldEmpty(cleanName, "Name", errors);
-              ValidationUtils.isFieldEmpty(cleanShortCode, "Short Code", errors);
-              return new ValidationStatus(errors.isEmpty(), errors.toString());
-            },
-            name,
-            shortCode);
+  private ValidationStatus validate() {
+    StringBuilder errors = new StringBuilder();
+    String cleanName = StringCleaner.cleanOrNull(this.name.get());
+    String cleanShortCode = StringCleaner.cleanOrNull(this.shortCode.get());
+
+    ValidationUtils.isFieldEmpty(cleanName, "Name", errors);
+    ValidationUtils.isFieldEmpty(cleanShortCode, "Short Code", errors);
+    return new ValidationStatus(errors.isEmpty(), errors.toString());
   }
 
   @Override
   public Supplier createResult() {
+    String cleanName = StringCleaner.cleanOrNull(this.name.get());
+    String cleanShortCode = StringCleaner.cleanOrNull(this.shortCode.get());
+    String cleanEmail = StringCleaner.cleanOrNull(this.email.get());
+    String cleanPhone = StringCleaner.cleanOrNull(this.phone.get());
+    String cleanAddress = StringCleaner.cleanOrNull(this.address.get());
     if (this.supplier == null) {
       Supplier result = new Supplier();
-      result.setName(this.name.get());
-      result.setShortCode(this.shortCode.get());
-      result.setEmail(this.email.get());
-      result.setPhone(this.phone.get());
-      result.setAddress(this.address.get());
+      result.setName(cleanName);
+      result.setShortCode(cleanShortCode);
+      result.setEmail(cleanEmail);
+      result.setPhone(cleanPhone);
+      result.setAddress(cleanAddress);
       return result;
     }
     return new Supplier(
         this.supplier.getId(),
-        this.name.get(),
-        this.shortCode.get(),
-        this.email.get(),
-        this.phone.get(),
-        this.address.get(),
+        cleanName,
+        cleanShortCode,
+        cleanEmail,
+        cleanPhone,
+        cleanAddress,
         this.supplier.getCreatedAt(),
         this.supplier.getUpdatedAt(),
         this.supplier.isDeleted());
@@ -77,14 +80,6 @@ public class SupplierDialogViewModel extends BaseDialogViewModel<Supplier> {
     return Bindings.createBooleanBinding(() -> this.supplier == null);
   }
 
-  protected void mapModelToProperties(Supplier supplier) {
-    this.name.set(supplier.getName());
-    this.shortCode.set(supplier.getShortCode());
-    this.email.set(supplier.getEmail());
-    this.phone.set(supplier.getPhone());
-    this.address.set(supplier.getAddress());
-  }
-
   @Override
   public void resetProperties() {
     this.name.set("");
@@ -92,5 +87,13 @@ public class SupplierDialogViewModel extends BaseDialogViewModel<Supplier> {
     this.email.set("");
     this.phone.set("");
     this.address.set("");
+  }
+
+  protected void mapModelToProperties(Supplier supplier) {
+    this.name.set(supplier.getName());
+    this.shortCode.set(supplier.getShortCode());
+    this.email.set(supplier.getEmail());
+    this.phone.set(supplier.getPhone());
+    this.address.set(supplier.getAddress());
   }
 }

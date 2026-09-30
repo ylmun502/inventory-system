@@ -127,6 +127,11 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
   }
 
   @Override
+  public BooleanBinding isNewProperty() {
+    return Bindings.createBooleanBinding(() -> this.product == null);
+  }
+
+  @Override
   protected void resetProperties() {
     this.sku.set("");
     this.name.set("");
@@ -138,6 +143,7 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.isActive.set(true);
   }
 
+  @Override
   protected void mapModelToProperties(Product model) {
     this.sku.set(model.getSku());
     this.name.set(model.getName());
@@ -147,10 +153,6 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.price.set(CurrencyUtil.formatForInput(model.getSellingPrice()));
     this.unitType.set(model.getUnitType());
     this.isActive.set(model.isActive());
-  }
-
-  public BooleanBinding isNewProperty() {
-    return Bindings.createBooleanBinding(() -> this.product == null);
   }
 
   public ObservableList<String> getAvailableUnitTypes() {

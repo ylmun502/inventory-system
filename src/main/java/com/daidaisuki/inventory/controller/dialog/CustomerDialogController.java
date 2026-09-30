@@ -26,17 +26,17 @@ public class CustomerDialogController
 
   @FXML
   public void initialize() {
-    this.setupBinding();
+    this.setupBindings();
+    this.InitializeBaseDialogController();
     this.dialogTitle
         .textProperty()
         .bind(
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Create Customer")
                 .otherwise("Edit Customer"));
-    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
   }
 
-  private void setupBinding() {
+  private void setupBindings() {
     this.phoneNumberField.setTextFormatter(
         new TextFormatter<>(
             change -> change.getControlNewText().matches("\\+?[0-9]{0,15}") ? change : null));

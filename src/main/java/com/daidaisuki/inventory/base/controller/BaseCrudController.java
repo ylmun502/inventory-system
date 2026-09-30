@@ -5,6 +5,7 @@ import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -30,10 +31,12 @@ public abstract class BaseCrudController<T, VM extends BaseListViewModel<T>>
   @Override
   protected void bindViewModelProperties() {
     super.bindViewModelProperties();
-    this.addButton.disableProperty().bind(this.viewModel.isBusyProperty());
+    BooleanProperty busy = this.viewModel.isBusyProperty();
     BooleanBinding nothingSelected = this.viewModel.selectedItemProperty().isNull();
-    this.editButton.disableProperty().bind(nothingSelected);
-    this.archiveButton.disableProperty().bind(nothingSelected);
+    this.addButton.disableProperty().bind(busy);
+    this.editButton.disableProperty().bind(nothingSelected.or(busy));
+    this.archiveButton.disableProperty().bind(nothingSelected.or(busy));
+    this.archiveToggle.disableProperty().bind(busy);
     this.addButton.visibleProperty().bind(this.viewModel.showArchivedProperty().not());
     this.addButton.managedProperty().bind(this.addButton.visibleProperty());
     this.editButton
@@ -46,7 +49,7 @@ public abstract class BaseCrudController<T, VM extends BaseListViewModel<T>>
             Bindings.when(this.viewModel.showArchivedProperty())
                 .then("Purge")
                 .otherwise("Archive"));
-    this.viewModel.showArchivedProperty().bind(archiveToggle.selectedProperty());
+    this.viewModel.showArchivedProperty().bindBidirectional(archiveToggle.selectedProperty());
     this.searchField.textProperty().bindBidirectional(this.viewModel.searchFilterProperty());
   }
 
@@ -114,7 +117,7 @@ public abstract class BaseCrudController<T, VM extends BaseListViewModel<T>>
     String message = this.getPurgeConfirmationMessage(item);
     boolean confirmed =
         AlertHelper.showConfirmationAlert(
-            this.getWindow(), "DANGER", message, "This action cannot be undone.");
+            this.getWindow(), "Confirm Permanent Delete", message, "This action cannot be undone.");
     if (confirmed) {
       this.viewModel.delete(item);
     }

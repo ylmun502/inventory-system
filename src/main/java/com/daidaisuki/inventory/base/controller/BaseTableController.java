@@ -22,23 +22,24 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   @FXML private Label userLabel;
   @FXML protected TableView<T> table;
   protected VM viewModel;
-  private EventHandler<KeyEvent> escapeFilter =
+  private final EventHandler<KeyEvent> escapeFilter =
       event -> {
-        if (event.getCode() == KeyCode.ESCAPE && !event.isConsumed()) {
-          Node focusOwner = this.table.getScene().getFocusOwner();
-          if (focusOwner instanceof TextInputControl textInput) {
-            if (!textInput.getText().isEmpty()) {
-              textInput.clear();
-            } else {
-              this.clearSelection();
-              this.table.requestFocus();
-            }
-            event.consume();
+        if (event.getCode() != KeyCode.ESCAPE || event.isConsumed()) {
+          return;
+        }
+        Node focusOwner = this.table.getScene().getFocusOwner();
+        if (focusOwner instanceof TextInputControl textInput) {
+          if (!textInput.getText().isEmpty()) {
+            textInput.clear();
           } else {
             this.clearSelection();
-            event.consume();
+            this.table.requestFocus();
           }
+          event.consume();
+          return;
         }
+        this.clearSelection();
+        event.consume();
       };
 
   protected BaseTableController(VM viewModel) {
@@ -56,10 +57,11 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   }
 
   protected void setupTableDataBinding() {
-    if (this.table != null) {
-      this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
-      this.table.setItems(this.viewModel.getSortedList());
+    if (this.table == null) {
+      return;
     }
+    this.viewModel.getSortedList().comparatorProperty().bind(this.table.comparatorProperty());
+    this.table.setItems(this.viewModel.getSortedList());
   }
 
   private void bindSelectionModel() {
@@ -106,24 +108,32 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   }
 
   protected void handleError(Throwable exception) {
-    // Remove sout after testing
-    System.out.println("task wrapped outermost exception: " + exception);
     Throwable cause = exception.getCause() != null ? exception.getCause() : exception;
+    if (cause instanceof IllegalArgumentException) {
+      AlertHelper.showWarningAlert(
+          this.getWindow(),
+          "Invalid Operation",
+          "Action could not be completed",
+          cause.getMessage());
+      return;
+    }
     if (cause instanceof InsufficientStockException insufficientStockException) {
       AlertHelper.showWarningAlert(
-          getWindow(), "Inventory issue", "Action failed", insufficientStockException.getMessage());
-    } else if (cause instanceof DataAccessException dataAcessException) {
+          getWindow(), "Inventory issue", "Action failed", cause.getMessage());
+      return;
+    }
+    if (cause instanceof DataAccessException dataAcessException) {
       if (dataAcessException.getCause() instanceof SQLException) {
         AlertHelper.showDatabaseError(
-            this.getWindow(), "A database operation failed", cause.getMessage());
+            this.getWindow(), "A database operation failed", dataAcessException.getMessage());
       } else {
         AlertHelper.showWarningAlert(
             getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
       }
-    } else {
-      AlertHelper.showErrorAlert(
-          getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());
+      return;
     }
+    AlertHelper.showErrorAlert(
+        getWindow(), "System Error", "An unexpected error occurred", cause.getMessage());
   }
 
   protected void initializeBaseUI() {

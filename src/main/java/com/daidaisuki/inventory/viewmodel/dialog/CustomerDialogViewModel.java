@@ -98,6 +98,11 @@ public class CustomerDialogViewModel extends BaseDialogViewModel<Customer> {
   }
 
   @Override
+  public BooleanBinding isNewProperty() {
+    return Bindings.createBooleanBinding(() -> this.customer == null);
+  }
+
+  @Override
   protected void resetProperties() {
     this.fullName.set("");
     this.phoneNumber.set("");
@@ -113,9 +118,5 @@ public class CustomerDialogViewModel extends BaseDialogViewModel<Customer> {
     this.email.set(StringCleaner.cleanString(model.getEmail()));
     this.address.set(StringCleaner.cleanString(model.getAddress()));
     this.acquisitionSource.set(StringCleaner.cleanString(model.getAcquisitionSource()));
-  }
-
-  public BooleanBinding isNewProperty() {
-    return Bindings.createBooleanBinding(() -> this.customer == null);
   }
 }

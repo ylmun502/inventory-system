@@ -1,6 +1,5 @@
 package com.daidaisuki.inventory.base.controller;
 
-import com.daidaisuki.inventory.util.AlertHelper;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -17,6 +16,10 @@ public abstract class BaseDialogController<R, VM extends BaseDialogViewModel<R>>
     this.viewModel = viewModel;
   }
 
+  protected void InitializeBaseDialogController() {
+    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
+  }
+
   public void setDialogStage(Stage dialogStage) {
     this.dialogStage = dialogStage;
   }
@@ -26,22 +29,16 @@ public abstract class BaseDialogController<R, VM extends BaseDialogViewModel<R>>
   }
 
   public R getResult() {
-    return confirmed ? this.viewModel.createResult() : null;
-  }
-
-  protected void showError(String message) {
-    AlertHelper.showErrorAlert(dialogStage, "Invalid Input", "Please fix input errors", message);
+    return this.confirmed ? this.viewModel.createResult() : null;
   }
 
   @FXML
   protected void handleConfirm() {
-    if (!this.viewModel.isInvalidProperty().get()) {
-      this.confirmed = true;
-      this.dialogStage.close();
-    } else {
-      AlertHelper.showWarningAlert(
-          dialogStage, "Invalid Input", null, "Please check the required fields.");
+    if (this.viewModel.isInvalidProperty().get()) {
+      return;
     }
+    this.confirmed = true;
+    this.dialogStage.close();
   }
 
   @FXML

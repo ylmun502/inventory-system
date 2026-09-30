@@ -23,17 +23,21 @@ public class SupplierDialogController
 
   @FXML
   public void initialize() {
+    this.setupBindings();
+    this.InitializeBaseDialogController();
     this.dialogTitle
         .textProperty()
         .bind(
             Bindings.when(this.viewModel.isNewProperty())
                 .then("Add New Supplier")
                 .otherwise("Edit Supplier"));
+  }
+
+  private void setupBindings() {
     this.nameField.textProperty().bindBidirectional(this.viewModel.name);
     this.shortCodeField.textProperty().bindBidirectional(this.viewModel.shortCode);
     this.emailField.textProperty().bindBidirectional(this.viewModel.email);
     this.phoneField.textProperty().bindBidirectional(this.viewModel.phone);
     this.addressField.textProperty().bindBidirectional(this.viewModel.address);
-    this.confirmButton.disableProperty().bind(this.viewModel.isInvalidProperty());
   }
 }
