@@ -99,7 +99,7 @@ public class ProductService implements Archivable, Removable {
   public Product getProduct(int productId) {
     return this.productDAO
         .findById(productId)
-        .orElseThrow(() -> new DataAccessException("The product could not be found"));
+        .orElseThrow(() -> new DataAccessException("The product could not be found."));
   }
 
   public List<String> listDistinctUnitTypes() {
