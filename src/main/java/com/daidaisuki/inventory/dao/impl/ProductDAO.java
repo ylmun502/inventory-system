@@ -253,7 +253,7 @@ public class ProductDAO extends BaseDAO<Product> {
     return this.queryForObject(sql, rs -> rs.getInt(1) > 0, barcode).orElse(false);
   }
 
-  public boolean existByBarcodeExcludingId(String barcode, int productId) {
+  public boolean existsByBarcodeExcludingId(String barcode, int productId) {
     if (barcode == null || barcode.isBlank()) {
       return false;
     }

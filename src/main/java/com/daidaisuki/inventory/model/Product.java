@@ -92,6 +92,8 @@ public class Product extends BaseModel {
     this.barcode.set(barcode);
     this.name.set(name);
     this.category.set(category);
+    this.unitType.set(unitType);
+    this.taxCategory.set(taxCategory);
     this.description.set(description);
     this.weight.set(weight);
     this.currentStock.set(currentStock);

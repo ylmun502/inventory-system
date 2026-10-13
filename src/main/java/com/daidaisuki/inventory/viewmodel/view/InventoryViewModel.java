@@ -123,7 +123,7 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
 
   @Override
   protected List<Product> fetchItems() throws Exception {
-    return this.productService.listProducts();
+    return this.productService.listAll();
   }
 
   @Override

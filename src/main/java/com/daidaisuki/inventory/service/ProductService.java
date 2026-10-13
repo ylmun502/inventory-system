@@ -19,7 +19,7 @@ public class ProductService implements Archivable, Removable {
     this.productDAO = new ProductDAO(connection);
   }
 
-  public List<Product> listProducts() {
+  public List<Product> listAll() {
     return this.productDAO.findAll();
   }
 
@@ -39,7 +39,7 @@ public class ProductService implements Archivable, Removable {
   public void updateProduct(Product product) {
     this.transactionManager.executeInTransaction(
         () -> {
-          this.validateSkuForUdate(product);
+          this.validateSkuForUpdate(product);
           this.validateBarcodeForUpdate(product);
           this.productDAO.update(product);
         });
@@ -57,14 +57,14 @@ public class ProductService implements Archivable, Removable {
     }
   }
 
-  private void validateSkuForUdate(Product product) {
+  private void validateSkuForUpdate(Product product) {
     if (this.productDAO.existsBySkuExcludingId(product.getSku(), product.getId())) {
       throw new IllegalArgumentException("A product with this SKU already exists.");
     }
   }
 
   private void validateBarcodeForUpdate(Product product) {
-    if (this.productDAO.existByBarcodeExcludingId(product.getBarcode(), product.getId())) {
+    if (this.productDAO.existsByBarcodeExcludingId(product.getBarcode(), product.getId())) {
       throw new IllegalArgumentException("A product with this barcode already exists.");
     }
   }
