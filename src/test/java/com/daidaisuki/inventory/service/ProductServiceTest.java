@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.daidaisuki.inventory.dao.impl.ProductDAO;
-import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.model.builder.ProductBuilder;
 import java.math.BigDecimal;
@@ -291,7 +291,7 @@ class ProductServiceTest {
     this.productService.archive(saved.getId());
     this.productService.remove(saved.getId());
     assertTrue(this.productService.listAll().isEmpty());
-    assertThrows(DataAccessException.class, () -> this.productService.getProduct(saved.getId()));
+    assertThrows(EntityNotFoundException.class, () -> this.productService.getProduct(saved.getId()));
   }
 
   @Test
@@ -305,8 +305,8 @@ class ProductServiceTest {
 
   @Test
   void getProductShouldThrowWhenProductDoesNotExist() {
-    DataAccessException exception =
-        assertThrows(DataAccessException.class, () -> this.productService.getProduct(9999));
+    EntityNotFoundException exception =
+        assertThrows(EntityNotFoundException.class, () -> this.productService.getProduct(9999));
     assertEquals("The product could not be found.", exception.getMessage());
   }
 

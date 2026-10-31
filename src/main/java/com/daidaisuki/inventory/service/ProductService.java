@@ -2,7 +2,7 @@ package com.daidaisuki.inventory.service;
 
 import com.daidaisuki.inventory.dao.impl.ProductDAO;
 import com.daidaisuki.inventory.db.TransactionManager;
-import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.interfaces.Archivable;
 import com.daidaisuki.inventory.interfaces.Removable;
 import com.daidaisuki.inventory.model.Product;
@@ -99,7 +99,7 @@ public class ProductService implements Archivable, Removable {
   public Product getProduct(int productId) {
     return this.productDAO
         .findById(productId)
-        .orElseThrow(() -> new DataAccessException("The product could not be found."));
+        .orElseThrow(() -> new EntityNotFoundException("The product could not be found."));
   }
 
   public List<String> listDistinctUnitTypes() {

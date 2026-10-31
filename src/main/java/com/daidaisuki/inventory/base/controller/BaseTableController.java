@@ -1,6 +1,7 @@
 package com.daidaisuki.inventory.base.controller;
 
 import com.daidaisuki.inventory.exception.DataAccessException;
+import com.daidaisuki.inventory.exception.EntityNotFoundException;
 import com.daidaisuki.inventory.exception.InsufficientStockException;
 import com.daidaisuki.inventory.user.AppSession;
 import com.daidaisuki.inventory.util.AlertHelper;
@@ -71,36 +72,34 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
   }
 
   protected void setupDeselectOnEmptySpace(TableView<?> targetTable) {
-    targetTable.setOnMouseClicked(
-        event -> {
-          Node target = (Node) event.getTarget();
-          while (target != null && target != targetTable) {
-            if (target instanceof TableCell<?, ?> cell) {
-              if (!cell.getTableRow().isEmpty()) {
-                return;
-              }
-            }
-            if (target.getStyleClass().contains("column-header-background")) {
-              return;
-            }
-            target = target.getParent();
+    targetTable.setOnMouseClicked(event -> {
+      Node target = (Node) event.getTarget();
+      while (target != null && target != targetTable) {
+        if (target instanceof TableCell<?, ?> cell) {
+          if (!cell.getTableRow().isEmpty()) {
+            return;
           }
-          targetTable.getSelectionModel().clearSelection();
-        });
+        }
+        if (target.getStyleClass().contains("column-header-background")) {
+          return;
+        }
+        target = target.getParent();
+      }
+      targetTable.getSelectionModel().clearSelection();
+    });
   }
 
   private void setupSceneKeyFilter() {
     this.table
         .sceneProperty()
-        .addListener(
-            (obs, oldScene, newScene) -> {
-              if (oldScene != null) {
-                oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
-              }
-              if (newScene != null) {
-                newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
-              }
-            });
+        .addListener((obs, oldScene, newScene) -> {
+          if (oldScene != null) {
+            oldScene.removeEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+          }
+          if (newScene != null) {
+            newScene.addEventFilter(KeyEvent.KEY_PRESSED, this.escapeFilter);
+          }
+        });
   }
 
   protected void bindViewModelProperties() {
@@ -117,18 +116,26 @@ public abstract class BaseTableController<T, VM extends BaseListViewModel<T>> {
           cause.getMessage());
       return;
     }
-    if (cause instanceof InsufficientStockException insufficientStockException) {
+    if (cause instanceof EntityNotFoundException) {
       AlertHelper.showWarningAlert(
-          getWindow(), "Inventory issue", "Action failed", cause.getMessage());
+          this.getWindow(),
+          "Record Not Found",
+          "Action could not be completed",
+          cause.getMessage());
       return;
     }
-    if (cause instanceof DataAccessException dataAcessException) {
-      if (dataAcessException.getCause() instanceof SQLException) {
+    if (cause instanceof InsufficientStockException) {
+      AlertHelper.showWarningAlert(
+          this.getWindow(), "Inventory issue", "Action failed", cause.getMessage());
+      return;
+    }
+    if (cause instanceof DataAccessException dataAccessException) {
+      if (dataAccessException.getCause() instanceof SQLException) {
         AlertHelper.showDatabaseError(
-            this.getWindow(), "A database operation failed", dataAcessException.getMessage());
+            this.getWindow(), "A database operation failed", dataAccessException.getMessage());
       } else {
         AlertHelper.showWarningAlert(
-            getWindow(), "Persistence Error", "Action failed", dataAcessException.getMessage());
+            getWindow(), "Persistence Error", "Action failed", dataAccessException.getMessage());
       }
       return;
     }

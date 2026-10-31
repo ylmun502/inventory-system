@@ -40,34 +40,33 @@ public class InventoryService {
   }
 
   public void stockAdjust(StockAdjustRequest adjustRequest, int userId) {
-    transactionManager.executeInTransaction(
-        () -> {
-          if (adjustRequest.changeAmount() > 0) {
-            if (adjustRequest.unitCost() == null
-                || adjustRequest.unitCost().compareTo(BigDecimal.ZERO) == 0) {
-              this.applyStockChange(adjustRequest.productId(), adjustRequest.changeAmount());
-            } else {
-              StockReceiveRequest receiveRequest =
-                  new StockReceiveRequest(
-                      adjustRequest.productId(),
-                      SYSTEM_SUPPLIER_ID,
-                      null,
-                      adjustRequest.changeAmount(),
-                      BigDecimal.ZERO,
-                      null,
-                      adjustRequest.reason());
-              this.receiveNewStockInternal(receiveRequest, userId);
-            }
-          } else if (adjustRequest.changeAmount() < 0) {
-            StockDeductRequest deductRequest =
-                new StockDeductRequest(
-                    adjustRequest.productId(),
-                    Math.abs(adjustRequest.changeAmount()),
-                    adjustRequest.type(),
-                    adjustRequest.reason());
-            this.deductFromInventoryInternal(deductRequest, userId);
-          }
-        });
+    transactionManager.executeInTransaction(() -> {
+      if (adjustRequest.changeAmount() > 0) {
+        if (adjustRequest.unitCost() == null
+            || adjustRequest.unitCost().compareTo(BigDecimal.ZERO) == 0) {
+          this.applyStockChange(adjustRequest.productId(), adjustRequest.changeAmount());
+        } else {
+          StockReceiveRequest receiveRequest =
+              new StockReceiveRequest(
+                  adjustRequest.productId(),
+                  SYSTEM_SUPPLIER_ID,
+                  null,
+                  adjustRequest.changeAmount(),
+                  BigDecimal.ZERO,
+                  null,
+                  adjustRequest.reason());
+          this.receiveNewStockInternal(receiveRequest, userId);
+        }
+      } else if (adjustRequest.changeAmount() < 0) {
+        StockDeductRequest deductRequest =
+            new StockDeductRequest(
+                adjustRequest.productId(),
+                Math.abs(adjustRequest.changeAmount()),
+                adjustRequest.type(),
+                adjustRequest.reason());
+        this.deductFromInventoryInternal(deductRequest, userId);
+      }
+    });
   }
 
   public List<StockBatch> listInventoryByProduct(int productId) {
@@ -75,10 +74,9 @@ public class InventoryService {
   }
 
   public void receiveNewStock(StockReceiveRequest request, int userId) {
-    transactionManager.executeInTransaction(
-        () -> {
-          receiveNewStockInternal(request, userId);
-        });
+    transactionManager.executeInTransaction(() -> {
+      receiveNewStockInternal(request, userId);
+    });
   }
 
   private void receiveNewStockInternal(StockReceiveRequest request, int userId) {
@@ -131,24 +129,22 @@ public class InventoryService {
   }
 
   public void processReturn(StockReturnRequest returnRequest, int userId) {
-    transactionManager.executeInTransaction(
-        () -> {
-          this.applyStockChange(returnRequest.productId(), returnRequest.quantity());
-          boolean success =
-              this.stockBatchDAO.updateStockTotal(
-                  returnRequest.batchId(), returnRequest.quantity());
-          if (!success) {
-            throw new DataAccessException("The stock batch could not be found.");
-          }
-          this.logTransaction(
-              returnRequest.productId(),
-              returnRequest.batchId(),
-              userId,
-              returnRequest.orderId(),
-              returnRequest.quantity(),
-              TransactionType.RETURN,
-              returnRequest.reason());
-        });
+    transactionManager.executeInTransaction(() -> {
+      this.applyStockChange(returnRequest.productId(), returnRequest.quantity());
+      boolean success =
+          this.stockBatchDAO.updateStockTotal(returnRequest.batchId(), returnRequest.quantity());
+      if (!success) {
+        throw new EntityNotFoundException("The stock batch could not be found.");
+      }
+      this.logTransaction(
+          returnRequest.productId(),
+          returnRequest.batchId(),
+          userId,
+          returnRequest.orderId(),
+          returnRequest.quantity(),
+          TransactionType.RETURN,
+          returnRequest.reason());
+    });
   }
 
   private List<StockAllocation> deductFromInventoryInternal(
