@@ -379,7 +379,7 @@ class ProductServiceTest {
               is_active INTEGER NOT NULL DEFAULT 1,
               created_at TEXT NOT NULL,
               updated_at TEXT NOT NULL,
-              is_deleted INTEGER NOT NULL DEFAULT 0);
+              is_deleted INTEGER NOT NULL DEFAULT 0)
           """;
       stmt.execute(sql);
     }
