@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,22 +120,19 @@ class SupplierDAOTest {
         this.supplierDAO.save(
             new SupplierBuilder().withName("Archive Supplier").withShortCode("ARC01").build());
     this.supplierDAO.archive(saved.getId());
-    List<Supplier> suppliers = this.supplierDAO.findAll();
-    Supplier archived =
-        suppliers.stream()
-            .filter(supplier -> supplier.getId() == saved.getId())
-            .findFirst()
-            .orElseThrow();
+    Supplier archived = this.supplierDAO.findById(saved.getId()).orElseThrow();
     assertTrue(archived.isDeleted());
   }
 
   @Test
-  void findByIdShouldExcludeArchivedSupplier() {
+  void findByIdShouldIncludeArchivedSupplier() {
     Supplier saved =
         this.supplierDAO.save(
             new SupplierBuilder().withName("Archive Supplier").withShortCode("ARC01").build());
     this.supplierDAO.archive(saved.getId());
-    assertTrue(this.supplierDAO.findById(saved.getId()).isEmpty());
+    Optional<Supplier> result = this.supplierDAO.findById(saved.getId());
+    assertTrue(result.isPresent());
+    assertTrue(result.orElseThrow().isDeleted());
   }
 
   @Test

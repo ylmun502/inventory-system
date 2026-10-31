@@ -57,7 +57,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
     String nowString = now.toString();
     return insert(
         sql,
-        (newId) ->
+        newId ->
             new Supplier(
                 newId,
                 supplier.getName(),
@@ -129,7 +129,7 @@ public class SupplierDAO extends BaseDAO<Supplier> {
           updated_at,
           is_deleted
         FROM suppliers
-        WHERE id = ? AND is_deleted = 0
+        WHERE id = ?
         """;
     return queryForObject(sql, this::mapResultSetToSupplier, id);
   }
