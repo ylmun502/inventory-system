@@ -57,12 +57,11 @@ public class DatabaseManager {
                   created_at                  DATETIME NOT NULL,
                   updated_at                  DATETIME NOT NULL,
                   is_deleted                  INTEGER NOT NULL
-                  );
+                  )
           """;
       stmt.execute(createProductTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);");
-      stmt.execute(
-          "CREATE INDEX IF NOT EXISTS idx_products_sku_barcode ON products(sku, barcode);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name)");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_products_sku_barcode ON products(sku, barcode)");
 
       String createSupplierTable =
           """
@@ -81,10 +80,10 @@ public class DatabaseManager {
                   created_at            DATETIME NOT NULL,
                   updated_at            DATETIME NOT NULL,
                   is_deleted            INTEGER NOT NULL
-                  );
+                  )
           """;
       stmt.execute(createSupplierTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name)");
 
       String createStockBatchesTable =
           """
@@ -111,11 +110,11 @@ public class DatabaseManager {
 
                   -- Constraints
                   FOREIGN KEY(product_id) REFERENCES products(id)
-                  );
+                  )
           """;
       stmt.execute(createStockBatchesTable);
       stmt.execute(
-          "CREATE INDEX IF NOT EXISTS idx_batches_product_id ON stock_batches(product_id);");
+          "CREATE INDEX IF NOT EXISTS idx_batches_product_id ON stock_batches(product_id)");
 
       String createInventoryTransactionsTable =
           """
@@ -142,24 +141,24 @@ public class DatabaseManager {
                   -- Constraints
                   FOREIGN KEY(product_id) REFERENCES products(id),
                   FOREIGN KEY(batch_id) REFERENCES stock_batches(id)
-                  );
+                  )
           """;
       stmt.execute(createInventoryTransactionsTable);
       stmt.execute(
           """
-          CREATE INDEX IF NOT EXISTS idx_transactions_product_id ON inventory_transactions(product_id);
+          CREATE INDEX IF NOT EXISTS idx_transactions_product_id ON inventory_transactions(product_id)
           """);
       stmt.execute(
           """
-          CREATE INDEX IF NOT EXISTS idx_transactions_batch_id ON inventory_transactions(batch_id);
+          CREATE INDEX IF NOT EXISTS idx_transactions_batch_id ON inventory_transactions(batch_id)
           """);
       stmt.execute(
           """
-          CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON inventory_transactions(created_at);
+          CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON inventory_transactions(created_at)
           """);
       stmt.execute(
           """
-          CREATE INDEX IF NOT EXISTS idx_transactions_type_date ON inventory_transactions(transaction_type, created_at);
+          CREATE INDEX IF NOT EXISTS idx_transactions_type_date ON inventory_transactions(transaction_type, created_at)
           """);
 
       String createCustomerTable =
@@ -179,10 +178,10 @@ public class DatabaseManager {
                   created_at            DATETIME NOT NULL,
                   updated_at            DATETIME NOT NULL,
                   is_deleted            INTEGER NOT NULL
-                  );
+                  )
           """;
       stmt.execute(createCustomerTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(full_name);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(full_name)");
 
       String createCustomerSummaryView =
           """
@@ -203,7 +202,7 @@ public class DatabaseManager {
               MAX(o.created_at) AS last_order_date
           FROM customers c
           LEFT JOIN orders o ON c.id = o.customer_id AND o.is_deleted = 0
-          GROUP BY c.id;
+          GROUP BY c.id
           """;
       stmt.execute(createCustomerSummaryView);
 
@@ -236,14 +235,14 @@ public class DatabaseManager {
 
                   -- Constraints
                   FOREIGN KEY(customer_id)      REFERENCES customers(id)
-                  );
+                  )
           """;
       stmt.execute(createOrderTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);");
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders(created_at);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id)");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders(created_at)");
       stmt.execute(
           """
-          CREATE INDEX IF NOT EXISTS idx_orders_fulfillment ON orders(fulfillment_type, fulfillment_status);
+          CREATE INDEX IF NOT EXISTS idx_orders_fulfillment ON orders(fulfillment_type, fulfillment_status)
           """);
 
       String createOrderItemTable =
@@ -271,25 +270,25 @@ public class DatabaseManager {
                   FOREIGN KEY(order_id) REFERENCES orders(id),
                   FOREIGN KEY(product_id) REFERENCES products(id),
                   FOREIGN KEY(batch_id) REFERENCES stock_batches(id)
-                  );
+                  )
           """;
       stmt.execute(createOrderItemTable);
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)");
       stmt.execute(
-          "CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);");
-      stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_batch_id ON order_items(batch_id);");
+          "CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id)");
+      stmt.execute("CREATE INDEX IF NOT EXISTS idx_order_items_batch_id ON order_items(batch_id)");
 
       stmt.execute(
           """
           INSERT OR IGNORE INTO products (id, sku, barcode, name, category, weight, selling_price_cents)
-          VALUES (0, 'SYSTEM-ADJ', '00000000', 'System Adjustment', 'System', 0, 0);
+          VALUES (0, 'SYSTEM-ADJ', '00000000', 'System Adjustment', 'System', 0, 0)
           """);
 
       String insertDummyBatch =
           """
           INSERT OR IGNORE INTO stock_batches (id, product_id, quantity_received,
               quantity_remaining, unit_cost_cents, landed_cost_cents)
-          VALUES (0, 0, 0, 0, 0, 0);
+          VALUES (0, 0, 0, 0, 0, 0)
           """;
       stmt.execute(insertDummyBatch);
     }
