@@ -28,7 +28,7 @@ public class SupplierService implements Archivable, Removable {
     transactionManager.executeInTransaction(() -> supplierDAO.save(supplier));
   }
 
-  public void update(Supplier supplier) {
+  public void updateSupplier(Supplier supplier) {
     if (this.supplierDAO.existsByShortCodeExcludingId(supplier.getShortCode(), supplier.getId())) {
       throw new IllegalArgumentException("A supplier with this short code already exists.");
     }

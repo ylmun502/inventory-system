@@ -84,7 +84,7 @@ class SupplierServiceTest {
             .withShortCode("NEW01")
             .withEmail("updated@example.com")
             .build();
-    this.supplierService.update(updated);
+    this.supplierService.updateSupplier(updated);
     Supplier result =
         this.supplierService.listAll().stream()
             .filter(supplier -> supplier.getId() == saved.getId())
@@ -106,7 +106,7 @@ class SupplierServiceTest {
             .withName("Renamed Supplier")
             .withShortCode("SUP01")
             .build();
-    this.supplierService.update(updated);
+    this.supplierService.updateSupplier(updated);
     Supplier result =
         this.supplierService.listAll().stream()
             .filter(supplier -> supplier.getId() == saved.getId())
@@ -135,7 +135,8 @@ class SupplierServiceTest {
             .withShortCode("SUP01")
             .build();
     assertThrows(
-        IllegalArgumentException.class, () -> this.supplierService.update(conflictingUpdate));
+        IllegalArgumentException.class,
+        () -> this.supplierService.updateSupplier(conflictingUpdate));
     Supplier unchanged =
         this.supplierService.listAll().stream()
             .filter(supplier -> supplier.getId() == supplierTwo.getId())

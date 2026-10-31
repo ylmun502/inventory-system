@@ -39,7 +39,7 @@ public class SupplierViewModel extends BaseListViewModel<Supplier> {
 
   @Override
   public void update(Supplier supplier) {
-    this.runAsync(() -> this.supplierService.update(supplier), null);
+    this.runAsync(() -> this.supplierService.updateSupplier(supplier), null);
   }
 
   @Override
