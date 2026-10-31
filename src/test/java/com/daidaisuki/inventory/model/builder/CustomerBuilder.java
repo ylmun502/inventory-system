@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public class CustomerBuilder {
-  private int id = 1;
+  private int id = -1;
   private String fullName = "Test Customer";
   private String phoneNumber = "1234567890";
   private String email = "supplier@example.com";

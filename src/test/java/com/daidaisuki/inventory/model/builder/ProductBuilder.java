@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public class ProductBuilder {
-  private int id = 1;
+  private int id = -1;
   private String sku = "PRD-001";
   private String barcode = "BAr-001";
   private String name = "Test Product";

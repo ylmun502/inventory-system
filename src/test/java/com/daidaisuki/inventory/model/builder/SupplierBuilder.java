@@ -4,7 +4,7 @@ import com.daidaisuki.inventory.model.Supplier;
 import java.time.OffsetDateTime;
 
 public class SupplierBuilder {
-  private int id = 1;
+  private int id = -1;
   private String name = "Test Supplier";
   private String shortCode = "SUP01";
   private String email = "supplier@example.com";
