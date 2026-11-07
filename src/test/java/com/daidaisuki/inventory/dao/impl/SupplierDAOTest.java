@@ -54,7 +54,14 @@ class SupplierDAOTest {
     assertFalse(saved.isDeleted());
     Supplier persisted = this.supplierDAO.findById(saved.getId()).orElseThrow();
     assertEquals(saved.getId(), persisted.getId());
-    assertEquals("New Supplier", persisted.getName());
+    assertEquals(saved.getName(), persisted.getName());
+    assertEquals(saved.getShortCode(), persisted.getShortCode());
+    assertEquals(saved.getEmail(), persisted.getEmail());
+    assertEquals(saved.getPhone(), persisted.getPhone());
+    assertEquals(saved.getAddress(), persisted.getAddress());
+    assertEquals(saved.getCreatedAt(), persisted.getCreatedAt());
+    assertEquals(saved.getUpdatedAt(), persisted.getUpdatedAt());
+    assertEquals(saved.isDeleted(), persisted.isDeleted());
   }
 
   @Test

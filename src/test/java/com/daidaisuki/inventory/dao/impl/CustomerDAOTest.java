@@ -62,7 +62,19 @@ class CustomerDAOTest {
     assertFalse(saved.isDeleted());
     Customer persisted = this.customerDAO.findById(saved.getId()).orElseThrow();
     assertEquals(saved.getId(), persisted.getId());
-    assertEquals("Jane Doe", persisted.getFullName());
+    assertEquals(saved.getFullName(), persisted.getFullName());
+    assertEquals(saved.getPhoneNumber(), persisted.getPhoneNumber());
+    assertEquals(saved.getEmail(), persisted.getEmail());
+    assertEquals(saved.getAddress(), persisted.getAddress());
+    assertEquals(saved.getAcquisitionSource(), persisted.getAcquisitionSource());
+    assertEquals(saved.getTotalOrders(), persisted.getTotalOrders());
+    assertEquals(0, persisted.getTotalSpent().compareTo(saved.getTotalSpent()));
+    assertEquals(0, persisted.getTotalDiscount().compareTo(saved.getTotalDiscount()));
+    assertEquals(0, persisted.getAverageOrderValue().compareTo(saved.getAverageOrderValue()));
+    assertEquals(saved.getLastOrderDate(), persisted.getLastOrderDate());
+    assertEquals(saved.getCreatedAt(), persisted.getCreatedAt());
+    assertEquals(saved.getUpdatedAt(), persisted.getUpdatedAt());
+    assertEquals(saved.isDeleted(), persisted.isDeleted());
   }
 
   @Test
