@@ -2,7 +2,6 @@ package com.daidaisuki.inventory.model;
 
 import com.daidaisuki.inventory.model.base.BaseModel;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -22,11 +21,11 @@ public class Customer extends BaseModel {
       new SimpleStringProperty(this, "acquisitionSource", "");
   private final IntegerProperty totalOrders = new SimpleIntegerProperty(this, "totalOrders", 0);
   private final ObjectProperty<BigDecimal> totalSpent =
-      new SimpleObjectProperty<>(this, "totalSpent", decimalZero());
+      new SimpleObjectProperty<>(this, "totalSpent", BigDecimal.ZERO);
   private final ObjectProperty<BigDecimal> totalDiscount =
-      new SimpleObjectProperty<>(this, "totalDiscount", decimalZero());
+      new SimpleObjectProperty<>(this, "totalDiscount", BigDecimal.ZERO);
   private final ObjectProperty<BigDecimal> averageOrderValue =
-      new SimpleObjectProperty<>(this, "averageOrderValue", decimalZero());
+      new SimpleObjectProperty<>(this, "averageOrderValue", BigDecimal.ZERO);
   private final ReadOnlyObjectWrapper<OffsetDateTime> lastOrderDate =
       new ReadOnlyObjectWrapper<>(this, "lastOrderDate");
 
@@ -56,9 +55,9 @@ public class Customer extends BaseModel {
     this.address.set(address);
     this.acquisitionSource.set(acquisitionSource);
     this.totalOrders.set(totalOrders);
-    this.totalSpent.set(sanitize(totalSpent));
-    this.totalDiscount.set(sanitize(totalDiscount));
-    this.averageOrderValue.set(sanitize(averageOrderValue));
+    this.totalSpent.set(totalSpent);
+    this.totalDiscount.set(totalDiscount);
+    this.averageOrderValue.set(averageOrderValue);
     this.lastOrderDate.set(lastOrderDate);
   }
 
@@ -174,13 +173,5 @@ public class Customer extends BaseModel {
   public String toString() {
     if (this.getEmail() == null || this.getEmail().isEmpty()) return this.getFullName();
     return this.getFullName() + " (" + this.getEmail() + ")";
-  }
-
-  private BigDecimal decimalZero() {
-    return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-  }
-
-  private BigDecimal sanitize(BigDecimal value) {
-    return value == null ? decimalZero() : value.setScale(2, RoundingMode.HALF_UP);
   }
 }
