@@ -46,7 +46,7 @@ class ProductDAOTest {
             .withUnitType("each")
             .withTaxCategory("Taxable")
             .withDescription("Test description")
-            .withWeight(100)
+            .withWeight(new BigDecimal("10.225"))
             .withMinStockLevel(5)
             .withMaxStockLevel(100)
             .withReorderingLevel(10)
@@ -62,7 +62,7 @@ class ProductDAOTest {
     assertEquals("each", saved.getUnitType());
     assertEquals("Taxable", saved.getTaxCategory());
     assertEquals("Test description", saved.getDescription());
-    assertEquals(100, saved.getWeight());
+    assertEquals(0, saved.getWeight().compareTo(new BigDecimal("10.225")));
     assertEquals(0, saved.getSellingPrice().compareTo(new BigDecimal("39.99")));
     assertEquals(0, saved.getAverageUnitCost().compareTo(new BigDecimal("12.5")));
     assertEquals(0, saved.getCurrentStock());
@@ -70,7 +70,24 @@ class ProductDAOTest {
     assertFalse(saved.isDeleted());
     Product persisted = this.productDAO.findById(saved.getId()).orElseThrow();
     assertEquals(saved.getId(), persisted.getId());
-    assertEquals("PRD-001", persisted.getSku());
+    assertEquals(saved.getSku(), persisted.getSku());
+    assertEquals(saved.getBarcode(), persisted.getBarcode());
+    assertEquals(saved.getName(), persisted.getName());
+    assertEquals(saved.getCategory(), persisted.getCategory());
+    assertEquals(saved.getUnitType(), persisted.getUnitType());
+    assertEquals(saved.getTaxCategory(), persisted.getTaxCategory());
+    assertEquals(saved.getDescription(), persisted.getDescription());
+    assertEquals(0, persisted.getWeight().compareTo(saved.getWeight()));
+    assertEquals(saved.getCurrentStock(), persisted.getCurrentStock());
+    assertEquals(saved.getMinStockLevel(), persisted.getMinStockLevel());
+    assertEquals(saved.getMaxStockLevel(), persisted.getMaxStockLevel());
+    assertEquals(saved.getReorderingLevel(), persisted.getReorderingLevel());
+    assertEquals(0, persisted.getSellingPrice().compareTo(saved.getSellingPrice()));
+    assertEquals(0, persisted.getAverageUnitCost().compareTo(saved.getAverageUnitCost()));
+    assertEquals(saved.isActive(), persisted.isActive());
+    assertEquals(saved.getCreatedAt(), persisted.getCreatedAt());
+    assertEquals(saved.getUpdatedAt(), persisted.getUpdatedAt());
+    assertEquals(saved.isDeleted(), persisted.isDeleted());
   }
 
   @Test
@@ -134,7 +151,7 @@ class ProductDAOTest {
             .withUnitType("each")
             .withTaxCategory("Taxable")
             .withDescription("Updated description")
-            .withWeight(250)
+            .withWeight(new BigDecimal("250.65"))
             .withMinStockLevel(15)
             .withMaxStockLevel(200)
             .withReorderingLevel(25)
@@ -150,7 +167,7 @@ class ProductDAOTest {
     assertEquals("each", result.getUnitType());
     assertEquals("Taxable", result.getTaxCategory());
     assertEquals("Updated description", result.getDescription());
-    assertEquals(250, result.getWeight());
+    assertEquals(0, result.getWeight().compareTo(new BigDecimal("250.65")));
     assertEquals(15, result.getMinStockLevel());
     assertEquals(200, result.getMaxStockLevel());
     assertEquals(25, result.getReorderingLevel());

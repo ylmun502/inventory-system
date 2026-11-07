@@ -50,7 +50,7 @@ class ProductServiceTest {
             .withCategory("Plushy")
             .withUnitType("each")
             .withTaxCategory("Taxable")
-            .withWeight(100)
+            .withWeight(new BigDecimal("12.75"))
             .withSellingPrice(new BigDecimal("39.99"))
             .build();
     this.productService.createProduct(product);
@@ -63,7 +63,7 @@ class ProductServiceTest {
     assertEquals("Plushy", saved.getCategory());
     assertEquals("each", saved.getUnitType());
     assertEquals("Taxable", saved.getTaxCategory());
-    assertEquals(100, saved.getWeight());
+    assertEquals(0, saved.getWeight().compareTo(new BigDecimal("12.75")));
     assertEquals(0, saved.getSellingPrice().compareTo(new BigDecimal("39.99")));
     assertEquals(0, saved.getCurrentStock());
     assertTrue(saved.isActive());
@@ -145,7 +145,7 @@ class ProductServiceTest {
             .withUnitType("piece")
             .withTaxCategory("Taxable")
             .withDescription("Updated description")
-            .withWeight(200)
+            .withWeight(new BigDecimal("88.725"))
             .withMinStockLevel(10)
             .withMaxStockLevel(180)
             .withReorderingLevel(20)
@@ -161,7 +161,7 @@ class ProductServiceTest {
     assertEquals("piece", result.getUnitType());
     assertEquals("Taxable", result.getTaxCategory());
     assertEquals("Updated description", result.getDescription());
-    assertEquals(200, result.getWeight());
+    assertEquals(0, result.getWeight().compareTo(new BigDecimal("88.725")));
     assertEquals(10, result.getMinStockLevel());
     assertEquals(180, result.getMaxStockLevel());
     assertEquals(20, result.getReorderingLevel());
@@ -291,7 +291,8 @@ class ProductServiceTest {
     this.productService.archive(saved.getId());
     this.productService.remove(saved.getId());
     assertTrue(this.productService.listAll().isEmpty());
-    assertThrows(EntityNotFoundException.class, () -> this.productService.getProduct(saved.getId()));
+    assertThrows(
+        EntityNotFoundException.class, () -> this.productService.getProduct(saved.getId()));
   }
 
   @Test

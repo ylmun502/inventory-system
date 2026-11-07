@@ -13,7 +13,7 @@ public class ProductBuilder {
   private String unitType = "each";
   private String taxCategory = "Standard";
   private String description = "Standard test product";
-  private int weight = 100;
+  private BigDecimal weight = new BigDecimal("100");
   private int currentStock = 50;
   private int minStockLevel = 5;
   private int maxStockLevel = 100;
@@ -65,7 +65,7 @@ public class ProductBuilder {
     return this;
   }
 
-  public ProductBuilder withWeight(int weight) {
+  public ProductBuilder withWeight(BigDecimal weight) {
     this.weight = weight;
     return this;
   }

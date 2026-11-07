@@ -21,6 +21,16 @@ public class DatabaseUtils {
     }
   }
 
+  public static BigDecimal getBigDecimalFromWeight(ResultSet rs, String columnName, String context)
+      throws SQLException {
+    try {
+      long storedWeight = rs.getLong(columnName);
+      return WeightUtil.longToBigDecimal(storedWeight);
+    } catch (SQLException e) {
+      throw new SQLException("Failed to read " + columnName + " for " + context, e);
+    }
+  }
+
   public static OffsetDateTime getOffsetDateTime(ResultSet rs, String columnName, String context)
       throws SQLException {
     String dateTime = rs.getString(columnName);

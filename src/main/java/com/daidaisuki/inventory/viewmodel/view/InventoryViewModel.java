@@ -9,6 +9,7 @@ import com.daidaisuki.inventory.service.ProductService;
 import com.daidaisuki.inventory.service.SupplierService;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.NumberUtils;
+import com.daidaisuki.inventory.util.WeightUtil;
 import com.daidaisuki.inventory.viewmodel.base.BaseListViewModel;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,24 +56,23 @@ public class InventoryViewModel extends BaseListViewModel<Product> {
   }
 
   private void setupSelectedItemListener() {
-    this.selectedItem.addListener(
-        (obs, oldProduct, newProduct) -> {
-          if (newProduct != null) {
-            this.updatePresentation(newProduct);
-            this.refreshDetail(newProduct.getId());
-          } else {
-            this.selectedProductBatches.clear();
-            this.selectedProductTransactions.clear();
-            this.clearPresentation();
-          }
-        });
+    this.selectedItem.addListener((obs, oldProduct, newProduct) -> {
+      if (newProduct != null) {
+        this.updatePresentation(newProduct);
+        this.refreshDetail(newProduct.getId());
+      } else {
+        this.selectedProductBatches.clear();
+        this.selectedProductTransactions.clear();
+        this.clearPresentation();
+      }
+    });
   }
 
   private void updatePresentation(Product product) {
     this.barcodeText.set(product.getBarcode());
     this.reorderingLevelText.set(String.valueOf(product.getReorderingLevel()));
     this.taxCategoryText.set(product.getTaxCategory());
-    this.weightText.set(String.valueOf(product.getWeight()));
+    this.weightText.set(WeightUtil.format(product.getWeight()));
     this.unitTypeText.set(product.getUnitType());
     this.minStockLevelText.set(String.valueOf(product.getMinStockLevel()));
     this.averageUnitCostText.set(CurrencyUtil.format(product.getAverageUnitCost()));

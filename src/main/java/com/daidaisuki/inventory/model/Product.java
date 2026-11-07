@@ -32,7 +32,8 @@ public class Product extends BaseModel {
   private final StringProperty taxCategory =
       new SimpleStringProperty(this, "taxCategory", "standard");
   private final StringProperty description = new SimpleStringProperty(this, "description", "");
-  private final IntegerProperty weight = new SimpleIntegerProperty(this, "weight", 0);
+  private final ObjectProperty<BigDecimal> weight =
+      new SimpleObjectProperty<>(this, "weight", BigDecimal.ZERO);
   private final IntegerProperty currentStock = new SimpleIntegerProperty(this, "currentStock", 0);
   private final IntegerProperty minStockLevel = new SimpleIntegerProperty(this, "minStockLevel", 0);
   private final IntegerProperty maxStockLevel = new SimpleIntegerProperty(this, "maxStockLevel", 0);
@@ -76,7 +77,7 @@ public class Product extends BaseModel {
       String unitType,
       String taxCategory,
       String description,
-      int weight,
+      BigDecimal weight,
       int currentStock,
       int minStockLevel,
       int maxStockLevel,
@@ -242,15 +243,15 @@ public class Product extends BaseModel {
     return this.description;
   }
 
-  public final int getWeight() {
+  public final BigDecimal getWeight() {
     return this.weight.get();
   }
 
-  public final void setWeight(int weight) {
+  public final void setWeight(BigDecimal weight) {
     this.weight.set(weight);
   }
 
-  public final IntegerProperty weightProperty() {
+  public final ObjectProperty<BigDecimal> weightProperty() {
     return this.weight;
   }
 

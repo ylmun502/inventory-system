@@ -5,6 +5,7 @@ import com.daidaisuki.inventory.exception.DataAccessException;
 import com.daidaisuki.inventory.model.Product;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.DatabaseUtils;
+import com.daidaisuki.inventory.util.WeightUtil;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -80,7 +81,7 @@ public class ProductDAO extends BaseDAO<Product> {
     String nowString = now.toString();
     return insert(
         sql,
-        (newId) ->
+        newId ->
             new Product(
                 newId,
                 product.getSku(),
@@ -108,7 +109,7 @@ public class ProductDAO extends BaseDAO<Product> {
         product.getUnitType(),
         product.getTaxCategory(),
         product.getDescription(),
-        product.getWeight(),
+        WeightUtil.bigDecimalToLong(product.getWeight()),
         0,
         product.getMinStockLevel(),
         product.getMaxStockLevel(),
@@ -155,7 +156,7 @@ public class ProductDAO extends BaseDAO<Product> {
         product.getUnitType(),
         product.getTaxCategory(),
         product.getDescription(),
-        product.getWeight(),
+        WeightUtil.bigDecimalToLong(product.getWeight()),
         product.getMinStockLevel(),
         product.getMaxStockLevel(),
         product.getReorderingLevel(),
@@ -279,7 +280,7 @@ public class ProductDAO extends BaseDAO<Product> {
       String unitType = rs.getString("unit_type");
       String taxCategory = rs.getString("tax_category");
       String description = rs.getString("description");
-      int weight = rs.getInt("weight");
+      BigDecimal weight = DatabaseUtils.getBigDecimalFromWeight(rs, "weight", "Product ID: " + id);
       int currentStock = rs.getInt("current_stock");
       int minStockLevel = rs.getInt("min_stock_level");
       int maxStockLevel = rs.getInt("max_stock_level");
@@ -292,7 +293,7 @@ public class ProductDAO extends BaseDAO<Product> {
       OffsetDateTime createdAt =
           DatabaseUtils.getOffsetDateTime(rs, "created_at", "Product ID: " + id);
       OffsetDateTime updatedAt =
-          DatabaseUtils.getOffsetDateTime(rs, "Updated_at", "Product ID: " + id);
+          DatabaseUtils.getOffsetDateTime(rs, "updated_at", "Product ID: " + id);
       boolean isDeleted = rs.getInt("is_deleted") == 1;
       return new Product(
           id,

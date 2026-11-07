@@ -7,6 +7,7 @@ import com.daidaisuki.inventory.ui.validation.ValidationStatus;
 import com.daidaisuki.inventory.util.CurrencyUtil;
 import com.daidaisuki.inventory.util.StringCleaner;
 import com.daidaisuki.inventory.util.ValidationUtils;
+import com.daidaisuki.inventory.util.WeightUtil;
 import com.daidaisuki.inventory.viewmodel.base.BaseDialogViewModel;
 import java.math.BigDecimal;
 import javafx.beans.binding.Bindings;
@@ -77,10 +78,10 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     String cleanCategory = StringCleaner.cleanOrNull(this.category.get());
     String cleanDescription = StringCleaner.cleanOrNull(this.description.get());
     String cleanUnitType = StringCleaner.cleanOrNull(this.unitType.get());
-    int parsedWeight =
+    BigDecimal parsedWeight =
         (this.weight.get() == null || this.weight.get().isBlank())
-            ? 0
-            : Integer.parseInt(this.weight.get().trim());
+            ? BigDecimal.ZERO
+            : new BigDecimal(this.weight.get().trim());
     BigDecimal parsedPrice =
         (this.price.get() == null || this.price.get().isBlank())
             ? BigDecimal.ZERO
@@ -149,7 +150,7 @@ public class ProductDialogViewModel extends BaseDialogViewModel<Product> {
     this.name.set(model.getName());
     this.category.set(model.getCategory());
     this.description.set(model.getDescription());
-    this.weight.set(Integer.toString(model.getWeight()));
+    this.weight.set(WeightUtil.formatForInput(model.getWeight()));
     this.price.set(CurrencyUtil.formatForInput(model.getSellingPrice()));
     this.unitType.set(model.getUnitType());
     this.isActive.set(model.isActive());

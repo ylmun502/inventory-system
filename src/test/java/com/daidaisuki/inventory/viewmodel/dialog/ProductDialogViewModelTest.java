@@ -87,10 +87,30 @@ class ProductDialogViewModelTest {
   }
 
   @Test
-  void numericWeightAndPriceShouldBeValid() {
+  void numericWeightShouldBeValid() {
     ProductDialogViewModel viewModel = createValidNewProductViewModel();
     viewModel.weight.set("80");
-    viewModel.price.set("88.99");
+    assertFalse(viewModel.isInvalidProperty().get());
+  }
+
+  @Test
+  void numericPriceShouldBeValid() {
+    ProductDialogViewModel viewModel = createValidNewProductViewModel();
+    viewModel.price.set("88");
+    assertFalse(viewModel.isInvalidProperty().get());
+  }
+
+  @Test
+  void decimalWeightShouldBeValid() {
+    ProductDialogViewModel viewModel = createValidNewProductViewModel();
+    viewModel.weight.set("12.375");
+    assertFalse(viewModel.isInvalidProperty().get());
+  }
+
+  @Test
+  void decimalPriceShouldBeValid() {
+    ProductDialogViewModel viewModel = createValidNewProductViewModel();
+    viewModel.price.set("18.65");
     assertFalse(viewModel.isInvalidProperty().get());
   }
 
@@ -109,7 +129,7 @@ class ProductDialogViewModelTest {
     viewModel.name.set("   Test Product   ");
     viewModel.category.set("   Plushy   ");
     viewModel.description.set("   Winter Collection 2026   ");
-    viewModel.weight.set("   80   ");
+    viewModel.weight.set("   80.88   ");
     viewModel.price.set("   88.99   ");
     viewModel.unitType.set("   each   ");
     viewModel.isActive.set(true);
@@ -118,8 +138,8 @@ class ProductDialogViewModelTest {
     assertEquals("Test Product", result.getName());
     assertEquals("Plushy", result.getCategory());
     assertEquals("Winter Collection 2026", result.getDescription());
-    assertEquals(80, result.getWeight());
-    assertEquals(new BigDecimal("88.99"), result.getSellingPrice());
+    assertEquals(0, result.getWeight().compareTo(new BigDecimal("80.88")));
+    assertEquals(0, result.getSellingPrice().compareTo(new BigDecimal("88.99")));
     assertEquals("each", result.getUnitType());
     assertTrue(result.isActive());
   }
@@ -132,8 +152,8 @@ class ProductDialogViewModelTest {
     viewModel.price.set("");
     Product result = viewModel.createResult();
     assertNull(result.getDescription());
-    assertEquals(0, result.getWeight());
-    assertEquals(BigDecimal.ZERO, result.getSellingPrice());
+    assertEquals(0, result.getWeight().compareTo(BigDecimal.ZERO));
+    assertEquals(0, result.getSellingPrice().compareTo(BigDecimal.ZERO));
   }
 
   @Test
@@ -144,7 +164,7 @@ class ProductDialogViewModelTest {
             .withName("Existing Product")
             .withCategory("Pin")
             .withDescription("Existing description")
-            .withWeight(100)
+            .withWeight(new BigDecimal("100.25"))
             .withSellingPrice(new BigDecimal("99.99"))
             .withUnitType("piece")
             .inactive()
@@ -156,7 +176,7 @@ class ProductDialogViewModelTest {
     assertEquals("Existing Product", viewModel.name.get());
     assertEquals("Pin", viewModel.category.get());
     assertEquals("Existing description", viewModel.description.get());
-    assertEquals("100", viewModel.weight.get());
+    assertEquals("100.25", viewModel.weight.get());
     assertEquals("99.99", viewModel.price.get());
     assertEquals("piece", viewModel.unitType.get());
     assertFalse(viewModel.isActive.get());
@@ -182,11 +202,11 @@ class ProductDialogViewModelTest {
     assertEquals("OLD-001", original.getSku());
     assertEquals("Original Product", original.getName());
     assertEquals("Original Category", original.getCategory());
-    assertEquals(new BigDecimal("68.99"), original.getSellingPrice());
+    assertEquals(0, original.getSellingPrice().compareTo(new BigDecimal("68.99")));
     assertEquals("NEW-001", result.getSku());
     assertEquals("Updated Product", result.getName());
     assertEquals("Updated Category", result.getCategory());
-    assertEquals(new BigDecimal("78.99"), result.getSellingPrice());
+    assertEquals(0, result.getSellingPrice().compareTo(new BigDecimal("78.99")));
   }
 
   @Test
@@ -217,7 +237,7 @@ class ProductDialogViewModelTest {
     assertEquals(20, result.getMinStockLevel());
     assertEquals(200, result.getMaxStockLevel());
     assertEquals(30, result.getReorderingLevel());
-    assertEquals(new BigDecimal("18.75"), result.getAverageUnitCost());
+    assertEquals(0, result.getAverageUnitCost().compareTo(new BigDecimal("18.75")));
     assertEquals(createdAt, result.getCreatedAt());
     assertEquals(updatedAt, result.getUpdatedAt());
     assertTrue(result.isDeleted());
