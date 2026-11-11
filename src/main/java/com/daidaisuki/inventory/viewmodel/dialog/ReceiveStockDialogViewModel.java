@@ -51,12 +51,20 @@ public class ReceiveStockDialogViewModel extends BaseDialogViewModel<StockReceiv
         Bindings.createObjectBinding(
             () -> {
               StringBuilder errors = new StringBuilder();
-              ValidationUtils.isNumeric(this.quantity.get(), "Quantity", errors, false);
+              boolean quantityValid =
+                  ValidationUtils.isNumeric(this.quantity.get(), "Quantity", errors, false);
               ValidationUtils.isNumeric(this.unitCost.get(), "Unit Cost", errors, true);
+              if (quantityValid && Integer.parseInt(this.quantity.get().trim()) <= 0) {
+                errors.append("Quantity must be greater than zero.\n");
+              }
+              if (this.reason.get() == null || this.reason.get().isBlank()) {
+                errors.append("Reason is required.\n");
+              }
               return new ValidationStatus(errors.isEmpty(), errors.toString());
             },
             this.quantity,
-            this.unitCost);
+            this.unitCost,
+            this.reason);
   }
 
   public void generateBatchCode() {

@@ -74,9 +74,28 @@ public class InventoryService {
   }
 
   public void receiveNewStock(StockReceiveRequest request, int userId) {
+    this.validateStockReceiveRequest(request);
     transactionManager.executeInTransaction(() -> {
       receiveNewStockInternal(request, userId);
     });
+  }
+
+  private void validateStockReceiveRequest(StockReceiveRequest request) {
+    if (request == null) {
+      throw new IllegalArgumentException("Stock request service is required.");
+    }
+    if (request.quantity() <= 0) {
+      throw new IllegalArgumentException("Quantity must be greater than zero.");
+    }
+    if (request.unitCost() == null) {
+      throw new IllegalArgumentException("Unit cost is required.");
+    }
+    if (request.unitCost().compareTo(BigDecimal.ZERO) < 0) {
+      throw new IllegalArgumentException("Unit cost cannot be negative.");
+    }
+    if (request.reason() == null || request.reason().isBlank()) {
+      throw new IllegalArgumentException("Reason is required");
+    }
   }
 
   private void receiveNewStockInternal(StockReceiveRequest request, int userId) {
